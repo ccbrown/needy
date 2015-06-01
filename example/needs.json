@@ -1,0 +1,54 @@
+{
+	"libraries": {
+		"curl": {
+			"download": "http://curl.haxx.se/download/curl-7.42.1.tar.gz",
+			"checksum": "8df5874c4a67ad55496bf3af548d99a2"
+		},
+		"libpng": {
+			"download": "ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.17.tar.gz",
+			"checksum": "134282f1752dcf4cd81a37b8ff421cef"
+		},
+		"libsodium": {
+			"download": "https://github.com/jedisct1/libsodium/releases/download/1.0.3/libsodium-1.0.3.tar.gz",
+			"checksum": "b3bcc98e34d3250f55ae196822307fab"
+		},
+		"miniupnpc": {
+			"download": "http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150522.tar.gz",
+			"checksum": "e938621c2e552f3cbf2f0ea032b5f2ab"
+		},
+		"protobuf": {
+			"download": "https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.bz2",
+			"checksum": "11aaac2d704eef8efd1867a807865d85",
+			"project": {
+				"conditionals": [
+					{
+						"platform": "host",
+						"false": {
+							"configure-args": ["--with-protoc=../build/host/default/bin/protoc"]
+						}
+					}
+				]
+			}
+		},
+		"sdl2": {
+			"download": "https://www.libsdl.org/release/SDL2-2.0.3.tar.gz",
+			"checksum": "fe6c61d2e9df9ef570e7e80c6e822537",
+			"project": {
+				"linkage": "static",
+				"conditionals": [
+					{
+						"platform": "iphone",
+						"true": {
+							"xcode-project": "./Xcode-iOS/SDL/SDL.xcodeproj"
+						}
+					}
+				]
+			}
+		}
+	},
+	"universal-binaries": {
+		"iphone": {
+			"iphone": ["arm64", "armv7", "armv7s"]
+		}
+	}
+}
