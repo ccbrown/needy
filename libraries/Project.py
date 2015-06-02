@@ -40,6 +40,9 @@ class Project:
 			for command in self.configuration['pre-build']:
 				subprocess.check_call(shlex.split(command))
 	
+	def configure(self, build_directory):
+		pass
+
 	def post_build(self, output_directory):
 		import shlex, subprocess
 	

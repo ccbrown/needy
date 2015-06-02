@@ -11,15 +11,14 @@ class AutotoolsProject(Project.Project):
 	def __init__(self, target, configuration, directory, needy):
 		Project.Project.__init__(self, target, configuration, directory, needy)
 
-	def build(self, output_directory):
+	def configure(self, output_directory):
 		import subprocess
 		
 		if not os.path.isfile(os.path.join(self.directory, 'configure')):
 			subprocess.check_call('./autogen.sh')
 		
 		configure_args = self.configuration['configure-args'] if 'configure-args' in self.configuration else []
-		make_args = []
-		
+
 		configure_args.append('--prefix=%s' % output_directory)
 	
 		if self.target.platform == 'host':
@@ -70,9 +69,7 @@ class AutotoolsProject(Project.Project):
 				'CXX=%s-g++ --sysroot=%s' % (binary_prefix, sysroot),
 				'--host=%s' % configure_host,
 				'--with-sysroot=%s' % sysroot
-			])
-			
-			make_args.append('PATH=%s' % fixed_path)
+			])			
 		else:
 			raise ValueError('unsupported platform')
 
@@ -87,6 +84,21 @@ class AutotoolsProject(Project.Project):
 				raise ValueError('unknown linkage')
 
 		subprocess.check_call(['./configure'] + configure_args)
+
+	def build(self, output_directory):
+		import subprocess
+		
+		make_args = []
+
+		if self.target.platform == 'android':
+			toolchain = self.needy.android_toolchain_path(self.target.architecture)
+			if self.target.architecture.find('arm') >= 0:
+				binary_prefix = 'arm-linux-androideabi'
+			else:
+				raise ValueError('unsupported architecture')
+			fixed_path = '%s:%s:%s' % (os.path.join(toolchain, binary_prefix, 'bin'), os.path.join(toolchain, 'bin'), os.environ['PATH'])
+			make_args.append('PATH=%s' % fixed_path)
+
 		subprocess.check_call(['make', '-j8'] + make_args)
 		subprocess.check_call(['make', 'install'] + make_args)
 

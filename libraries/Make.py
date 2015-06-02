@@ -9,10 +9,32 @@ class MakeProject(Project.Project):
 	def __init__(self, target, configuration, directory, needy):
 		Project.Project.__init__(self, target, configuration, directory, needy)
 
+	def configure(self, output_directory):
+		import fileinput, sys
+
+		excluded_targets = []
+		
+		if self.target.platform != 'host':
+			excluded_targets.extend(['test', 'tests', 'check'])
+
+		with open('Makefile', 'r') as makefile:
+			with open('MakefileNeedyGenerated', 'w') as needy_makefile:
+				for line in makefile.readlines():
+					excluded_target = None
+					for target in excluded_targets:
+						if line.find('%s:' % target) == 0:
+							excluded_target = target
+							break
+
+					if excluded_target:
+					    needy_makefile.write('%s:\nneedy-excluded-%s-for-non-host-platform:\n' % (excluded_target, excluded_target))
+					else:
+						needy_makefile.write(line)
+    
 	def build(self, output_directory):
 		import re, subprocess
 		
-		make_args = ['-j8']
+		make_args = ['-f', './MakefileNeedyGenerated', '-j8']
 	
 		target_os = None
 
@@ -42,6 +64,7 @@ class MakeProject(Project.Project):
 				'CC=%s-gcc --sysroot=%s' % (binary_prefix, sysroot),
 				'CXX=%s-g++ --sysroot=%s' % (binary_prefix, sysroot),
 				'AR=%s-ar' % binary_prefix,
+				'RANLIB=%s-ranlib' % binary_prefix,
 				'PATH=%s' % fixed_path
 			])
 			

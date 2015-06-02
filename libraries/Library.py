@@ -11,6 +11,7 @@ class Library:
 		import shutil
 	
 		self.fetch()
+		self.clean_source()
 
 		print 'Building for %s' % target.platform
 		
@@ -31,6 +32,7 @@ class Library:
 		os.chdir(project.directory)
 
 		try:
+			project.configure(build_directory)
 			project.pre_build(build_directory)
 			project.build(build_directory)
 			project.post_build(build_directory)
@@ -109,12 +111,9 @@ class Library:
 			self.__fetch_git_repository()
 		else:
 			raise ValueError('no source specified in configuration')
-	
+
 	def __fetch_download(self):
-		import binascii, hashlib, re, shutil, StringIO, tarfile, urllib2
-	
-		if not 'checksum' in self.configuration:
-			raise ValueError('checksums are required for downloads')
+		import sys, urllib2
 	
 		download_directory = os.path.join(self.directory, 'download')
 		if not os.path.exists(download_directory):
@@ -124,11 +123,50 @@ class Library:
 	
 		if not os.path.isfile(local_download_path):
 			print 'Downloading from %s' % self.configuration['download']
-			download = urllib2.urlopen(self.configuration['download'])
+			download = urllib2.urlopen(self.configuration['download'], timeout = 5)
 			with open(local_download_path, 'wb') as local_file:
-				local_file.write(download.read())
-			del download
+				while True:
+					chunk = download.read(4 * 1024)
+					if not chunk:
+						break
+					local_file.write(chunk)
+			del download	
+
+	def __fetch_git_repository(self):
+		import subprocess
+
+		if not os.path.exists(self.source_directory):
+			os.makedirs(self.source_directory)
+
+		original_directory = os.getcwd()
+		os.chdir(self.source_directory)
+
+		try:
+			if not os.path.exists(os.path.join(self.source_directory, '.git')):
+				subprocess.check_call(['git', 'clone', self.configuration['repository'], '.'])
+		finally:
+			os.chdir(original_directory)
+
+	def clean_source(self):
+		self.fetch()
+		if 'download' in self.configuration:
+			self.__clean_download_source()
+		elif 'repository' in self.configuration:
+			self.__clean_git_source()
+		else:
+			raise ValueError('no source specified in configuration')
+
+	def __clean_download_source(self):
+		import binascii, hashlib, re, shutil, StringIO, tarfile, urllib2
 	
+		if not 'checksum' in self.configuration:
+			raise ValueError('checksums are required for downloads')
+	
+		download_directory = os.path.join(self.directory, 'download')
+		local_download_path = os.path.join(download_directory, self.configuration['checksum'])
+		if not os.path.isfile(local_download_path):
+			self.fetch()
+
 		with open(local_download_path, 'rb') as file:
 			file_contents = file.read()
 		
@@ -172,20 +210,18 @@ class Library:
 			shutil.rmtree(self.source_directory)
 			shutil.move(temporary_source_directory, self.source_directory)
 
-	def __fetch_git_repository(self):
+	def __clean_git_source(self):
 		import subprocess
 
 		if not os.path.exists(self.source_directory):
-			os.makedirs(self.source_directory)
+			self.fetch()
 
 		original_directory = os.getcwd()
 		os.chdir(self.source_directory)
 
 		try:
-			if not os.path.exists(os.path.join(self.source_directory, '.git')):
-				subprocess.check_call(['git', 'clone', self.configuration['repository'], '.'])
-			subprocess.check_call(['git', 'checkout', self.configuration['commit']])
 			subprocess.check_call(['git', 'clean', '-xfd'])
+			subprocess.check_call(['git', 'checkout', self.configuration['commit']])
 		finally:
 			os.chdir(original_directory)
 
