@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os
+import os, subprocess
 
 class Needy:
 	def __init__(self, path, parameters):
@@ -13,6 +13,13 @@ class Needy:
 			self.needs = json.load(needs_file)
 
 		self.needs_directory = self.determine_needs_directory()
+
+	def command(self, arguments, environment_overrides = None):
+		env = None
+		if environment_overrides:
+			env = os.environ.copy()
+			env.update(environment_overrides)
+		subprocess.check_call(arguments, env = env)
 
 	def satisfy_target(self, target):
 		if not 'libraries' in self.needs:
@@ -60,9 +67,7 @@ class Needy:
 				library.build_universal_binary(universal_binary, configuration)
 				print '[SUCCESS]'
 		
-	def create_universal_binary(self, inputs, output):
-		import subprocess
-	
+	def create_universal_binary(self, inputs, output):	
 		name, extension = os.path.splitext(output)
 		if not extension in ['.a', '.so', '.dylib']:
 			return False

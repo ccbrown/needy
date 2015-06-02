@@ -2,16 +2,26 @@ import os
 
 class Library:
 	def __init__(self, configuration, directory, global_configuration):
+		import Download, GitRepository
+	
 		self.configuration = configuration
 		self.directory = directory
 		self.source_directory = os.path.join(directory, 'source')
+
+		if 'download' in self.configuration:
+			self.source = Download.Download(self.configuration['download'], self.configuration['checksum'], self.source_directory, os.path.join(directory, 'download'))
+		elif 'repository' in self.configuration:
+			self.source = GitRepository.GitRepository(self.configuration['repository'], self.configuration['commit'], self.source_directory)
+		else:
+			raise ValueError('no source specified in configuration')
+		
 		self.global_configuration = global_configuration
 
 	def build(self, target):
 		import shutil
 	
-		self.fetch()
-		self.clean_source()
+		self.source.fetch()
+		self.source.clean()
 
 		print 'Building for %s' % target.platform
 		
@@ -103,127 +113,6 @@ class Library:
 
 	def universal_binary_directory(self, name):
 		return os.path.join(self.directory, 'build', 'universal', name)
-
-	def fetch(self):
-		if 'download' in self.configuration:
-			self.__fetch_download()
-		elif 'repository' in self.configuration:
-			self.__fetch_git_repository()
-		else:
-			raise ValueError('no source specified in configuration')
-
-	def __fetch_download(self):
-		import sys, urllib2
-	
-		download_directory = os.path.join(self.directory, 'download')
-		if not os.path.exists(download_directory):
-			os.makedirs(download_directory)
-	
-		local_download_path = os.path.join(download_directory, self.configuration['checksum'])
-	
-		if not os.path.isfile(local_download_path):
-			print 'Downloading from %s' % self.configuration['download']
-			download = urllib2.urlopen(self.configuration['download'], timeout = 5)
-			with open(local_download_path, 'wb') as local_file:
-				while True:
-					chunk = download.read(4 * 1024)
-					if not chunk:
-						break
-					local_file.write(chunk)
-			del download	
-
-	def __fetch_git_repository(self):
-		import subprocess
-
-		if not os.path.exists(self.source_directory):
-			os.makedirs(self.source_directory)
-
-		original_directory = os.getcwd()
-		os.chdir(self.source_directory)
-
-		try:
-			if not os.path.exists(os.path.join(self.source_directory, '.git')):
-				subprocess.check_call(['git', 'clone', self.configuration['repository'], '.'])
-		finally:
-			os.chdir(original_directory)
-
-	def clean_source(self):
-		self.fetch()
-		if 'download' in self.configuration:
-			self.__clean_download_source()
-		elif 'repository' in self.configuration:
-			self.__clean_git_source()
-		else:
-			raise ValueError('no source specified in configuration')
-
-	def __clean_download_source(self):
-		import binascii, hashlib, re, shutil, StringIO, tarfile, urllib2
-	
-		if not 'checksum' in self.configuration:
-			raise ValueError('checksums are required for downloads')
-	
-		download_directory = os.path.join(self.directory, 'download')
-		local_download_path = os.path.join(download_directory, self.configuration['checksum'])
-		if not os.path.isfile(local_download_path):
-			self.fetch()
-
-		with open(local_download_path, 'rb') as file:
-			file_contents = file.read()
-		
-		print 'Verifying checksum...'
-		
-		checksum = binascii.unhexlify(self.configuration['checksum'])
-	
-		if len(checksum) == hashlib.md5().digest_size:
-			hash = hashlib.md5()
-			hash.update(file_contents)
-			if checksum != hash.digest():
-				raise ValueError('incorrect checksum')
-		else:
-			raise ValueError('unknown checksum type')
-	
-		print 'Checksum verified.'
-		
-		print 'Unpacking to %s' % self.source_directory
-	
-		if os.path.exists(self.source_directory):
-			shutil.rmtree(self.source_directory)
-
-		os.makedirs(self.source_directory)
-	
-		file_contents_io = StringIO.StringIO(file_contents)
-		tar = tarfile.open(fileobj = file_contents_io, mode='r|*')
-		tar.extractall(self.source_directory)
-		del tar
-		del file_contents_io
-		
-		temporary_source_directory = os.path.join(os.path.dirname(self.source_directory), 'source_')
-
-		while True:
-			source_directory_contents = os.listdir(self.source_directory)
-			if len(source_directory_contents) != 1:
-				break
-			lone_directory = os.path.join(self.source_directory, source_directory_contents[0])
-			if not os.path.isdir(lone_directory):
-				break
-			shutil.move(lone_directory, temporary_source_directory)
-			shutil.rmtree(self.source_directory)
-			shutil.move(temporary_source_directory, self.source_directory)
-
-	def __clean_git_source(self):
-		import subprocess
-
-		if not os.path.exists(self.source_directory):
-			self.fetch()
-
-		original_directory = os.getcwd()
-		os.chdir(self.source_directory)
-
-		try:
-			subprocess.check_call(['git', 'clean', '-xfd'])
-			subprocess.check_call(['git', 'checkout', self.configuration['commit']])
-		finally:
-			os.chdir(original_directory)
 
 	def project(self, target):
 		import AndroidMk, Autotools, Make, Project, Source, Xcode

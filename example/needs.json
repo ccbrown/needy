@@ -8,6 +8,10 @@
 			"download": "http://curl.haxx.se/download/curl-7.42.1.tar.gz",
 			"checksum": "8df5874c4a67ad55496bf3af548d99a2"
 		},
+		"hiredis": {
+			"repository": "git@github.com:redis/hiredis.git",
+			"commit": "f58dd249d6ed47a7e835463c3b04722972281dbb"
+		},
 		"libpng": {
 			"download": "ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.17.tar.gz",
 			"checksum": "134282f1752dcf4cd81a37b8ff421cef"

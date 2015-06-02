@@ -10,7 +10,7 @@ class MakeProject(Project.Project):
 		Project.Project.__init__(self, target, configuration, directory, needy)
 
 	def configure(self, output_directory):
-		import fileinput, sys
+		import fileinput, re, sys
 
 		excluded_targets = []
 		
@@ -20,6 +20,11 @@ class MakeProject(Project.Project):
 		with open('Makefile', 'r') as makefile:
 			with open('MakefileNeedyGenerated', 'w') as needy_makefile:
 				for line in makefile.readlines():
+					uname_assignment = re.match('(.+=).*shell .*uname', line, re.MULTILINE)
+					if uname_assignment and self.target.platform == 'android':
+						needy_makefile.write('%sLinux\n' % uname_assignment.group(1))
+						continue
+				
 					excluded_target = None
 					for target in excluded_targets:
 						if line.find('%s:' % target) == 0:
@@ -28,14 +33,16 @@ class MakeProject(Project.Project):
 
 					if excluded_target:
 					    needy_makefile.write('%s:\nneedy-excluded-%s-for-non-host-platform:\n' % (excluded_target, excluded_target))
-					else:
-						needy_makefile.write(line)
+					    continue
+
+					needy_makefile.write(line)
     
 	def build(self, output_directory):
 		import re, subprocess
 		
 		make_args = ['-f', './MakefileNeedyGenerated', '-j8']
-	
+		path_override = None
+
 		target_os = None
 
 		if self.target.platform == 'host':
@@ -58,19 +65,20 @@ class MakeProject(Project.Project):
 			else:
 				raise ValueError('unsupported architecture')			
 
-			fixed_path = '%s:%s:%s' % (os.path.join(toolchain, binary_prefix, 'bin'), os.path.join(toolchain, 'bin'), os.environ['PATH'])
+			path_override = '%s:%s:%s' % (os.path.join(toolchain, binary_prefix, 'bin'), os.path.join(toolchain, 'bin'), os.environ['PATH'])
 
 			make_args.extend([
 				'CC=%s-gcc --sysroot=%s' % (binary_prefix, sysroot),
 				'CXX=%s-g++ --sysroot=%s' % (binary_prefix, sysroot),
 				'AR=%s-ar' % binary_prefix,
 				'RANLIB=%s-ranlib' % binary_prefix,
-				'PATH=%s' % fixed_path
 			])
 			
 			target_os = 'Linux'
 		else:
 			raise ValueError('unsupported platform')
+
+		environment_overrides = dict()
 
 		if target_os:
 			make_args.extend([
@@ -78,8 +86,11 @@ class MakeProject(Project.Project):
 				'TARGET_OS=%s' % target_os
 			])
 
+		if path_override:
+			make_args.append('PATH=%s' % path_override)
+			environment_overrides['PATH'] = path_override
 
-		subprocess.check_call(['make'] + make_args)
+		self.needy.command(['make'] + make_args, environment_overrides = environment_overrides)
 		
 		make_install_args = [
 			'PREFIX=%s' % output_directory,
@@ -108,4 +119,4 @@ class MakeProject(Project.Project):
 		if doing_things_outside_prefix or not doing_things_inside_prefix:
 			raise RuntimeError('unable to figure out how to set installation prefix')
 
-		subprocess.check_call(['make', 'install'] + make_args + make_install_args)
+		self.needy.command(['make', 'install'] + make_args + make_install_args, environment_overrides = environment_overrides)
