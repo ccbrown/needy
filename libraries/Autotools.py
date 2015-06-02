@@ -3,6 +3,8 @@ import Project, os
 def project(target, configuration, directory, needy):
 	if os.path.isfile(os.path.join(directory, 'configure')) and os.path.isfile(os.path.join(directory, 'Makefile.in')):
 		return AutotoolsProject(target, configuration, directory, needy)
+	if os.path.isfile(os.path.join(directory, 'autogen.sh')) and os.path.isfile(os.path.join(directory, 'configure.ac')) and os.path.isfile(os.path.join(directory, 'Makefile.am')):
+		return AutotoolsProject(target, configuration, directory, needy)
 	return None
 
 class AutotoolsProject(Project.Project):
@@ -11,6 +13,9 @@ class AutotoolsProject(Project.Project):
 
 	def build(self, output_directory):
 		import subprocess
+		
+		if not os.path.isfile(os.path.join(self.directory, 'configure')):
+			subprocess.check_call('./autogen.sh')
 		
 		configure_args = self.configuration['configure-args'] if 'configure-args' in self.configuration else []
 		make_args = []

@@ -12,6 +12,10 @@
 			"download": "https://github.com/jedisct1/libsodium/releases/download/1.0.3/libsodium-1.0.3.tar.gz",
 			"checksum": "b3bcc98e34d3250f55ae196822307fab"
 		},
+		"libuv": {
+			"repository": "git@github.com:libuv/libuv.git",
+			"commit": "bb2632b339d86f69f7dd9aa7168e4b46bf4126a5"
+		},
 		"miniupnpc": {
 			"download": "http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150522.tar.gz",
 			"checksum": "e938621c2e552f3cbf2f0ea032b5f2ab"

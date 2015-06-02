@@ -194,7 +194,7 @@ class Library:
 
 		configuration = Project.evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
 
-		candidates = [AndroidMk, Autotools, Make, Xcode, Source]
+		candidates = [AndroidMk, Autotools, Make, Xcode]
 
 		if 'configure-args' in configuration:
 			candidates.insert(0, Autotools)

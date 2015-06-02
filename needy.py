@@ -25,7 +25,7 @@ class Needy:
 			print 'Architecture: %s' % target.architecture
 
 		for name, library_configuration in self.needs['libraries'].iteritems():
-			directory = os.path.join(self.needs_directory, 'libraries', name)
+			directory = os.path.join(self.needs_directory, name)
 			library = Library.Library(library_configuration, directory, self)
 			if library.has_up_to_date_build(target):
 				print '[UP-TO-DATE] %s' % name
@@ -51,7 +51,7 @@ class Needy:
 		configuration = self.needs['universal-binaries'][universal_binary]
 
 		for name, library_configuration in self.needs['libraries'].iteritems():
-			directory = os.path.join(self.needs_directory, 'libraries', name)
+			directory = os.path.join(self.needs_directory, name)
 			library = Library.Library(library_configuration, directory, self)
 			if library.has_up_to_date_universal_binary(universal_binary, configuration):
 				print '[UP-TO-DATE] %s' % name
@@ -72,13 +72,14 @@ class Needy:
 
 	def determine_needs_directory(self):
 		directory = os.path.dirname(self.path)
-		previous_directory = directory
+		needy_directory = directory
 		
-		while os.path.isfile(os.path.join(directory, 'needs.json')):
-			previous_directory = directory
+		while directory != '/':
 			directory = os.path.dirname(directory)
+			if os.path.isfile(os.path.join(directory, 'needs.json')):
+				needy_directory = directory
 		
-		return os.path.join(previous_directory, 'needs')
+		return os.path.join(needy_directory, 'needs')
 	
 	def android_platform(self):
 		return self.parameters.android_platform
