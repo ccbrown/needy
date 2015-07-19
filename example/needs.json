@@ -28,6 +28,10 @@
 			"download": "http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150522.tar.gz",
 			"checksum": "e938621c2e552f3cbf2f0ea032b5f2ab"
 		},
+		"postgresql": {
+			"repository": "git://git.postgresql.org/git/postgresql.git",
+			"commit": "0ed1e572b644e064e480e14d2f6afe03d11638a7"
+		},
 		"protobuf": {
 			"download": "https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.bz2",
 			"checksum": "11aaac2d704eef8efd1867a807865d85",

@@ -1,7 +1,7 @@
-import Project, os
+import glob, Project, os
 
 def project(target, configuration, directory, needy):
-	if os.path.isfile(os.path.join(directory, 'configure')) and os.path.isfile(os.path.join(directory, 'Makefile.in')):
+	if os.path.isfile(os.path.join(directory, 'configure')) and glob.glob(os.path.join(directory, '*akefile.in')):
 		return AutotoolsProject(target, configuration, directory, needy)
 	if os.path.isfile(os.path.join(directory, 'autogen.sh')) and os.path.isfile(os.path.join(directory, 'configure.ac')) and os.path.isfile(os.path.join(directory, 'Makefile.am')):
 		return AutotoolsProject(target, configuration, directory, needy)
