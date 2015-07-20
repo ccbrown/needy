@@ -18,16 +18,18 @@ class Library:
 		self.global_configuration = global_configuration
 
 	def build(self, target):
-		import shutil
+		import Project, shutil
 	
-		project = self.project(target)
+		configuration = Project.evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
 		
-		if not project:
+		if 'build' in configuration and not configuration['build']:
 			print 'Skipping for %s' % target.platform
 			return False
 
 		self.source.fetch()
 		self.source.clean()
+
+		project = self.project(target, configuration)		
 
 		print 'Building for %s' % target.platform
 		
@@ -122,13 +124,8 @@ class Library:
 	def universal_binary_directory(self, name):
 		return os.path.join(self.directory, 'build', 'universal', name)
 
-	def project(self, target):
-		import AndroidMk, Autotools, Make, Project, Source, Xcode
-
-		configuration = Project.evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
-		
-		if 'build' in configuration and not configuration['build']:
-			return None
+	def project(self, target, configuration):
+		import AndroidMk, Autotools, Make, Source, Xcode
 
 		candidates = [AndroidMk, Autotools, Make, Xcode]
 
