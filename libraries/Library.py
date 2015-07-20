@@ -20,6 +20,12 @@ class Library:
 	def build(self, target):
 		import shutil
 	
+		project = self.project(target)
+		
+		if not project:
+			print 'Skipping for %s' % target.platform
+			return False
+
 		self.source.fetch()
 		self.source.clean()
 
@@ -27,9 +33,7 @@ class Library:
 		
 		if target.architecture:
 			print 'Architecture: %s' % target.architecture
-		
-		project = self.project(target)
-		
+				
 		if not project:
 			raise RuntimeError('unknown project type')
 		
@@ -51,17 +55,21 @@ class Library:
 			raise
 		finally:
 			os.chdir(original_directory)
+			
+		return True
 	
 	def build_universal_binary(self, name, configuration):
 		import shutil, subprocess, Target
 	
-		print 'Building universal binary %s' % name
-
 		for platform, architectures in configuration.iteritems():
 			for architecture in architectures:
 				target = Target.Target(platform, architecture)
 				if not self.has_up_to_date_build(target):
-					self.build(target)
+					if not self.build(target):
+						print 'Skipping universal binary %s' % name
+						return
+
+		print 'Building universal binary %s' % name
 
 		files = dict()
 		target_count = 0
@@ -118,6 +126,9 @@ class Library:
 		import AndroidMk, Autotools, Make, Project, Source, Xcode
 
 		configuration = Project.evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
+		
+		if 'build' in configuration and not configuration['build']:
+			return None
 
 		candidates = [AndroidMk, Autotools, Make, Xcode]
 

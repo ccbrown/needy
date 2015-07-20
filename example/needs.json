@@ -30,7 +30,17 @@
 		},
 		"postgresql": {
 			"repository": "git://git.postgresql.org/git/postgresql.git",
-			"commit": "0ed1e572b644e064e480e14d2f6afe03d11638a7"
+			"commit": "0ed1e572b644e064e480e14d2f6afe03d11638a7",
+			"project": {
+				"conditionals": [
+					{
+						"platform": "iphone",
+						"true": {
+							"build": false
+						}
+					}
+				]
+			}
 		},
 		"protobuf": {
 			"download": "https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.bz2",
