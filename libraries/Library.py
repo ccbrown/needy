@@ -27,7 +27,6 @@ class Library:
             print 'Skipping for %s' % target.platform
             return False
 
-        self.source.fetch()
         self.source.clean()
 
         project = self.project(target, configuration)
