@@ -34,8 +34,8 @@
 			"project": {
 				"conditionals": [
 					{
-						"platform": "iphone",
-						"true": {
+						"platform": "host",
+						"false": {
 							"build": false
 						}
 					}
