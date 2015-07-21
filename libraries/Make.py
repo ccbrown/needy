@@ -1,9 +1,14 @@
-import Project, os
+import Project
+import os
+import re
 
 
 def project(target, configuration, directory, needy):
-    if os.path.isfile(os.path.join(directory, 'Makefile')):
+    makefile_path = MakeProject.get_makefile_path(directory)
+
+    if makefile_path is not None:
         return MakeProject(target, configuration, directory, needy)
+
     return None
 
 
@@ -11,15 +16,26 @@ class MakeProject(Project.Project):
     def __init__(self, target, configuration, directory, needy):
         Project.Project.__init__(self, target, configuration, directory, needy)
 
-    def configure(self, output_directory):
-        import fileinput, re, sys
+    @staticmethod
+    def get_makefile_path(directory='.'):
+        valid_makefile_names = ['Makefile', 'GNUmakefile']
 
+        for makefile in valid_makefile_names:
+            path = os.path.join(directory, makefile)
+            if os.path.isfile(path):
+                return path
+
+        return None
+
+    def configure(self, output_directory):
         excluded_targets = []
 
         if self.target.platform != 'host':
             excluded_targets.extend(['test', 'tests', 'check'])
 
-        with open('Makefile', 'r') as makefile:
+        makefile_path = MakeProject.get_makefile_path()
+
+        with open(makefile_path, 'r') as makefile:
             with open('MakefileNeedyGenerated', 'w') as needy_makefile:
                 for line in makefile.readlines():
                     uname_assignment = re.match('(.+=).*shell .*uname', line, re.MULTILINE)
