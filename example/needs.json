@@ -21,8 +21,8 @@
 			"commit": "f58dd249d6ed47a7e835463c3b04722972281dbb"
 		},
 		"libpng": {
-			"download": "ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.17.tar.gz",
-			"checksum": "134282f1752dcf4cd81a37b8ff421cef"
+			"download": "ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.18.tar.gz",
+			"checksum": "685ce2ebbf4ad9a03992fb5f10c38df1"
 		},
 		"libsodium": {
 			"download": "https://github.com/jedisct1/libsodium/releases/download/1.0.3/libsodium-1.0.3.tar.gz",
