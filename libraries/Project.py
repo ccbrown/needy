@@ -63,8 +63,8 @@ class Project:
         return None
 
     def pre_build(self, output_directory):
-        prebuild_commands = self.configuration('pre-build') or []
-        for command in prebuild_commands:
+        pre_build_commands = self.configuration('pre-build') or []
+        for command in pre_build_commands:
             subprocess.check_call(shlex.split(command))
 
     def configure(self, build_directory):

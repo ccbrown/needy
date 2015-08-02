@@ -1,5 +1,15 @@
 {
 	"libraries": {
+		"boost": {
+			"repository": "git@github.com:boostorg/boost.git",
+			"commit": "9ccd3390c8e9ef05f4cb681d15b2e14eac48886e",
+			"post-clean": [
+				"./bootstrap.sh"
+			],
+			"project": {
+				"b2-args": ["--with-filesystem"]
+			}
+		},
 		"bzip": {
 			"download": "http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz",
 			"checksum": "00b516f4704d4a7cb50a1d97e6e8e15b"

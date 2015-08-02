@@ -1,5 +1,7 @@
 import os
+import shlex
 import shutil
+import subprocess
 
 import Project
 import Download
@@ -10,10 +12,10 @@ from ChangeDir import cd
 
 from AndroidMk import AndroidMkProject
 from Autotools import AutotoolsProject
+from BoostBuild import BoostBuildProject
 from Make import MakeProject
 from Source import SourceProject
 from Xcode import XcodeProject
-
 
 class Library:
     def __init__(self, configuration, directory, global_configuration):
@@ -38,9 +40,14 @@ class Library:
             print 'Skipping for %s' % target.platform
             return False
 
+        project = self.project(target, configuration)
+
         self.source.clean()
 
-        project = self.project(target, configuration)
+        post_clean_commands = self.configuration['post-clean'] if 'post-clean' in self.configuration else []
+        with cd(project.directory()):
+            for command in post_clean_commands:
+                subprocess.check_call(shlex.split(command))
 
         print 'Building for %s' % target.platform
 
@@ -132,7 +139,13 @@ class Library:
         return os.path.join(self.directory, 'build', 'universal', name)
 
     def project(self, target, configuration):
-        candidates = [AndroidMkProject, AutotoolsProject, MakeProject, XcodeProject]
+        candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject]
+
+        if configuration:
+            configuration = Project.evaluate_conditionals(configuration, target)
+
+        if 'b2-args' in configuration:
+            candidates.insert(0, BoostBuildProject)
 
         if 'configure-args' in configuration:
             candidates.insert(0, AutotoolsProject)
@@ -143,13 +156,11 @@ class Library:
         if 'source-directory' in configuration:
             candidates.insert(0, SourceProject)
 
-        if configuration:
-            configuration = Project.evaluate_conditionals(configuration, target)
-
         definition = ProjectDefinition(target, self.source_directory, configuration)
 
-        for candidate in candidates:
-            if candidate.is_valid_project(definition):
-                return candidate(definition, self.global_configuration)
+        with cd(definition.directory):
+            for candidate in candidates:
+                if candidate.is_valid_project(definition):
+                    return candidate(definition, self.global_configuration)
 
         raise RuntimeError('unknown project type')
