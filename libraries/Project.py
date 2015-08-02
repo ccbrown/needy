@@ -1,5 +1,10 @@
+import shlex
+import subprocess
+
+
+# TODO: reevaluate where this function belongs
 def evaluate_conditionals(configuration, target):
-    if not 'conditionals' in configuration:
+    if 'conditionals' not in configuration:
         return configuration
 
     ret = configuration.copy()
@@ -14,7 +19,10 @@ def evaluate_conditionals(configuration, target):
                 continue
 
             if key == 'platform':
-                is_true = (target.platform in value) if isinstance(value, list) else (target.platform == value)
+                if isinstance(value, list):
+                    is_true = target.platform in value
+                else:
+                    is_true = target.platform == value
             else:
                 raise ValueError('unknown conditional key')
 
@@ -27,26 +35,42 @@ def evaluate_conditionals(configuration, target):
     return ret
 
 
-class Project:
-    def __init__(self, target, configuration, directory, needy):
+class ProjectDefinition:
+    def __init__(self, target, directory, configuration):
         self.target = target
-        self.configuration = evaluate_conditionals(configuration, target) if configuration else dict()
         self.directory = directory
+        self.configuration = configuration
+
+
+class Project:
+    def __init__(self, definition, needy):
+        self.__definition = definition
         self.needy = needy
 
-    def pre_build(self, output_directory):
-        import shlex, subprocess
+    @staticmethod
+    def is_valid_project(definition):
+        raise NotImplementedError('Subclasses of Project must override is_valid_project')
 
-        if 'pre-build' in self.configuration:
-            for command in self.configuration['pre-build']:
-                subprocess.check_call(shlex.split(command))
+    def target(self):
+        return self.__definition.target
+
+    def directory(self):
+        return self.__definition.directory
+
+    def configuration(self, key):
+        if key in self.__definition.configuration:
+            return self.__definition.configuration[key]
+        return None
+
+    def pre_build(self, output_directory):
+        prebuild_commands = self.configuration('pre-build') or []
+        for command in prebuild_commands:
+            subprocess.check_call(shlex.split(command))
 
     def configure(self, build_directory):
         pass
 
     def post_build(self, output_directory):
-        import shlex, subprocess
-
-        if 'post-build' in self.configuration:
-            for command in self.configuration['post-build']:
-                subprocess.check_call(shlex.split(command.format(build_directory=output_directory)))
+        postbuild_commands = self.configuration('post-build') or []
+        for command in postbuild_commands:
+            subprocess.check_call(shlex.split(command.format(build_directory=output_directory)))

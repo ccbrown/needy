@@ -3,18 +3,11 @@ import os
 import re
 
 
-def project(target, configuration, directory, needy):
-    makefile_path = MakeProject.get_makefile_path(directory)
-
-    if makefile_path is not None:
-        return MakeProject(target, configuration, directory, needy)
-
-    return None
-
-
 class MakeProject(Project.Project):
-    def __init__(self, target, configuration, directory, needy):
-        Project.Project.__init__(self, target, configuration, directory, needy)
+
+    @staticmethod
+    def is_valid_project(definition):
+        return MakeProject.get_makefile_path(definition.directory) is not None
 
     @staticmethod
     def get_makefile_path(directory='.'):
@@ -24,13 +17,12 @@ class MakeProject(Project.Project):
             path = os.path.join(directory, makefile)
             if os.path.isfile(path):
                 return path
-
         return None
 
     def configure(self, output_directory):
         excluded_targets = []
 
-        if self.target.platform != 'host':
+        if self.target().platform != 'host':
             excluded_targets.extend(['test', 'tests', 'check'])
 
         makefile_path = MakeProject.get_makefile_path()
@@ -39,7 +31,7 @@ class MakeProject(Project.Project):
             with open('MakefileNeedyGenerated', 'w') as needy_makefile:
                 for line in makefile.readlines():
                     uname_assignment = re.match('(.+=).*shell .*uname', line, re.MULTILINE)
-                    if uname_assignment and self.target.platform == 'android':
+                    if uname_assignment and self.target().platform == 'android':
                         needy_makefile.write('%sLinux\n' % uname_assignment.group(1))
                         continue
 
@@ -63,21 +55,21 @@ class MakeProject(Project.Project):
 
         target_os = None
 
-        if self.target.platform == 'host':
+        if self.target().platform == 'host':
             pass
-        elif self.target.platform == 'iphone':
+        elif self.target().platform == 'iphone':
             make_args.extend([
                 'CFLAGS=-mios-version-min=5.0',
-                'CC=xcrun -sdk iphoneos clang -arch %s' % self.target.architecture,
-                'CXX=xcrun -sdk iphoneos clang++ -arch %s' % self.target.architecture,
+                'CC=xcrun -sdk iphoneos clang -arch %s' % self.target().architecture,
+                'CXX=xcrun -sdk iphoneos clang++ -arch %s' % self.target().architecture,
             ])
-        elif self.target.platform == 'android':
-            toolchain = self.needy.android_toolchain_path(self.target.architecture)
-            sysroot = self.needy.android_sysroot_path(self.target.architecture)
+        elif self.target().platform == 'android':
+            toolchain = self.needy.android_toolchain_path(self.target().architecture)
+            sysroot = self.needy.android_sysroot_path(self.target().architecture)
 
-            if self.target.architecture.find('arm') >= 0:
+            if self.target().architecture.find('arm') >= 0:
                 make_args.extend([
-                    'CFLAGS=-mthumb -march=%s' % self.target.architecture,
+                    'CFLAGS=-mthumb -march=%s' % self.target().architecture,
                 ])
                 binary_prefix = 'arm-linux-androideabi'
             else:
@@ -126,7 +118,7 @@ class MakeProject(Project.Project):
                 break
 
             path = match.group(1)
-            if os.path.relpath(path, self.directory).find('..') == 0:
+            if os.path.relpath(path, self.directory()).find('..') == 0:
                 if os.path.relpath(path, output_directory).find('..') == 0:
                     doing_things_outside_prefix = True
                 else:

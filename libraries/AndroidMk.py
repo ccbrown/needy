@@ -1,22 +1,23 @@
-import Project, os
-
-
-def project(target, configuration, directory, needy):
-    if target.platform == 'android' and os.path.exists(os.path.join(directory, 'Android.mk')):
-        return AndroidMkProject(target, configuration, directory, needy)
-    return None
+import Project
+import os
+import shutil
+import subprocess
 
 
 class AndroidMkProject(Project.Project):
-    def __init__(self, target, configuration, directory, needy):
-        Project.Project.__init__(self, target, configuration, directory, needy)
+
+    @staticmethod
+    def is_valid_project(definition):
+        if definition.target.platform not in ['android']:
+            return False
+        if not os.path.exists(os.path.join(definition.directory, 'Android.mk')):
+            return False
+        return True
 
     def build(self, output_directory):
-        import shutil, subprocess
-
-        if self.target.architecture == 'armv7':
+        if self.target().architecture == 'armv7':
             abi = 'armeabi-v7a'
-        elif self.target.architecture == 'arm':
+        elif self.target().architecture == 'arm':
             abi = 'armeabi'
         else:
             raise ValueError('unsupported architecture')
@@ -25,7 +26,7 @@ class AndroidMkProject(Project.Project):
             'NDK_PROJECT_PATH=.',
             'APP_BUILD_SCRIPT=./Android.mk',
             'NDK_LIBS_OUT=%s' % os.path.join(output_directory, 'lib-temp'),
-            'NDK_TOOLCHAIN=%s' % self.needy.android_toolchain(self.target.architecture),
+            'NDK_TOOLCHAIN=%s' % self.needy.android_toolchain(self.target().architecture),
             'APP_PLATFORM=%s' % self.needy.android_platform(),
             'APP_ABI=%s' % abi
         ]

@@ -1,46 +1,42 @@
-import Project, os, subprocess
+import Project
+import os
+import subprocess
+import shutil
 
-
-def project(target, configuration, directory, needy):
-    if target.platform != 'host' and target.platform != 'iphone':
-        return None
-
-    xcodebuild_args = []
-
-    if 'xcode-project' in configuration:
-        xcodebuild_args.extend(['-project', configuration['xcode-project']])
-
-    original_directory = os.getcwd()
-    os.chdir(directory)
-
-    try:
-        with open(os.devnull, 'w') as devnull:
-            subprocess.check_call(['xcodebuild', '-list'] + xcodebuild_args, stdout=devnull)
-    except:
-        return None
-    finally:
-        os.chdir(original_directory)
-
-    return XcodeProject(target, configuration, directory, needy)
+from ChangeDir import cd
 
 
 class XcodeProject(Project.Project):
-    def __init__(self, target, configuration, directory, needy):
-        Project.Project.__init__(self, target, configuration, directory, needy)
+
+    @staticmethod
+    def is_valid_project(definition):
+        if definition.target.platform not in ['host', 'iphone']:
+            return False
+
+        xcodebuild_args = []
+
+        if 'xcode-project' in definition.configuration:
+            xcodebuild_args.extend(['-project', definition.configuration['xcode-project']])
+
+        try:
+            with cd(definition.directory):
+                with open(os.devnull, 'w') as devnull:
+                    subprocess.check_call(['xcodebuild', '-list'] + xcodebuild_args, stdout=devnull)
+        except:
+            return False
+        return True
 
     def build(self, output_directory):
-        import shutil
-
         xcodebuild_args = ['-parallelizeTargets', 'ONLY_ACTIVE_ARCH=YES', 'USE_HEADER_SYMLINKS=YES']
 
-        if 'xcode-project' in self.configuration:
-            xcodebuild_args.extend(['-project', self.configuration['xcode-project']])
+        if self.configuration('xcode-project'):
+            xcodebuild_args.extend(['-project', self.configuration('xcode-project')])
 
-        if self.target.platform == 'iphone':
+        if self.target().platform == 'iphone':
             xcodebuild_args.extend(['-sdk', 'iphoneos'])
 
-        if self.target.architecture:
-            xcodebuild_args.extend(['-arch', self.target.architecture])
+        if self.target().architecture:
+            xcodebuild_args.extend(['-arch', self.target().architecture])
 
         extras_build_dir = os.path.join(output_directory, 'extras')
 

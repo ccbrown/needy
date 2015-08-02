@@ -1,9 +1,22 @@
 import os
+import shutil
+
+import Project
+import Download
+import GitRepository
+
+from Project import ProjectDefinition
+from ChangeDir import cd
+
+from AndroidMk import AndroidMkProject
+from Autotools import AutotoolsProject
+from Make import MakeProject
+from Source import SourceProject
+from Xcode import XcodeProject
 
 
 class Library:
     def __init__(self, configuration, directory, global_configuration):
-        import Download, GitRepository
 
         self.configuration = configuration
         self.directory = directory
@@ -19,8 +32,6 @@ class Library:
         self.global_configuration = global_configuration
 
     def build(self, target):
-        import Project, shutil
-
         configuration = Project.evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
 
         if 'build' in configuration and not configuration['build']:
@@ -44,19 +55,15 @@ class Library:
         if not os.path.exists(build_directory):
             os.makedirs(build_directory)
 
-        original_directory = os.getcwd()
-        os.chdir(project.directory)
-
-        try:
-            project.configure(build_directory)
-            project.pre_build(build_directory)
-            project.build(build_directory)
-            project.post_build(build_directory)
-        except:
-            shutil.rmtree(build_directory)
-            raise
-        finally:
-            os.chdir(original_directory)
+        with cd(project.directory()):
+            try:
+                project.configure(build_directory)
+                project.pre_build(build_directory)
+                project.build(build_directory)
+                project.post_build(build_directory)
+            except:
+                shutil.rmtree(build_directory)
+                raise
 
         return True
 
@@ -125,22 +132,24 @@ class Library:
         return os.path.join(self.directory, 'build', 'universal', name)
 
     def project(self, target, configuration):
-        import AndroidMk, Autotools, Make, Source, Xcode
-
-        candidates = [AndroidMk, Autotools, Make, Xcode]
+        candidates = [AndroidMkProject, AutotoolsProject, MakeProject, XcodeProject]
 
         if 'configure-args' in configuration:
-            candidates.insert(0, Autotools)
+            candidates.insert(0, AutotoolsProject)
 
         if 'xcode-project' in configuration:
-            candidates.insert(0, Xcode)
+            candidates.insert(0, XcodeProject)
 
         if 'source-directory' in configuration:
-            candidates.insert(0, Source)
+            candidates.insert(0, SourceProject)
+
+        if configuration:
+            configuration = Project.evaluate_conditionals(configuration, target)
+
+        definition = ProjectDefinition(target, self.source_directory, configuration)
 
         for candidate in candidates:
-            project = candidate.project(target, configuration, self.source_directory, self.global_configuration)
-            if project:
-                return project
+            if candidate.is_valid_project(definition):
+                return candidate(definition, self.global_configuration)
 
         raise RuntimeError('unknown project type')
