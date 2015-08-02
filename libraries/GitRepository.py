@@ -19,6 +19,7 @@ class GitRepository:
         try:
             if not os.path.exists(os.path.join(self.directory, '.git')):
                 subprocess.check_call(['git', 'clone', self.repository, '.'])
+                subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
         finally:
             os.chdir(original_directory)
 
@@ -34,5 +35,6 @@ class GitRepository:
         try:
             subprocess.check_call(['git', 'clean', '-xfd'])
             subprocess.check_call(['git', 'reset', '--hard', self.commit])
+            subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
         finally:
             os.chdir(original_directory)
