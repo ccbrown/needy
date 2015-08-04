@@ -8,25 +8,6 @@ import subprocess
 class SourceProject(Project.Project):
     def __init__(self, definition, needy):
         super().__init__(definition, needy)
-        self.compilation_flags = []
-
-        if self.target().platform.identifier() == 'ios':
-            self.c_compiler = 'xcrun -sdk iphoneos clang'
-            self.cpp_compiler = 'xcrun -sdk iphoneos clang++'
-            self.compilation_flags = ['-arch', self.target().architecture]
-        elif self.target().platform.identifier() == 'android':
-            toolchain = self.target().platform.toolchain_path(self.target().architecture)
-            sysroot = self.target().platform.sysroot_path(self.target().architecture)
-
-            if self.target().architecture.find('arm') >= 0:
-                self.c_compiler = os.path.join(toolchain, 'bin', 'arm-linux-androideabi-gcc') + (' --sysroot=%s' % sysroot)
-                self.cpp_compiler = os.path.join(toolchain, 'bin', 'arm-linux-androideabi-g++') + (' --sysroot=%s' % sysroot)
-                self.compilation_flags = ['-mthumb', '-march=%s' % self.target().architecture]
-            else:
-                raise ValueError('unsupported architecture')
-        else:
-            self.c_compiler = 'clang'
-            self.cpp_compiler = 'clang++'
 
         if 'source-directory' in self.definition.configuration:
             self.source_directory = self.definition.configuration['source-directory']
@@ -80,9 +61,9 @@ class SourceProject(Project.Project):
             os.makedirs(os.path.dirname(output))
 
         if extension == '.c':
-            self.__printed_call(shlex.split(self.c_compiler) + self.compilation_flags + ['-c', input, '-o', output, '-I%s' % self.header_directory])
+            self.__printed_call(shlex.split(self.target().platform.c_compiler()) + ['-c', input, '-o', output, '-I%s' % self.header_directory])
         elif extension == '.cpp':
-            self.__printed_call(shlex.split(self.cpp_compiler) + self.compilation_flags + ['-c', input, '-o', output, '-I%s' % self.header_directory])
+            self.__printed_call(shlex.split(self.target().platform.cxx_compiler()) + ['-c', input, '-o', output, '-I%s' % self.header_directory])
         else:
             return False
 

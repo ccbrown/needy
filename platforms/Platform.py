@@ -12,10 +12,10 @@ class Platform:
         return None
 
     def c_compiler(self, architecture):
-        return None
+        raise NotImplementedError('c_compiler')
 
     def cxx_compiler(self, architecture):
-        return None
+        raise NotImplementedError('cxx_compiler')
 
     def required_libraries(self, architecture):
         return []
