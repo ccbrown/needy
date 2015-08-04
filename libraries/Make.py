@@ -55,22 +55,22 @@ class MakeProject(Project.Project):
 
         target_os = None
 
-        if self.target().platform.identifier() == 'host':
-            pass
-        elif self.target().platform.identifier() == 'ios':
-            make_args.extend([
-                'CFLAGS=-mios-version-min=5.0',
-                'CC=xcrun -sdk iphoneos clang -arch %s' % self.target().architecture,
-                'CXX=xcrun -sdk iphoneos clang++ -arch %s' % self.target().architecture,
-            ])
-        elif self.target().platform.identifier() == 'android':
+        c_compiler = self.target().platform.c_compiler(self.target().architecture)
+        if c_compiler:
+            make_args.append('CC=%s' % c_compiler)
+
+        cxx_compiler = self.target().platform.cxx_compiler(self.target().architecture)
+        if cxx_compiler:
+            make_args.append('CXX=%s' % cxx_compiler)
+
+        required_libraries = self.target().platform.required_libraries(self.target().architecture)
+        if len(required_libraries) > 0:
+            make_args.append('LDFLAGS=%s' % ' '.join(required_libraries))
+
+        if self.target().platform.identifier() == 'android':
             toolchain = self.target().platform.toolchain_path(self.target().architecture)
-            sysroot = self.target().platform.sysroot_path(self.target().architecture)
 
             if self.target().architecture.find('arm') >= 0:
-                make_args.extend([
-                    'CFLAGS=-mthumb -march=%s' % self.target().architecture,
-                ])
                 binary_prefix = 'arm-linux-androideabi'
             else:
                 raise ValueError('unsupported architecture')
@@ -78,15 +78,11 @@ class MakeProject(Project.Project):
             path_override = '%s:%s:%s' % (os.path.join(toolchain, binary_prefix, 'bin'), os.path.join(toolchain, 'bin'), os.environ['PATH'])
 
             make_args.extend([
-                'CC=%s-gcc --sysroot=%s' % (binary_prefix, sysroot),
-                'CXX=%s-g++ --sysroot=%s' % (binary_prefix, sysroot),
                 'AR=%s-ar' % binary_prefix,
                 'RANLIB=%s-ranlib' % binary_prefix,
             ])
 
             target_os = 'Linux'
-        else:
-            raise ValueError('unsupported platform')
 
         environment_overrides = dict()
 

@@ -28,9 +28,19 @@ class AutotoolsProject(Project.Project):
 
         linkage = self.configuration('linkage')
 
-        if self.target().platform.identifier() == 'host':
-            pass
-        elif self.target().platform.identifier() == 'ios':
+        c_compiler = self.target().platform.c_compiler(self.target().architecture)
+        if c_compiler:
+            configure_args.append('CC=%s' % c_compiler)
+
+        cxx_compiler = self.target().platform.cxx_compiler(self.target().architecture)
+        if cxx_compiler:
+            configure_args.append('CXX=%s' % cxx_compiler)
+
+        required_libraries = self.target().platform.required_libraries(self.target().architecture)
+        if len(required_libraries) > 0:
+            configure_args.append('LDFLAGS=%s' % ' '.join(required_libraries))
+
+        if self.target().platform.identifier() == 'ios':
             if not linkage:
                 linkage = 'static'
         
@@ -45,12 +55,7 @@ class AutotoolsProject(Project.Project):
             elif not configure_host:
                 configure_host = 'arm-apple-darwin'
 
-            configure_args.extend([
-                'CFLAGS=-mios-version-min=5.0',
-                'CC=xcrun -sdk iphoneos clang -arch %s' % self.target().architecture,
-                'CXX=xcrun -sdk iphoneos clang++ -arch %s' % self.target().architecture,
-                '--host=%s' % configure_host
-            ])
+            configure_args.append('--host=%s' % configure_host)
         elif self.target().platform.identifier() == 'android':
             toolchain = self.target().platform.toolchain_path(self.target().architecture)
             sysroot = self.target().platform.sysroot_path(self.target().architecture)
@@ -64,6 +69,8 @@ class AutotoolsProject(Project.Project):
                     configure_host = 'arm-linux-androideabi'
                 elif configure_host == 'arm*':
                     configure_host = self.target().architecture
+                elif not configure_host:
+                    configure_host = 'arm-linux-androideabi'
 
                 configure_args.extend([
                     'CFLAGS=-mthumb -march=%s' % self.target().architecture
@@ -77,13 +84,9 @@ class AutotoolsProject(Project.Project):
 
             configure_args.extend([
                 'PATH=%s' % fixed_path,
-                'CC=%s-gcc --sysroot=%s' % (binary_prefix, sysroot),
-                'CXX=%s-g++ --sysroot=%s' % (binary_prefix, sysroot),
                 '--host=%s' % configure_host,
                 '--with-sysroot=%s' % sysroot
             ])
-        else:
-            raise ValueError('unsupported platform')
 
         if linkage:
             if linkage == 'static':

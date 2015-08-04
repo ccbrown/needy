@@ -1,11 +1,14 @@
 from Platform import Platform
 
+import os
+
 class AndroidPlatform(Platform):
     def __init__(self, api_level):
         Platform.__init__(self)
         self.api_level = api_level
     
-    def identifier(self):
+    @staticmethod
+    def identifier():
         return 'android'
 
     def toolchain(self, architecture):
@@ -30,7 +33,47 @@ class AndroidPlatform(Platform):
         else:
             raise ValueError('unsupported architecture')
 
-        return os.path.join(self.ndk_home(), 'platforms', 'android-%d' % self.api_level, arch_directory)
+        return os.path.join(self.ndk_home(), 'platforms', 'android-%s' % self.api_level, arch_directory)
+
+    def __cxx_stl_architecture_name(self, architecture):
+        if architecture == 'armv7':
+            return 'armeabi-v7a'
+        raise ValueError('unsupported architecture')
+
+    def include_paths(self, architecture):
+        ret = [
+            self.sysroot_path(architecture),
+            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'include'),
+            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'include', 'backward'),
+            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'include')
+        ]
+
+        return ret
+        
+    def required_libraries(self, architecture):
+        return [
+            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libgnustl_shared.so'),
+            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libsupc++.a')
+        ]
+
+    def __compiler_args(self, architecture):
+        ret = ['--sysroot=%s' % self.sysroot_path(architecture)]
+
+        if architecture.find('arm') >= 0:
+            ret.append('-mthumb')
+            ret.append('-march=%s' % architecture)
+
+        include_paths = self.include_paths(architecture)
+        for path in include_paths:
+            ret.append('-I%s' % path)
+
+        return ret
+
+    def c_compiler(self, architecture):
+        return 'arm-linux-androideabi-gcc %s' % ' '.join(self.__compiler_args(architecture))
+
+    def cxx_compiler(self, architecture):
+        return 'arm-linux-androideabi-g++ %s' % ' '.join(self.__compiler_args(architecture))
 
     def ndk_home(self):
         ndk_home = os.getenv('ANDROID_NDK_HOME', os.getenv('NDK_HOME'))

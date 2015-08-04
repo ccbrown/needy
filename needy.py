@@ -24,7 +24,7 @@ class Needy:
         if identifier == 'host':
             return Host.HostPlatform()
         if identifier == 'ios':
-            return IOS.IOSPlatform()
+            return IOS.IOSPlatform(self.parameters.minimum_ios_version)
         if identifier == 'android':
             return Android.AndroidPlatform(self.parameters.android_api_level)
         raise ValueError('unknown platform')
@@ -108,6 +108,7 @@ def main(args):
     parser.add_argument('--target', default='host', help='builds needs for this target (example: ios:armv7)')
     parser.add_argument('--universal-binary', help='builds the universal binary with the given name')
     parser.add_argument('--android-api-level', default='21', help='the android API level to build for')
+    parser.add_argument('--minimum-ios-version', default='5.0', help='the minimum iOS version to build for')
     parameters = parser.parse_args(args[1:])
 
     needy = Needy(os.path.abspath('needs.json'), parameters)

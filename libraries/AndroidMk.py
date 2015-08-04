@@ -27,7 +27,7 @@ class AndroidMkProject(Project.Project):
             'APP_BUILD_SCRIPT=./Android.mk',
             'NDK_LIBS_OUT=%s' % os.path.join(output_directory, 'lib-temp'),
             'NDK_TOOLCHAIN=%s' % self.target().platform.toolchain(self.target().architecture),
-            'APP_PLATFORM=android-%d' % self.target().platform.api_level(),
+            'APP_PLATFORM=android-%s' % self.target().platform.api_level,
             'APP_ABI=%s' % abi
         ]
 

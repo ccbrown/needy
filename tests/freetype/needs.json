@@ -2,7 +2,17 @@
 	"libraries": {
 		"freetype": {
 			"download": "http://download.savannah.gnu.org/releases/freetype/freetype-2.6.tar.gz",
-			"checksum": "1d733ea6c1b7b3df38169fbdbec47d2b"
+			"checksum": "1d733ea6c1b7b3df38169fbdbec47d2b",
+			"project": {
+				"conditionals": [
+					{
+						"platform": "android",
+						"true": {
+							"build": false
+						}
+					}
+				]
+			}
 		}
 	}
 }

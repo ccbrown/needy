@@ -1,5 +1,6 @@
 from Platform import Platform
 
 class HostPlatform(Platform):
-    def identifier(self):
+    @staticmethod
+    def identifier():
         return 'host'
