@@ -26,9 +26,14 @@ class AutotoolsProject(Project.Project):
 
         configure_args.append('--prefix=%s' % output_directory)
 
+        linkage = self.configuration('linkage')
+
         if self.target().platform.identifier() == 'host':
             pass
         elif self.target().platform.identifier() == 'ios':
+            if not linkage:
+                linkage = 'static'
+        
             configure_host = self.__available_configure_host([
                 '%s-apple-darwin' % self.target().architecture, 'arm*-apple-darwin', 'arm-apple-darwin', 'arm*', 'arm'
             ])
@@ -37,6 +42,8 @@ class AutotoolsProject(Project.Project):
                 configure_host = '%s-apple-darwin' % self.target().architecture
             elif configure_host == 'arm*':
                 configure_host = self.target().architecture
+            elif not configure_host:
+                configure_host = 'arm-apple-darwin'
 
             configure_args.extend([
                 'CFLAGS=-mios-version-min=5.0',
@@ -78,8 +85,6 @@ class AutotoolsProject(Project.Project):
         else:
             raise ValueError('unsupported platform')
 
-        linkage = self.configuration('linkage')
-
         if linkage:
             if linkage == 'static':
                 configure_args.append('--disable-shared')
@@ -104,7 +109,7 @@ class AutotoolsProject(Project.Project):
             fixed_path = '%s:%s:%s' % (os.path.join(toolchain, binary_prefix, 'bin'), os.path.join(toolchain, 'bin'), os.environ['PATH'])
             make_args.append('PATH=%s' % fixed_path)
 
-        subprocess.check_call(['make', '-j8'] + make_args)
+        subprocess.check_call(['make'] + make_args)
         subprocess.check_call(['make', 'install'] + make_args)
 
     def __available_configure_host(self, candidates):

@@ -2,6 +2,8 @@
 
 import os, subprocess
 
+from libraries import Target
+
 from platforms import Host
 from platforms import IOS
 from platforms import Android
@@ -19,11 +21,11 @@ class Needy:
         self.needs_directory = self.determine_needs_directory()
     
     def platform(self, identifier):
-        if identifier is 'host':
+        if identifier == 'host':
             return Host.HostPlatform()
-        if identifier is 'ios':
+        if identifier == 'ios':
             return IOS.IOSPlatform()
-        if identifier is 'android':
+        if identifier == 'android':
             return Android.AndroidPlatform(self.parameters.android_api_level)
         raise ValueError('unknown platform')
 
@@ -103,7 +105,7 @@ def main(args):
     import argparse
 
     parser = argparse.ArgumentParser(description='Satisfies needs.')
-    parser.add_argument('--target', help='builds needs for this target (example: ios:armv7)')
+    parser.add_argument('--target', default='host', help='builds needs for this target (example: ios:armv7)')
     parser.add_argument('--universal-binary', help='builds the universal binary with the given name')
     parser.add_argument('--android-api-level', default='21', help='the android API level to build for')
     parameters = parser.parse_args(args[1:])
@@ -114,13 +116,9 @@ def main(args):
     print 'Needs directory: %s' % needy.needs_directory
 
     if parameters.target or parameters.universal_binary == None:
-        from libraries import Target
-        if parameters.target:
-            parts = parameters.target.split(':')
-            platform = needy.platform(parts[0])
-            target = Target.Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
-        else:
-            target = Target.Target(Host.HostPlatform())
+        parts = parameters.target.split(':')
+        platform = needy.platform(parts[0])
+        target = Target.Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
         needy.satisfy_target(target)
 
     if parameters.universal_binary:

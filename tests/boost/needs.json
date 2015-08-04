@@ -7,7 +7,15 @@
 				"./bootstrap.sh"
 			],
 			"project": {
-				"b2-args": ["--with-filesystem"]
+				"b2-args": ["--with-filesystem"],
+				"conditionals": [
+					{
+						"platform": "host",
+						"false": {
+							"build": false
+						}
+					}
+				]
 			}
 		}
 	}

@@ -50,7 +50,7 @@ class MakeProject(Project.Project):
     def build(self, output_directory):
         import re, subprocess
 
-        make_args = ['-f', './MakefileNeedyGenerated', '-j']
+        make_args = ['-f', './MakefileNeedyGenerated']
         path_override = None
 
         target_os = None

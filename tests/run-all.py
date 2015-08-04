@@ -19,14 +19,12 @@ def test(directory, needy_args, run_dirty=False):
 def main(args):
     parser = argparse.ArgumentParser(description='Tests Needy.')
     parser.add_argument('--run-dirty', default=False, action='store_true', help='run without cleaning first (useful for saving time while debugging)')
-    parameters = parser.parse_args(args[1:])
+    parameters, needy_args = parser.parse_known_args(args[1:])
     
     for entry in os.listdir(TESTS_DIRECTORY):
         test_directory = os.path.join(TESTS_DIRECTORY, entry)
         if os.path.isfile(os.path.join(test_directory, 'needs.json')):
-            test(test_directory, [], parameters.run_dirty)
-            test(test_directory, ['--target=ios:armv7'], parameters.run_dirty)
-            test(test_directory, ['--target=android:armv7'], parameters.run_dirty)
+            test(test_directory, needy_args, parameters.run_dirty)
 
 if __name__ == "__main__":
     try:
