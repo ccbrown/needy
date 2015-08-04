@@ -2,6 +2,10 @@
 
 import os, subprocess
 
+from platforms import Host
+from platforms import IOS
+from platforms import Android
+
 class Needy:
     def __init__(self, path, parameters):
         import json
@@ -13,6 +17,15 @@ class Needy:
             self.needs = json.load(needs_file)
 
         self.needs_directory = self.determine_needs_directory()
+    
+    def platform(self, identifier):
+        if identifier is 'host':
+            return Host.HostPlatform()
+        if identifier is 'ios':
+            return IOS.IOSPlatform()
+        if identifier is 'android':
+            return Android.AndroidPlatform(self.parameters.android_api_level)
+        raise ValueError('unknown platform')
 
     def command(self, arguments, environment_overrides = None):
         env = None
@@ -27,7 +40,7 @@ class Needy:
 
         from libraries import Library
 
-        print 'Building libraries for %s' % target.platform
+        print 'Building libraries for %s' % target.platform.identifier()
         if target.architecture:
             print 'Architecture: %s' % target.architecture
 
@@ -86,46 +99,13 @@ class Needy:
 
         return os.path.join(needy_directory, 'needs')
 
-    def android_platform(self):
-        return self.parameters.android_platform
-
-    def android_toolchain(self, architecture):
-        if architecture.find('arm') >= 0:
-            return 'arm-linux-androideabi-4.9'
-        else:
-            raise ValueError('unsupported architecture')
-
-    def android_toolchain_path(self, architecture):
-        path = os.path.join(self.android_ndk_home(), 'toolchains', self.android_toolchain(architecture), 'prebuilt', 'darwin-x86_64')
-        if not os.path.exists(path):
-            raise ValueError('missing toolchain: %s' % path)
-        return path
-
-    def android_sysroot_path(self, architecture):
-        arch_directory = None
-
-        if architecture == 'arm64':
-            arch_directory = 'arch-arm64'
-        elif architecture.find('arm') >= 0:
-            arch_directory = 'arch-arm'
-        else:
-            raise ValueError('unsupported architecture')
-
-        return os.path.join(self.android_ndk_home(), 'platforms', self.android_platform(), arch_directory)
-
-    def android_ndk_home(self):
-        ndk_home = os.getenv('ANDROID_NDK_HOME', os.getenv('NDK_HOME'))
-        if not ndk_home:
-            raise RuntimeError('unable to locate ndk')
-        return ndk_home
-
 def main(args):
     import argparse
 
     parser = argparse.ArgumentParser(description='Satisfies needs.')
     parser.add_argument('--target', help='builds needs for this target (example: iphone:armv7)')
     parser.add_argument('--universal-binary', help='builds the universal binary with the given name')
-    parser.add_argument('--android-platform', default='android-21', help='the android platform to build for (example: android-14)')
+    parser.add_argument('--android-api-level', default='21', help='the android API level to build for')
     parameters = parser.parse_args(args[1:])
 
     needy = Needy(os.path.abspath('needs.json'), parameters)
@@ -137,9 +117,10 @@ def main(args):
         from libraries import Target
         if parameters.target:
             parts = parameters.target.split(':')
-            target = Target.Target(parts[0], parts[1] if len(parts) > 1 else None)
+            platform = needy.platform(parts[0])
+            target = Target.Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
         else:
-            target = Target.Target('host')
+            target = Target.Target(Host.HostPlatform())
         needy.satisfy_target(target)
 
     if parameters.universal_binary:

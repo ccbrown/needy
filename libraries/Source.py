@@ -10,13 +10,13 @@ class SourceProject(Project.Project):
         super().__init__(definition, needy)
         self.compilation_flags = []
 
-        if self.target().platform == 'iphone':
+        if self.target().platform.identifier() == 'ios':
             self.c_compiler = 'xcrun -sdk iphoneos clang'
             self.cpp_compiler = 'xcrun -sdk iphoneos clang++'
             self.compilation_flags = ['-arch', self.target().architecture]
-        elif self.target().platform == 'android':
-            toolchain = self.needy.android_toolchain_path(self.target().architecture)
-            sysroot = self.needy.android_sysroot_path(self.target().architecture)
+        elif self.target().platform.identifier() == 'android':
+            toolchain = self.target().platform.toolchain_path(self.target().architecture)
+            sysroot = self.target().platform.sysroot_path(self.target().architecture)
 
             if self.target().architecture.find('arm') >= 0:
                 self.c_compiler = os.path.join(toolchain, 'bin', 'arm-linux-androideabi-gcc') + (' --sysroot=%s' % sysroot)

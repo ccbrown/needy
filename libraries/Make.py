@@ -22,7 +22,7 @@ class MakeProject(Project.Project):
     def configure(self, output_directory):
         excluded_targets = []
 
-        if self.target().platform != 'host':
+        if self.target().platform.identifier() != 'host':
             excluded_targets.extend(['test', 'tests', 'check'])
 
         makefile_path = MakeProject.get_makefile_path()
@@ -31,7 +31,7 @@ class MakeProject(Project.Project):
             with open('MakefileNeedyGenerated', 'w') as needy_makefile:
                 for line in makefile.readlines():
                     uname_assignment = re.match('(.+=).*shell .*uname', line, re.MULTILINE)
-                    if uname_assignment and self.target().platform == 'android':
+                    if uname_assignment and self.target().platform.identifier() == 'android':
                         needy_makefile.write('%sLinux\n' % uname_assignment.group(1))
                         continue
 
@@ -55,17 +55,17 @@ class MakeProject(Project.Project):
 
         target_os = None
 
-        if self.target().platform == 'host':
+        if self.target().platform.identifier() == 'host':
             pass
-        elif self.target().platform == 'iphone':
+        elif self.target().platform.identifier() == 'ios':
             make_args.extend([
                 'CFLAGS=-mios-version-min=5.0',
                 'CC=xcrun -sdk iphoneos clang -arch %s' % self.target().architecture,
                 'CXX=xcrun -sdk iphoneos clang++ -arch %s' % self.target().architecture,
             ])
-        elif self.target().platform == 'android':
-            toolchain = self.needy.android_toolchain_path(self.target().architecture)
-            sysroot = self.needy.android_sysroot_path(self.target().architecture)
+        elif self.target().platform.identifier() == 'android':
+            toolchain = self.target().platform.toolchain_path(self.target().architecture)
+            sysroot = self.target().platform.sysroot_path(self.target().architecture)
 
             if self.target().architecture.find('arm') >= 0:
                 make_args.extend([

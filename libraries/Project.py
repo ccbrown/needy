@@ -20,9 +20,9 @@ def evaluate_conditionals(configuration, target):
 
             if key == 'platform':
                 if isinstance(value, list):
-                    is_true = target.platform in value
+                    is_true = target.platform.identifier() in value
                 else:
-                    is_true = target.platform == value
+                    is_true = target.platform.identifier() == value
             else:
                 raise ValueError('unknown conditional key')
 

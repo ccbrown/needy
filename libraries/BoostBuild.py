@@ -6,7 +6,7 @@ class BoostBuildProject(Project.Project):
 
     @staticmethod
     def is_valid_project(definition):
-        return definition.target.platform is 'host' and os.path.isfile('Jamroot') and (os.path.isfile('b2') or subprocess.check_output(['b2', '-v']))
+        return definition.target.platform.identifier() is 'host' and os.path.isfile('Jamroot') and (os.path.isfile('b2') or subprocess.check_output(['b2', '-v']))
 
     def build(self, output_directory):
         b2 = './b2' if os.path.isfile('b2') else 'b2'

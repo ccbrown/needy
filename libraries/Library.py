@@ -18,7 +18,7 @@ from Source import SourceProject
 from Xcode import XcodeProject
 
 class Library:
-    def __init__(self, configuration, directory, global_configuration):
+    def __init__(self, configuration, directory, needy):
 
         self.configuration = configuration
         self.directory = directory
@@ -31,25 +31,25 @@ class Library:
         else:
             raise ValueError('no source specified in configuration')
 
-        self.global_configuration = global_configuration
+        self.needy = needy
 
     def build(self, target):
         configuration = Project.evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
 
         if 'build' in configuration and not configuration['build']:
-            print 'Skipping for %s' % target.platform
+            print 'Skipping for %s' % target.platform.identifier()
             return False
 
-        project = self.project(target, configuration)
-
         self.source.clean()
+
+        project = self.project(target, configuration)
 
         post_clean_commands = self.configuration['post-clean'] if 'post-clean' in self.configuration else []
         with cd(project.directory()):
             for command in post_clean_commands:
                 subprocess.check_call(shlex.split(command))
 
-        print 'Building for %s' % target.platform
+        print 'Building for %s' % target.platform.identifier()
 
         if target.architecture:
             print 'Architecture: %s' % target.architecture
@@ -79,7 +79,7 @@ class Library:
 
         for platform, architectures in configuration.iteritems():
             for architecture in architectures:
-                target = Target.Target(platform, architecture)
+                target = Target.Target(self.needy.platform(platform), architecture)
                 if not self.has_up_to_date_build(target):
                     if not self.build(target):
                         print 'Skipping universal binary %s' % name
@@ -93,7 +93,7 @@ class Library:
         for platform, architectures in configuration.iteritems():
             for architecture in architectures:
                 target_count = target_count + 1
-                target = Target.Target(platform, architecture)
+                target = Target.Target(self.needy.platform(platform), architecture)
                 lib_directory = os.path.join(self.build_directory(target), 'lib')
                 for file in os.listdir(lib_directory):
                     if not os.path.isfile(os.path.join(lib_directory, file)):
@@ -133,7 +133,7 @@ class Library:
         return os.path.exists(self.universal_binary_directory(name))
 
     def build_directory(self, target):
-        return os.path.join(self.directory, 'build', target.platform, target.architecture if target.architecture else 'default')
+        return os.path.join(self.directory, 'build', target.platform.identifier(), target.architecture if target.architecture else 'default')
 
     def universal_binary_directory(self, name):
         return os.path.join(self.directory, 'build', 'universal', name)
@@ -161,6 +161,6 @@ class Library:
         with cd(definition.directory):
             for candidate in candidates:
                 if candidate.is_valid_project(definition):
-                    return candidate(definition, self.global_configuration)
+                    return candidate(definition, self.needy)
 
         raise RuntimeError('unknown project type')

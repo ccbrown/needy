@@ -8,7 +8,7 @@ class AndroidMkProject(Project.Project):
 
     @staticmethod
     def is_valid_project(definition):
-        if definition.target.platform not in ['android']:
+        if definition.target.platform.identifier() not in ['android']:
             return False
         if not os.path.exists(os.path.join(definition.directory, 'Android.mk')):
             return False
@@ -26,8 +26,8 @@ class AndroidMkProject(Project.Project):
             'NDK_PROJECT_PATH=.',
             'APP_BUILD_SCRIPT=./Android.mk',
             'NDK_LIBS_OUT=%s' % os.path.join(output_directory, 'lib-temp'),
-            'NDK_TOOLCHAIN=%s' % self.needy.android_toolchain(self.target().architecture),
-            'APP_PLATFORM=%s' % self.needy.android_platform(),
+            'NDK_TOOLCHAIN=%s' % self.target().platform.toolchain(self.target().architecture),
+            'APP_PLATFORM=android-%d' % self.target().platform.api_level(),
             'APP_ABI=%s' % abi
         ]
 

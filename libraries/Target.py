@@ -3,5 +3,5 @@ class Target:
         self.platform = platform
         self.architecture = architecture
 
-        if platform != 'host' and architecture is None:
+        if platform.identifier() != 'host' and architecture is None:
             raise ValueError('an architecture must be specified')

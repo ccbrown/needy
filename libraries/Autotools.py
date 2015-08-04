@@ -26,9 +26,9 @@ class AutotoolsProject(Project.Project):
 
         configure_args.append('--prefix=%s' % output_directory)
 
-        if self.target().platform == 'host':
+        if self.target().platform.identifier() == 'host':
             pass
-        elif self.target().platform == 'iphone':
+        elif self.target().platform.identifier() == 'ios':
             configure_host = self.__available_configure_host([
                 '%s-apple-darwin' % self.target().architecture, 'arm*-apple-darwin', 'arm-apple-darwin', 'arm*', 'arm'
             ])
@@ -44,9 +44,9 @@ class AutotoolsProject(Project.Project):
                 'CXX=xcrun -sdk iphoneos clang++ -arch %s' % self.target().architecture,
                 '--host=%s' % configure_host
             ])
-        elif self.target().platform == 'android':
-            toolchain = self.needy.android_toolchain_path(self.target().architecture)
-            sysroot = self.needy.android_sysroot_path(self.target().architecture)
+        elif self.target().platform.identifier() == 'android':
+            toolchain = self.target().platform.toolchain_path(self.target().architecture)
+            sysroot = self.target().platform.sysroot_path(self.target().architecture)
 
             if self.target().architecture.find('arm') >= 0:
                 configure_host = self.__available_configure_host([
@@ -95,8 +95,8 @@ class AutotoolsProject(Project.Project):
     def build(self, output_directory):
         make_args = []
 
-        if self.target().platform == 'android':
-            toolchain = self.needy.android_toolchain_path(self.target().architecture)
+        if self.target().platform.identifier() == 'android':
+            toolchain = self.target().platform.toolchain_path(self.target().architecture)
             if self.target().architecture.find('arm') >= 0:
                 binary_prefix = 'arm-linux-androideabi'
             else:
