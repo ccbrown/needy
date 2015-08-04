@@ -103,7 +103,7 @@ def main(args):
     import argparse
 
     parser = argparse.ArgumentParser(description='Satisfies needs.')
-    parser.add_argument('--target', help='builds needs for this target (example: iphone:armv7)')
+    parser.add_argument('--target', help='builds needs for this target (example: ios:armv7)')
     parser.add_argument('--universal-binary', help='builds the universal binary with the given name')
     parser.add_argument('--android-api-level', default='21', help='the android API level to build for')
     parameters = parser.parse_args(args[1:])

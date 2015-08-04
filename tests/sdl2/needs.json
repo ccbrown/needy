@@ -1,0 +1,19 @@
+{
+	"libraries": {
+		"sdl2": {
+			"download": "https://www.libsdl.org/release/SDL2-2.0.3.tar.gz",
+			"checksum": "fe6c61d2e9df9ef570e7e80c6e822537",
+			"project": {
+				"linkage": "static",
+				"conditionals": [
+					{
+						"platform": "ios",
+						"true": {
+							"xcode-project": "./Xcode-iOS/SDL/SDL.xcodeproj"
+						}
+					}
+				]
+			}
+		}
+	}
+}

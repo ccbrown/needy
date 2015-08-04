@@ -6,6 +6,3 @@ class Platform:
 
     def default_architecture(self):
         return None
-
-    def available_architectures(self):
-        return []

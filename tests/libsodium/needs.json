@@ -1,0 +1,8 @@
+{
+	"libraries": {
+		"libsodium": {
+			"download": "https://github.com/jedisct1/libsodium/releases/download/1.0.3/libsodium-1.0.3.tar.gz",
+			"checksum": "b3bcc98e34d3250f55ae196822307fab"
+		}
+	}
+}

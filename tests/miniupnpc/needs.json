@@ -1,0 +1,8 @@
+{
+	"libraries": {
+		"miniupnpc": {
+			"download": "http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150522.tar.gz",
+			"checksum": "e938621c2e552f3cbf2f0ea032b5f2ab"
+		}
+	}
+}

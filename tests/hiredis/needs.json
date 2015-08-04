@@ -1,0 +1,8 @@
+{
+	"libraries": {
+		"hiredis": {
+			"repository": "git@github.com:redis/hiredis.git",
+			"commit": "f58dd249d6ed47a7e835463c3b04722972281dbb"
+		}
+	}
+}
