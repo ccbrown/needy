@@ -40,6 +40,15 @@ class AndroidPlatform(Platform):
             return 'armeabi-v7a'
         raise ValueError('unsupported architecture')
 
+    def binary_prefix(self, architecture):
+        if architecture.find('arm') >= 0:
+            return 'arm-linux-androideabi'
+        raise ValueError('unsupported architecture')
+
+    def binary_paths(self, architecture):
+        toolchain_path = self.toolchain_path(architecture)        
+        return [os.path.join(toolchain_path, self.binary_prefix(architecture), 'bin'), os.path.join(toolchain_path, 'bin')]
+
     def include_paths(self, architecture):
         ret = [
             self.sysroot_path(architecture),

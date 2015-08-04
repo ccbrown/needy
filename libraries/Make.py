@@ -67,21 +67,11 @@ class MakeProject(Project.Project):
         if len(required_libraries) > 0:
             make_args.append('LDFLAGS=%s' % ' '.join(required_libraries))
 
+        binary_paths = self.target().platform.binary_paths(self.target().architecture)
+        if len(binary_paths) > 0:
+            path_override = '%s:%s' % (':'.join(binary_paths), os.environ['PATH'])
+
         if self.target().platform.identifier() == 'android':
-            toolchain = self.target().platform.toolchain_path(self.target().architecture)
-
-            if self.target().architecture.find('arm') >= 0:
-                binary_prefix = 'arm-linux-androideabi'
-            else:
-                raise ValueError('unsupported architecture')
-
-            path_override = '%s:%s:%s' % (os.path.join(toolchain, binary_prefix, 'bin'), os.path.join(toolchain, 'bin'), os.environ['PATH'])
-
-            make_args.extend([
-                'AR=%s-ar' % binary_prefix,
-                'RANLIB=%s-ranlib' % binary_prefix,
-            ])
-
             target_os = 'Linux'
 
         environment_overrides = dict()

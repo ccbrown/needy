@@ -40,6 +40,10 @@ class AutotoolsProject(Project.Project):
         if len(required_libraries) > 0:
             configure_args.append('LDFLAGS=%s' % ' '.join(required_libraries))
 
+        binary_paths = self.target().platform.binary_paths(self.target().architecture)
+        if len(binary_paths) > 0:
+            configure_args.append('PATH=%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
+
         if self.target().platform.identifier() == 'ios':
             if not linkage:
                 linkage = 'static'
@@ -76,14 +80,7 @@ class AutotoolsProject(Project.Project):
                     'CFLAGS=-mthumb -march=%s' % self.target().architecture
                 ])
 
-                binary_prefix = 'arm-linux-androideabi'
-            else:
-                raise ValueError('unsupported architecture')
-
-            fixed_path = '%s:%s:%s' % (os.path.join(toolchain, binary_prefix, 'bin'), os.path.join(toolchain, 'bin'), os.environ['PATH'])
-
             configure_args.extend([
-                'PATH=%s' % fixed_path,
                 '--host=%s' % configure_host,
                 '--with-sysroot=%s' % sysroot
             ])
@@ -103,14 +100,9 @@ class AutotoolsProject(Project.Project):
     def build(self, output_directory):
         make_args = []
 
-        if self.target().platform.identifier() == 'android':
-            toolchain = self.target().platform.toolchain_path(self.target().architecture)
-            if self.target().architecture.find('arm') >= 0:
-                binary_prefix = 'arm-linux-androideabi'
-            else:
-                raise ValueError('unsupported architecture')
-            fixed_path = '%s:%s:%s' % (os.path.join(toolchain, binary_prefix, 'bin'), os.path.join(toolchain, 'bin'), os.environ['PATH'])
-            make_args.append('PATH=%s' % fixed_path)
+        binary_paths = self.target().platform.binary_paths(self.target().architecture)
+        if len(binary_paths) > 0:
+            make_args.append('PATH=%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
 
         subprocess.check_call(['make'] + make_args)
         subprocess.check_call(['make', 'install'] + make_args)
