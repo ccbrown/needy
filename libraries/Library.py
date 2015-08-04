@@ -49,10 +49,7 @@ class Library:
             for command in post_clean_commands:
                 subprocess.check_call(shlex.split(command))
 
-        print 'Building for %s' % target.platform.identifier()
-
-        if target.architecture:
-            print 'Architecture: %s' % target.architecture
+        print 'Building for %s %s' % (target.platform.identifier(), target.architecture)
 
         if not project:
             raise RuntimeError('unknown project type')
@@ -133,7 +130,7 @@ class Library:
         return os.path.exists(self.universal_binary_directory(name))
 
     def build_directory(self, target):
-        return os.path.join(self.directory, 'build', target.platform.identifier(), target.architecture if target.architecture else 'default')
+        return os.path.join(self.directory, 'build', target.platform.identifier(), target.architecture)
 
     def universal_binary_directory(self, name):
         return os.path.join(self.directory, 'build', 'universal', name)

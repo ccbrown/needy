@@ -1,6 +1,8 @@
 from Platform import Platform
 
+import platform
 import os
+import subprocess
 
 class HostPlatform(Platform):
     @staticmethod
@@ -11,8 +13,11 @@ class HostPlatform(Platform):
         try:
             subprocess.check_output([command, '--help'])
             return True
-        except CalledProcessError:
+        except subprocess.CalledProcessError:
             return False
+
+    def default_architecture(self):
+        return platform.machine()
 
     def c_compiler(self, architecture):
         command = 'gcc'
@@ -20,7 +25,7 @@ class HostPlatform(Platform):
             command = os.environ['CC']
         elif self.__command_exists('clang'):
             command = 'clang'
-        return '%s -arch=%s' % (command, architecture)
+        return '%s -arch %s' % (command, architecture)
 
     def cxx_compiler(self, architecture):
         command = 'g++'
@@ -28,4 +33,4 @@ class HostPlatform(Platform):
             command = os.environ['CXX']
         elif self.__command_exists('clang++'):
             command = 'clang++'
-        return '%s -arch=%s' % (command, architecture)
+        return '%s -arch %s' % (command, architecture)

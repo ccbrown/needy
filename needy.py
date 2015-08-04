@@ -42,9 +42,7 @@ class Needy:
 
         from libraries import Library
 
-        print 'Building libraries for %s' % target.platform.identifier()
-        if target.architecture:
-            print 'Architecture: %s' % target.architecture
+        print 'Building libraries for %s %s' % (target.platform.identifier(), target.architecture)
 
         for name, library_configuration in self.needs['libraries'].iteritems():
             directory = os.path.join(self.needs_directory, name)
