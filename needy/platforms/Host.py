@@ -1,4 +1,4 @@
-from Platform import Platform
+from ..Platform import Platform
 
 import platform
 import os

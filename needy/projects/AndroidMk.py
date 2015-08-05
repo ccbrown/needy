@@ -1,4 +1,4 @@
-import Project
+from .. import Project
 import os
 import shutil
 import subprocess

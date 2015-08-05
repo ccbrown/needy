@@ -7,15 +7,16 @@ import Project
 import Download
 import GitRepository
 
-from Project import ProjectDefinition
 from ChangeDir import cd
 
-from AndroidMk import AndroidMkProject
-from Autotools import AutotoolsProject
-from BoostBuild import BoostBuildProject
-from Make import MakeProject
-from Source import SourceProject
-from Xcode import XcodeProject
+import Project
+
+from projects import AndroidMk
+from projects import Autotools
+from projects import BoostBuild
+from projects import Make
+from projects import Source
+from projects import Xcode
 
 class Library:
     def __init__(self, configuration, directory, needy):
@@ -136,24 +137,24 @@ class Library:
         return os.path.join(self.directory, 'build', 'universal', name)
 
     def project(self, target, configuration):
-        candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject]
+        candidates = [AndroidMk.AndroidMkProject, Autotools.AutotoolsProject, BoostBuild.BoostBuildProject, Make.MakeProject, Xcode.XcodeProject]
 
         if configuration:
             configuration = Project.evaluate_conditionals(configuration, target)
 
         if 'b2-args' in configuration:
-            candidates.insert(0, BoostBuildProject)
+            candidates.insert(0, BoostBuild.BoostBuildProject)
 
         if 'configure-args' in configuration:
-            candidates.insert(0, AutotoolsProject)
+            candidates.insert(0, Autotools.AutotoolsProject)
 
         if 'xcode-project' in configuration:
-            candidates.insert(0, XcodeProject)
+            candidates.insert(0, Xcode.XcodeProject)
 
         if 'source-directory' in configuration:
-            candidates.insert(0, SourceProject)
+            candidates.insert(0, Source.SourceProject)
 
-        definition = ProjectDefinition(target, self.source_directory, configuration)
+        definition = Project.ProjectDefinition(target, self.source_directory, configuration)
 
         with cd(definition.directory):
             for candidate in candidates:

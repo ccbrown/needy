@@ -1,9 +1,9 @@
-import Project
+from .. import Project
 import os
 import subprocess
 import shutil
 
-from ChangeDir import cd
+from ..ChangeDir import cd
 
 
 class XcodeProject(Project.Project):

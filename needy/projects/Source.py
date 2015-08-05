@@ -1,5 +1,5 @@
 import pipes
-import Project
+from .. import Project
 import os
 import shlex
 import subprocess

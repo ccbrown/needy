@@ -1,9 +1,8 @@
 import os
 import subprocess
 
-import Project
-from ChangeDir import cd
-
+from .. import Project
+from ..ChangeDir import cd
 
 class AutotoolsProject(Project.Project):
 
