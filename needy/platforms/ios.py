@@ -1,4 +1,4 @@
-from ..Platform import Platform
+from ..platform import Platform
 
 class IOSPlatform(Platform):
     def __init__(self, minimum_version):

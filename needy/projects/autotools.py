@@ -1,10 +1,10 @@
 import os
 import subprocess
 
-from .. import Project
-from ..ChangeDir import cd
+from .. import project
+from ..cd import cd
 
-class AutotoolsProject(Project.Project):
+class AutotoolsProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition):

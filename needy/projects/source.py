@@ -1,11 +1,11 @@
 import pipes
-from .. import Project
 import os
 import shlex
 import subprocess
 
+from .. import project
 
-class SourceProject(Project.Project):
+class SourceProject(project.Project):
     def __init__(self, definition, needy):
         super().__init__(definition, needy)
 

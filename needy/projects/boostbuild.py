@@ -1,8 +1,9 @@
-from .. import Project
 import os
 import subprocess
 
-class BoostBuildProject(Project.Project):
+from .. import project
+
+class BoostBuildProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition):

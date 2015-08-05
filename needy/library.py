@@ -3,20 +3,20 @@ import shlex
 import shutil
 import subprocess
 
-import Project
-import Download
-import GitRepository
+from project import evaluate_conditionals
+from project import ProjectDefinition
 
-from ChangeDir import cd
+from download import Download
+from git import GitRepository
 
-import Project
+from cd import cd
 
-from projects import AndroidMk
-from projects import Autotools
-from projects import BoostBuild
-from projects import Make
-from projects import Source
-from projects import Xcode
+from projects.androidmk import AndroidMkProject
+from projects.autotools import AutotoolsProject
+from projects.boostbuild import BoostBuildProject
+from projects.make import MakeProject
+from projects.source import SourceProject
+from projects.xcode import XcodeProject
 
 class Library:
     def __init__(self, configuration, directory, needy):
@@ -26,16 +26,16 @@ class Library:
         self.source_directory = os.path.join(directory, 'source')
 
         if 'download' in self.configuration:
-            self.source = Download.Download(self.configuration['download'], self.configuration['checksum'], self.source_directory, os.path.join(directory, 'download'))
+            self.source = Download(self.configuration['download'], self.configuration['checksum'], self.source_directory, os.path.join(directory, 'download'))
         elif 'repository' in self.configuration:
-            self.source = GitRepository.GitRepository(self.configuration['repository'], self.configuration['commit'], self.source_directory)
+            self.source = GitRepository(self.configuration['repository'], self.configuration['commit'], self.source_directory)
         else:
             raise ValueError('no source specified in configuration')
 
         self.needy = needy
 
     def build(self, target):
-        configuration = Project.evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
+        configuration = evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
 
         if 'build' in configuration and not configuration['build']:
             print 'Skipping for %s' % target.platform.identifier()
@@ -137,24 +137,24 @@ class Library:
         return os.path.join(self.directory, 'build', 'universal', name)
 
     def project(self, target, configuration):
-        candidates = [AndroidMk.AndroidMkProject, Autotools.AutotoolsProject, BoostBuild.BoostBuildProject, Make.MakeProject, Xcode.XcodeProject]
+        candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject]
 
         if configuration:
             configuration = Project.evaluate_conditionals(configuration, target)
 
         if 'b2-args' in configuration:
-            candidates.insert(0, BoostBuild.BoostBuildProject)
+            candidates.insert(0, BoostBuildProject)
 
         if 'configure-args' in configuration:
-            candidates.insert(0, Autotools.AutotoolsProject)
+            candidates.insert(0, AutotoolsProject)
 
         if 'xcode-project' in configuration:
-            candidates.insert(0, Xcode.XcodeProject)
+            candidates.insert(0, XcodeProject)
 
         if 'source-directory' in configuration:
-            candidates.insert(0, Source.SourceProject)
+            candidates.insert(0, SourceProject)
 
-        definition = Project.ProjectDefinition(target, self.source_directory, configuration)
+        definition = ProjectDefinition(target, self.source_directory, configuration)
 
         with cd(definition.directory):
             for candidate in candidates:

@@ -1,9 +1,10 @@
-from .. import Project
 import os
 import re
 
+from .. import project
 
-class MakeProject(Project.Project):
+
+class MakeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition):

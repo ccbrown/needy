@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 
+import json
 import os
 import subprocess
 import sys
 
-import Library
-import Target
+from library import Library
+from target import Target
 
-from platforms import Host
-from platforms import IOS
-from platforms import Android
+from platforms.host import HostPlatform
+from platforms.ios import IOSPlatform
+from platforms.android import AndroidPlatform
 
 class Needy:
     def __init__(self, path, parameters):
-        import json
-
         self.path = path
         self.parameters = parameters
 
@@ -25,11 +24,11 @@ class Needy:
     
     def platform(self, identifier):
         if identifier == 'host':
-            return Host.HostPlatform()
+            return HostPlatform()
         if identifier == 'ios':
-            return IOS.IOSPlatform(self.parameters.minimum_ios_version)
+            return IOSPlatform(self.parameters.minimum_ios_version)
         if identifier == 'android':
-            return Android.AndroidPlatform(self.parameters.android_api_level)
+            return AndroidPlatform(self.parameters.android_api_level)
         raise ValueError('unknown platform')
 
     def command(self, arguments, environment_overrides = None):
@@ -47,7 +46,7 @@ class Needy:
 
         for name, library_configuration in self.needs['libraries'].iteritems():
             directory = os.path.join(self.needs_directory, name)
-            library = Library.Library(library_configuration, directory, self)
+            library = Library(library_configuration, directory, self)
             if library.has_up_to_date_build(target):
                 print '[UP-TO-DATE] %s' % name
             else:
@@ -56,8 +55,6 @@ class Needy:
                 print '[SUCCESS]'
 
     def satisfy_universal_binary(self, universal_binary):
-        from libraries import Library, Target
-
         print 'Building universal binary for %s' % universal_binary
 
         if not 'universal-binaries' in self.needs:
@@ -73,7 +70,7 @@ class Needy:
 
         for name, library_configuration in self.needs['libraries'].iteritems():
             directory = os.path.join(self.needs_directory, name)
-            library = Library.Library(library_configuration, directory, self)
+            library = Library(library_configuration, directory, self)
             if library.has_up_to_date_universal_binary(universal_binary, configuration):
                 print '[UP-TO-DATE] %s' % name
             else:
@@ -99,31 +96,3 @@ class Needy:
                 needy_directory = directory
 
         return os.path.join(needy_directory, 'needs')
-
-def main(args=sys.argv):
-    import argparse
-
-    try:
-        parser = argparse.ArgumentParser(description='Satisfies needs.')
-        parser.add_argument('--target', default='host', help='builds needs for this target (example: ios:armv7)')
-        parser.add_argument('--universal-binary', help='builds the universal binary with the given name')
-        parser.add_argument('--android-api-level', default='21', help='the android API level to build for')
-        parser.add_argument('--minimum-ios-version', default='5.0', help='the minimum iOS version to build for')
-        parameters = parser.parse_args(args[1:])
-    
-        needy = Needy(os.path.abspath('needs.json'), parameters)
-    
-        print 'Satisfying needs for: %s' % needy.path
-        print 'Needs directory: %s' % needy.needs_directory
-    
-        if parameters.target or parameters.universal_binary == None:
-            parts = parameters.target.split(':')
-            platform = needy.platform(parts[0])
-            target = Target.Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
-            needy.satisfy_target(target)
-    
-        if parameters.universal_binary:
-            needy.satisfy_universal_binary(parameters.universal_binary)
-    except Exception as e:
-        print '[ERROR]', e
-        raise

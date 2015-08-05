@@ -1,10 +1,11 @@
-from .. import Project
 import os
 import shutil
 import subprocess
 
+from .. import project
 
-class AndroidMkProject(Project.Project):
+
+class AndroidMkProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition):

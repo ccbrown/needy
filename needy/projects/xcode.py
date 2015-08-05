@@ -1,12 +1,12 @@
-from .. import Project
 import os
 import subprocess
 import shutil
 
-from ..ChangeDir import cd
+from .. import project
+from ..cd import cd
 
 
-class XcodeProject(Project.Project):
+class XcodeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition):
