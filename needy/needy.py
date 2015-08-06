@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 
+from colorama import Fore
+
 from library import Library
 from target import Target
 
@@ -42,41 +44,49 @@ class Needy:
         if not 'libraries' in self.needs:
             return
 
-        print 'Building libraries for %s %s' % (target.platform.identifier(), target.architecture)
-
-        for name, library_configuration in self.needs['libraries'].iteritems():
-            directory = os.path.join(self.needs_directory, name)
-            library = Library(library_configuration, directory, self)
-            if library.has_up_to_date_build(target):
-                print '[UP-TO-DATE] %s' % name
-            else:
-                print '[LIBRARY] %s' % name
-                library.build(target)
-                print '[SUCCESS]'
+        try:
+            print 'Building libraries for %s %s' % (target.platform.identifier(), target.architecture)
+    
+            for name, library_configuration in self.needs['libraries'].iteritems():
+                directory = os.path.join(self.needs_directory, name)
+                library = Library(library_configuration, directory, self)
+                if library.has_up_to_date_build(target):
+                    print Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name
+                else:
+                    print Fore.CYAN + '[OUT-OF-DATE]' + Fore.RESET + ' %s' % name
+                    library.build(target)
+                    print Fore.GREEN + '[SUCCESS]' + Fore.RESET + ' %s' % name
+        except Exception as e:
+            print Fore.RED + '[ERROR]' + Fore.RESET, e
+            raise
 
     def satisfy_universal_binary(self, universal_binary):
-        print 'Building universal binary for %s' % universal_binary
-
-        if not 'universal-binaries' in self.needs:
-            raise ValueError('no universal binaries defined')
-
-        if not universal_binary in self.needs['universal-binaries']:
-            raise ValueError('unknown universal binary')
-
-        if not 'libraries' in self.needs:
-            return
-
-        configuration = self.needs['universal-binaries'][universal_binary]
-
-        for name, library_configuration in self.needs['libraries'].iteritems():
-            directory = os.path.join(self.needs_directory, name)
-            library = Library(library_configuration, directory, self)
-            if library.has_up_to_date_universal_binary(universal_binary, configuration):
-                print '[UP-TO-DATE] %s' % name
-            else:
-                print '[LIBRARY] %s' % name
-                library.build_universal_binary(universal_binary, configuration)
-                print '[SUCCESS]'
+        try:
+            print 'Building universal binary for %s' % universal_binary
+    
+            if not 'universal-binaries' in self.needs:
+                raise ValueError('no universal binaries defined')
+    
+            if not universal_binary in self.needs['universal-binaries']:
+                raise ValueError('unknown universal binary')
+    
+            if not 'libraries' in self.needs:
+                return
+    
+            configuration = self.needs['universal-binaries'][universal_binary]
+    
+            for name, library_configuration in self.needs['libraries'].iteritems():
+                directory = os.path.join(self.needs_directory, name)
+                library = Library(library_configuration, directory, self)
+                if library.has_up_to_date_universal_binary(universal_binary, configuration):
+                    print Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name
+                else:
+                    print Fore.CYAN + '[OUT-OF-DATE]' + Fore.RESET + ' %s' % name
+                    library.build_universal_binary(universal_binary, configuration)
+                    print Fore.GREEN + '[SUCCESS]' + Fore.RESET + ' %s' % name
+        except Exception as e:
+            print Fore.RED + '[ERROR]' + Fore.RESET, e
+            raise
 
     def create_universal_binary(self, inputs, output):
         name, extension = os.path.splitext(output)
