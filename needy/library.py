@@ -34,18 +34,23 @@ class Library:
 
         self.needy = needy
 
-    def build(self, target):
-        configuration = evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
+    def should_build(self, target):
+        if 'project' not in self.configuration:
+            return True
 
-        if 'build' in configuration and not configuration['build']:
-            print 'Skipping for %s' % target.platform.identifier()
+        configuration = evaluate_conditionals(self.configuration['project'], target)
+        return 'build' not in configuration or configuration['build']
+
+    def build(self, target):
+        if not self.should_build(target):
             return False
 
         self.source.clean()
 
+        configuration = evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
         project = self.project(target, configuration)
 
-        post_clean_commands = self.configuration['post-clean'] if 'post-clean' in self.configuration else []
+        post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
         with cd(project.directory()):
             for command in post_clean_commands:
                 subprocess.check_call(shlex.split(command))
@@ -124,7 +129,7 @@ class Library:
 
     def has_up_to_date_build(self, target):
         # TODO: return out-of-date if our configuration changes
-        return os.path.exists(self.build_directory(target))
+        return not self.should_build(target) or os.path.exists(self.build_directory(target))
 
     def has_up_to_date_universal_binary(self, name, configuration):
         # TODO: return out-of-date if our configuration changes
