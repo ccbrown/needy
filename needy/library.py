@@ -140,7 +140,7 @@ class Library:
         candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject]
 
         if configuration:
-            configuration = Project.evaluate_conditionals(configuration, target)
+            configuration = evaluate_conditionals(configuration, target)
 
         if 'b2-args' in configuration:
             candidates.insert(0, BoostBuildProject)

@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 TESTS_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
+TOP_LEVEL_DIRECTORY = os.path.dirname(TESTS_DIRECTORY)
 
 def test(directory, needy_args, run_dirty=False):
     print 'Running test in %s: %s' % (directory, ' '.join(needy_args))
@@ -14,7 +15,7 @@ def test(directory, needy_args, run_dirty=False):
     if not run_dirty and os.path.exists('needs'):
         shutil.rmtree('needs')
     env = os.environ.copy()
-    env['PYTHONPATH'] = '../'
+    env['PYTHONPATH'] = TOP_LEVEL_DIRECTORY
     subprocess.check_call(['python', '-m', 'needy'] + needy_args, env=env)
 
 def main(args):
