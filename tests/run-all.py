@@ -16,7 +16,7 @@ def test(directory, needy_args, run_dirty=False):
         shutil.rmtree('needs')
     env = os.environ.copy()
     env['PYTHONPATH'] = TOP_LEVEL_DIRECTORY
-    subprocess.check_call(['python', '-m', 'needy'] + needy_args, env=env)
+    subprocess.check_call(['python', '-m', 'needy', 'satisfy'] + needy_args, env=env)
 
 def main(args):
     parser = argparse.ArgumentParser(description='Tests Needy.')
