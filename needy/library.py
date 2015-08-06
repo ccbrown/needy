@@ -141,6 +141,12 @@ class Library:
     def universal_binary_directory(self, name):
         return os.path.join(self.directory, 'build', 'universal', name)
 
+    def include_path(self, target):
+        return os.path.join(self.build_directory(target), 'include')
+
+    def library_path(self, target):
+        return os.path.join(self.build_directory(target), 'lib')
+
     def project(self, target, configuration):
         candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject]
 

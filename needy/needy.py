@@ -27,12 +27,37 @@ class Needy:
                 return platform(self.parameters)
         raise ValueError('unknown platform')
 
+    def target(self, identifier):
+        parts = identifier.split(':')
+        platform = self.platform(parts[0])
+        return Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
+
     def command(self, arguments, environment_overrides = None):
         env = None
         if environment_overrides:
             env = os.environ.copy()
             env.update(environment_overrides)
         subprocess.check_call(arguments, env = env)
+
+    def libraries_to_build(self, target):
+        if not 'libraries' in self.needs:
+            return []
+
+        ret = []
+
+        for name, library_configuration in self.needs['libraries'].iteritems():
+            directory = os.path.join(self.needs_directory, name)
+            library = Library(library_configuration, directory, self)
+            if library.should_build(target):
+                ret.append((name, library))
+
+        return ret
+
+    def include_paths(self, target):
+        return [l.include_path(target) for n, l in self.libraries_to_build(target)]
+
+    def library_paths(self, target):
+        return [l.library_path(target) for n, l in self.libraries_to_build(target)]
 
     def satisfy_target(self, target):
         if not 'libraries' in self.needs:

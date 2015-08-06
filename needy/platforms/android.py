@@ -2,10 +2,12 @@ from ..platform import Platform
 
 import os
 
+DEFAULT_ANDROID_API_LEVEL = '21'
+
 class AndroidPlatform(Platform):
     def __init__(self, parameters):
         Platform.__init__(self, parameters)
-        self.api_level = parameters.android_api_level
+        self.api_level = parameters.android_api_level if 'android_api_level' in parameters else DEFAULT_ANDROID_API_LEVEL
     
     @staticmethod
     def identifier():
@@ -13,7 +15,7 @@ class AndroidPlatform(Platform):
 
     @staticmethod
     def add_arguments(parser):
-        parser.add_argument('--android-api-level', default='21', help='the android API level to build for')
+        parser.add_argument('--android-api-level', default=DEFAULT_ANDROID_API_LEVEL, help='the android API level to build for')
 
     def toolchain(self, architecture):
         if architecture.find('arm') >= 0:

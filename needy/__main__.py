@@ -5,7 +5,6 @@ import sys
 
 from needy import Needy
 from platform import available_platforms
-from target import Target
 
 def satisfy(args=[]):
     parser = argparse.ArgumentParser(
@@ -24,15 +23,45 @@ def satisfy(args=[]):
     print 'Satisfying needs for: %s' % needy.path
     print 'Needs directory: %s' % needy.needs_directory
 
-    if parameters.target or parameters.universal_binary == None:
-        parts = parameters.target.split(':')
-        platform = needy.platform(parts[0])
-        target = Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
-        needy.satisfy_target(target)
-
     if parameters.universal_binary:
         needy.satisfy_universal_binary(parameters.universal_binary)
+    else:
+        needy.satisfy_target(needy.target(parameters.target))
     
+    return 0
+
+def cflags(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s cflags' % os.path.basename(sys.argv[0]),
+        description='Gets compiler flags required for using the needs.',
+        formatter_class = argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('--target', default='host', help='gets flags for this target (example: ios:armv7)')
+    parameters = parser.parse_args(args)
+
+    needy = Needy(os.path.abspath('needs.json'), parameters)
+    target = needy.target(parameters.target)
+
+    for path in needy.include_paths(target):
+        print '-I%s' % path,
+
+    return 0
+
+def ldflags(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s ldflags' % os.path.basename(sys.argv[0]),
+        description='Gets linker flags required for using the needs.',
+        formatter_class = argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('--target', default='host', help='gets flags for this target (example: ios:armv7)')
+    parameters = parser.parse_args(args)
+
+    needy = Needy(os.path.abspath('needs.json'), parameters)
+    target = needy.target(parameters.target)
+
+    for path in needy.library_paths(target):
+        print '-L%s' % path,
+
     return 0
 
 def main(args=sys.argv):
@@ -52,6 +81,10 @@ Use '%s <command> --help' to get help for a specific command.
 
     if parameters.command == 'satisfy':
         return satisfy(parameters.args)
+    if parameters.command == 'cflags':
+        return cflags(parameters.args)
+    if parameters.command == 'ldflags':
+        return ldflags(parameters.args)
 
     print '\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0]))
     return 1
