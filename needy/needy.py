@@ -8,11 +8,8 @@ import sys
 from colorama import Fore
 
 from library import Library
+from platform import available_platforms
 from target import Target
-
-from platforms.host import HostPlatform
-from platforms.ios import IOSPlatform
-from platforms.android import AndroidPlatform
 
 class Needy:
     def __init__(self, path, parameters):
@@ -25,12 +22,9 @@ class Needy:
         self.needs_directory = os.path.join(os.path.dirname(self.path), 'needs')
     
     def platform(self, identifier):
-        if identifier == 'host':
-            return HostPlatform()
-        if identifier == 'ios':
-            return IOSPlatform(self.parameters.minimum_ios_version)
-        if identifier == 'android':
-            return AndroidPlatform(self.parameters.android_api_level)
+        for platform in available_platforms():
+            if identifier == platform.identifier():
+                return platform(self.parameters)
         raise ValueError('unknown platform')
 
     def command(self, arguments, environment_overrides = None):

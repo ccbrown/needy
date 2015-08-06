@@ -3,13 +3,17 @@ from ..platform import Platform
 import os
 
 class AndroidPlatform(Platform):
-    def __init__(self, api_level):
-        Platform.__init__(self)
-        self.api_level = api_level
+    def __init__(self, parameters):
+        Platform.__init__(self, parameters)
+        self.api_level = parameters.android_api_level
     
     @staticmethod
     def identifier():
         return 'android'
+
+    @staticmethod
+    def add_arguments(parser):
+        parser.add_argument('--android-api-level', default='21', help='the android API level to build for')
 
     def toolchain(self, architecture):
         if architecture.find('arm') >= 0:
