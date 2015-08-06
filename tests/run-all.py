@@ -7,14 +7,15 @@ import subprocess
 import sys
 
 TESTS_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
-NEEDY_PATH = os.path.join(TESTS_DIRECTORY, '..', 'needy.py')
 
 def test(directory, needy_args, run_dirty=False):
     print 'Running test in %s: %s' % (directory, ' '.join(needy_args))
     os.chdir(directory)
     if not run_dirty and os.path.exists('needs'):
         shutil.rmtree('needs')
-    subprocess.check_call([NEEDY_PATH] + needy_args)
+    env = os.environ.copy()
+    env['PYTHONPATH'] = '../'
+    subprocess.check_call(['python', '-m', 'needy'] + needy_args, env=env)
 
 def main(args):
     parser = argparse.ArgumentParser(description='Tests Needy.')

@@ -1,9 +1,9 @@
-#!/usr/bin/env python
-
 import argparse
+import os
 import sys
 
 from needy import Needy
+from target import Target
 
 def main(args=sys.argv):
     try:

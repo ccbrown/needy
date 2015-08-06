@@ -22,6 +22,6 @@ class Platform:
     def cxx_compiler(self, architecture):
         raise NotImplementedError('cxx_compiler')
 
-    def required_libraries(self, architecture):
+    def libraries(self, architecture):
         """ returns additional libraries that should be linked to """
         return []

@@ -20,7 +20,7 @@ class Needy:
         with open(self.path, 'r') as needs_file:
             self.needs = json.load(needs_file)
 
-        self.needs_directory = self.determine_needs_directory()
+        self.needs_directory = os.path.join(os.path.dirname(self.path), 'needs')
     
     def platform(self, identifier):
         if identifier == 'host':
@@ -85,14 +85,3 @@ class Needy:
 
         subprocess.check_call(['lipo', '-create'] + inputs + ['-output', output])
         return True
-
-    def determine_needs_directory(self):
-        directory = os.path.dirname(self.path)
-        needy_directory = directory
-
-        while directory != '/':
-            directory = os.path.dirname(directory)
-            if os.path.isfile(os.path.join(directory, 'needs.json')):
-                needy_directory = directory
-
-        return os.path.join(needy_directory, 'needs')

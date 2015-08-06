@@ -6,8 +6,8 @@ import subprocess
 from project import evaluate_conditionals
 from project import ProjectDefinition
 
-from download import Download
-from git import GitRepository
+from sources.download import Download
+from sources.git import GitRepository
 
 from cd import cd
 

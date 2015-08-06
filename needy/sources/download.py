@@ -7,9 +7,11 @@ import StringIO
 import tarfile
 import zipfile
 
+from ..source import Source
 
-class Download:
+class Download(Source):
     def __init__(self, url, checksum, destination, cache_directory):
+        Source.__init__(self)
         self.url = url
         self.checksum = checksum
         self.destination = destination

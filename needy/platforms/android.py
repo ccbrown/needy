@@ -59,7 +59,7 @@ class AndroidPlatform(Platform):
 
         return ret
         
-    def required_libraries(self, architecture):
+    def libraries(self, architecture):
         return [
             os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libgnustl_shared.so'),
             os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libsupc++.a')

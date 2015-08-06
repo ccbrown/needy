@@ -64,9 +64,9 @@ class MakeProject(project.Project):
         if cxx_compiler:
             make_args.append('CXX=%s' % cxx_compiler)
 
-        required_libraries = self.target().platform.required_libraries(self.target().architecture)
-        if len(required_libraries) > 0:
-            make_args.append('LDFLAGS=%s' % ' '.join(required_libraries))
+        libraries = self.target().platform.libraries(self.target().architecture)
+        if len(libraries) > 0:
+            make_args.append('LDFLAGS=%s' % ' '.join(libraries))
 
         binary_paths = self.target().platform.binary_paths(self.target().architecture)
         if len(binary_paths) > 0:

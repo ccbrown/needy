@@ -6,7 +6,12 @@ setup(
     name='needy', 
     version='0.0',
     description='Dependency management utility',
-    packages=['needy', 'needy.platforms', 'needy.projects'],
+    packages=[
+        'needy',
+        'needy.platforms',
+        'needy.projects',
+        'needy.sources'
+    ],
     entry_points={
         'console_scripts': [
             'needy = needy.__main__:main'
