@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 
 from .. import project
 
@@ -49,7 +50,6 @@ class MakeProject(project.Project):
                     needy_makefile.write(line)
 
     def build(self, output_directory):
-        import re, subprocess
 
         make_args = ['-f', './MakefileNeedyGenerated']
         path_override = None
@@ -87,7 +87,7 @@ class MakeProject(project.Project):
             make_args.append('PATH=%s' % path_override)
             environment_overrides['PATH'] = path_override
 
-        self.needy.command(['make'] + make_args, environment_overrides = environment_overrides)
+        self.needy.command(['make'] + make_args, environment_overrides=environment_overrides)
 
         make_install_args = [
             'PREFIX=%s' % output_directory,
@@ -101,7 +101,7 @@ class MakeProject(project.Project):
 
         while True:
             match = re.search(' (/.+?[^\\\\])( |$)', recon, re.MULTILINE)
-            if match == None:
+            if match is None:
                 break
 
             path = match.group(1)
@@ -116,4 +116,4 @@ class MakeProject(project.Project):
         if doing_things_outside_prefix or not doing_things_inside_prefix:
             raise RuntimeError('unable to figure out how to set installation prefix')
 
-        self.needy.command(['make', 'install'] + make_args + make_install_args, environment_overrides = environment_overrides)
+        self.needy.command(['make', 'install'] + make_args + make_install_args, environment_overrides=environment_overrides)

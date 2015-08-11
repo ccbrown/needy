@@ -10,6 +10,7 @@ from sources.download import Download
 from sources.git import GitRepository
 
 from cd import cd
+from target import Target
 
 from projects.androidmk import AndroidMkProject
 from projects.autotools import AutotoolsProject
@@ -17,6 +18,7 @@ from projects.boostbuild import BoostBuildProject
 from projects.make import MakeProject
 from projects.source import SourceProject
 from projects.xcode import XcodeProject
+
 
 class Library:
     def __init__(self, configuration, directory, needy):
@@ -78,8 +80,6 @@ class Library:
         return True
 
     def build_universal_binary(self, name, configuration):
-        import shutil, subprocess, Target
-
         for platform, architectures in configuration.iteritems():
             for architecture in architectures:
                 target = Target.Target(self.needy.platform(platform), architecture)
@@ -101,7 +101,7 @@ class Library:
                 for file in os.listdir(lib_directory):
                     if not os.path.isfile(os.path.join(lib_directory, file)):
                         continue
-                    if not file in files:
+                    if file not in files:
                         files[file] = []
                     files[file].append(os.path.join(lib_directory, file))
 

@@ -3,13 +3,13 @@
 import json
 import os
 import subprocess
-import sys
 
 from colorama import Fore
 
 from library import Library
 from platform import available_platforms
 from target import Target
+
 
 class Needy:
     def __init__(self, path, parameters):
@@ -20,7 +20,7 @@ class Needy:
             self.needs = json.load(needs_file)
 
         self.needs_directory = os.path.join(os.path.dirname(self.path), 'needs')
-    
+
     def platform(self, identifier):
         for platform in available_platforms():
             if identifier == platform.identifier():
@@ -32,15 +32,15 @@ class Needy:
         platform = self.platform(parts[0])
         return Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
 
-    def command(self, arguments, environment_overrides = None):
+    def command(self, arguments, environment_overrides=None):
         env = None
         if environment_overrides:
             env = os.environ.copy()
             env.update(environment_overrides)
-        subprocess.check_call(arguments, env = env)
+        subprocess.check_call(arguments, env=env)
 
     def libraries_to_build(self, target):
-        if not 'libraries' in self.needs:
+        if 'libraries' not in self.needs:
             return []
 
         ret = []
@@ -60,12 +60,12 @@ class Needy:
         return [l.library_path(target) for n, l in self.libraries_to_build(target)]
 
     def satisfy_target(self, target):
-        if not 'libraries' in self.needs:
+        if 'libraries' not in self.needs:
             return
 
         try:
             print 'Building libraries for %s %s' % (target.platform.identifier(), target.architecture)
-    
+
             for name, library_configuration in self.needs['libraries'].iteritems():
                 directory = os.path.join(self.needs_directory, name)
                 library = Library(library_configuration, directory, self)
@@ -82,18 +82,18 @@ class Needy:
     def satisfy_universal_binary(self, universal_binary):
         try:
             print 'Building universal binary for %s' % universal_binary
-    
-            if not 'universal-binaries' in self.needs:
+
+            if 'universal-binaries' not in self.needs:
                 raise ValueError('no universal binaries defined')
-    
-            if not universal_binary in self.needs['universal-binaries']:
+
+            if universal_binary not in self.needs['universal-binaries']:
                 raise ValueError('unknown universal binary')
-    
-            if not 'libraries' in self.needs:
+
+            if 'libraries' not in self.needs:
                 return
-    
+
             configuration = self.needs['universal-binaries'][universal_binary]
-    
+
             for name, library_configuration in self.needs['libraries'].iteritems():
                 directory = os.path.join(self.needs_directory, name)
                 library = Library(library_configuration, directory, self)
@@ -109,7 +109,7 @@ class Needy:
 
     def create_universal_binary(self, inputs, output):
         name, extension = os.path.splitext(output)
-        if not extension in ['.a', '.so', '.dylib']:
+        if extension not in ['.a', '.so', '.dylib']:
             return False
 
         subprocess.check_call(['lipo', '-create'] + inputs + ['-output', output])

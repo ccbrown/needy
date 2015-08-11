@@ -6,11 +6,12 @@ import sys
 from needy import Needy
 from platform import available_platforms
 
+
 def satisfy(args=[]):
     parser = argparse.ArgumentParser(
         prog='%s satisfy' % os.path.basename(sys.argv[0]),
         description='Satisfies library and universal binary needs.',
-        formatter_class = argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('--target', default='host', help='builds needs for this target (example: ios:armv7)')
     parser.add_argument('--universal-binary', help='builds the universal binary with the given name')
@@ -27,14 +28,15 @@ def satisfy(args=[]):
         needy.satisfy_universal_binary(parameters.universal_binary)
     else:
         needy.satisfy_target(needy.target(parameters.target))
-    
+
     return 0
+
 
 def cflags(args=[]):
     parser = argparse.ArgumentParser(
         prog='%s cflags' % os.path.basename(sys.argv[0]),
         description='Gets compiler flags required for using the needs.',
-        formatter_class = argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parameters = parser.parse_args(args)
@@ -47,11 +49,12 @@ def cflags(args=[]):
 
     return 0
 
+
 def ldflags(args=[]):
     parser = argparse.ArgumentParser(
         prog='%s ldflags' % os.path.basename(sys.argv[0]),
         description='Gets linker flags required for using the needs.',
-        formatter_class = argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parameters = parser.parse_args(args)
@@ -64,11 +67,12 @@ def ldflags(args=[]):
 
     return 0
 
+
 def main(args=sys.argv):
     parser = argparse.ArgumentParser(
         description='Helps with dependencies.',
-        formatter_class = argparse.RawDescriptionHelpFormatter,
-        epilog =
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=
 """available commands:
   satisfy     satisfies libraries / universal binary needs
 

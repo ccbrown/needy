@@ -1,10 +1,12 @@
 from exceptions import NotImplementedError
 
+
 def available_platforms():
     from platforms.host import HostPlatform
     from platforms.ios import IOSPlatform
     from platforms.android import AndroidPlatform
     return [HostPlatform, IOSPlatform, AndroidPlatform]
+
 
 class Platform:
     def __init__(self, parameters):

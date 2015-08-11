@@ -2,6 +2,7 @@ import os
 
 from ..source import Source
 
+
 class GitRepository(Source):
     def __init__(self, repository, commit, directory):
         Source.__init__(self)
