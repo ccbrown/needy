@@ -3,6 +3,7 @@ import subprocess
 
 from .. import project
 
+
 class BoostBuildProject(project.Project):
 
     @staticmethod

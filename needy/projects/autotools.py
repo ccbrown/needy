@@ -4,6 +4,7 @@ import subprocess
 from .. import project
 from ..cd import cd
 
+
 class AutotoolsProject(project.Project):
 
     @staticmethod
@@ -46,7 +47,7 @@ class AutotoolsProject(project.Project):
         if self.target().platform.identifier() == 'ios':
             if not linkage:
                 linkage = 'static'
-        
+
             configure_host = self.__available_configure_host([
                 '%s-apple-darwin' % self.target().architecture, 'arm*-apple-darwin', 'arm-apple-darwin', 'arm*', 'arm'
             ])

@@ -4,12 +4,13 @@ import platform
 import os
 import subprocess
 
+
 class HostPlatform(Platform):
     @staticmethod
     def identifier():
         return 'host'
 
-    def __command_exists(self, command):    
+    def __command_exists(self, command):
         try:
             subprocess.check_output([command, '--help'])
             return True

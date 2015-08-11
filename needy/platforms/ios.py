@@ -2,6 +2,7 @@ from ..platform import Platform
 
 DEFAULT_MIN_IOS_VERSION = '5.0'
 
+
 class IOSPlatform(Platform):
     def __init__(self, parameters):
         Platform.__init__(self, parameters)

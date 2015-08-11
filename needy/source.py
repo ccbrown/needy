@@ -1,5 +1,6 @@
 from exceptions import NotImplementedError
 
+
 class Source:
     def __init__(self):
         pass

@@ -4,11 +4,12 @@ import os
 
 DEFAULT_ANDROID_API_LEVEL = '21'
 
+
 class AndroidPlatform(Platform):
     def __init__(self, parameters):
         Platform.__init__(self, parameters)
         self.api_level = parameters.android_api_level if 'android_api_level' in parameters else DEFAULT_ANDROID_API_LEVEL
-    
+
     @staticmethod
     def identifier():
         return 'android'
@@ -52,7 +53,7 @@ class AndroidPlatform(Platform):
         raise ValueError('unsupported architecture')
 
     def binary_paths(self, architecture):
-        toolchain_path = self.toolchain_path(architecture)        
+        toolchain_path = self.toolchain_path(architecture)
         return [os.path.join(toolchain_path, self.binary_prefix(architecture), 'bin'), os.path.join(toolchain_path, 'bin')]
 
     def include_paths(self, architecture):
@@ -64,7 +65,7 @@ class AndroidPlatform(Platform):
         ]
 
         return ret
-        
+
     def libraries(self, architecture):
         return [
             os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libgnustl_shared.so'),
