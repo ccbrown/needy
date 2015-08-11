@@ -13,8 +13,21 @@ def satisfy(args=[]):
         description='Satisfies library and universal binary needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('--target', default='host', help='builds needs for this target (example: ios:armv7)')
-    parser.add_argument('--universal-binary', help='builds the universal binary with the given name')
+    parser.add_argument(
+        '--target',
+        default='host',
+        help='builds needs for this target (example: ios:armv7)')
+    parser.add_argument(
+        '--universal-binary',
+        help='builds the universal binary with the given name')
+    parser.add_argument(
+        '--jobs',
+        dest='build_concurrency',
+        default=1,
+        const=0,
+        nargs='?',
+        type=int,
+        help='number of jobs to process concurrently')
     for platform in available_platforms():
         platform.add_arguments(parser)
     parameters = parser.parse_args(args)

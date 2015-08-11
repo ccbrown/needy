@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+import multiprocessing
 
 from colorama import Fore
 
@@ -26,6 +27,11 @@ class Needy:
 
     def parameters(self):
         return self.__parameters
+
+    def build_concurrency(self):
+        if self.parameters().build_concurrency > 0:
+            return self.parameters().build_concurrency
+        return multiprocessing.cpu_count()
 
     def platform(self, identifier):
         for platform in available_platforms():
