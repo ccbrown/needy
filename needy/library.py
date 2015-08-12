@@ -3,6 +3,8 @@ import shlex
 import shutil
 import subprocess
 
+from operator import itemgetter
+
 from project import evaluate_conditionals
 from project import ProjectDefinition
 
@@ -156,17 +158,8 @@ class Library:
         if configuration:
             configuration = evaluate_conditionals(configuration, target)
 
-        if 'b2-args' in configuration:
-            candidates.insert(0, BoostBuildProject)
-
-        if 'configure-args' in configuration:
-            candidates.insert(0, AutotoolsProject)
-
-        if 'xcode-project' in configuration:
-            candidates.insert(0, XcodeProject)
-
-        if 'source-directory' in configuration:
-            candidates.insert(0, SourceProject)
+        scores = [(len(configuration.viewkeys() & c.configuration_keys()), c) for c in candidates]
+        candidates = [candidate for score, candidate in sorted(scores, key=itemgetter(0), reverse=True)]
 
         definition = ProjectDefinition(target, self.source_directory, configuration)
 

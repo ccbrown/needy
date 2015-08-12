@@ -51,6 +51,11 @@ class Project:
     def is_valid_project(definition):
         raise NotImplementedError('Subclasses of Project must override is_valid_project')
 
+    @staticmethod
+    def configuration_keys():
+        """ should return a list of configuration keys that this project uses """
+        return []
+
     def target(self):
         return self.__definition.target
 

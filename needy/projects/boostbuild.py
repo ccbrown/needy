@@ -10,6 +10,10 @@ class BoostBuildProject(project.Project):
     def is_valid_project(definition):
         return definition.target.platform.identifier() is 'host' and os.path.isfile('Jamroot') and (os.path.isfile('b2') or subprocess.check_output(['b2', '-v']))
 
+    @staticmethod
+    def configuration_keys():
+        return ['b2-args']
+
     def get_build_concurrency_args(self):
         concurrency = self.build_concurrency()
 

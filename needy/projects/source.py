@@ -33,6 +33,10 @@ class SourceProject(project.Project):
     def is_valid_project(definition):
         return SourceProject.header_directory(definition.directory, definition.configuration)
 
+    @staticmethod
+    def configuration_keys():
+        return ['source-directory', 'header-directory']
+
     def build(self, output_directory):
         source_directory = self.source_directory(self.directory(), self.configuration())
 

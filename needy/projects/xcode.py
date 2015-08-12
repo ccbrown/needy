@@ -26,6 +26,10 @@ class XcodeProject(project.Project):
             return False
         return True
 
+    @staticmethod
+    def configuration_keys():
+        return ['xcode-project']
+
     def build(self, output_directory):
         xcodebuild_args = ['-parallelizeTargets', 'ONLY_ACTIVE_ARCH=YES', 'USE_HEADER_SYMLINKS=YES']
 

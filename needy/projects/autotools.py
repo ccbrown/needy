@@ -20,6 +20,10 @@ class AutotoolsProject(project.Project):
                 return True
         return False
 
+    @staticmethod
+    def configuration_keys():
+        return ['configure-args']
+
     def configure(self, output_directory):
         if not os.path.isfile(os.path.join(self.directory(), 'configure')):
             subprocess.check_call('./autogen.sh')
