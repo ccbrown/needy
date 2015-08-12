@@ -1,6 +1,8 @@
 import os
+import subprocess
 
 from ..source import Source
+from ..cd import cd
 
 
 class GitRepository(Source):
@@ -11,33 +13,19 @@ class GitRepository(Source):
         self.directory = directory
 
     def clean(self):
-        import subprocess
-
         if not os.path.exists(self.directory):
             self.__fetch()
 
-        original_directory = os.getcwd()
-        os.chdir(self.directory)
-
-        try:
+        with cd(self.directory):
             subprocess.check_call(['git', 'clean', '-xfd'])
             subprocess.check_call(['git', 'reset', '--hard', self.commit])
             subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
-        finally:
-            os.chdir(original_directory)
 
     def __fetch(self):
-        import subprocess
-
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
-        original_directory = os.getcwd()
-        os.chdir(self.directory)
-
-        try:
+        with cd(self.directory):
             if not os.path.exists(os.path.join(self.directory, '.git')):
                 subprocess.check_call(['git', 'clone', self.repository, '.'])
                 subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
-        finally:
-            os.chdir(original_directory)
