@@ -14,15 +14,14 @@ def satisfy(args=[]):
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        '--target',
+        '-t', '--target',
         default='host',
         help='builds needs for this target (example: ios:armv7)')
     parser.add_argument(
-        '--universal-binary',
+        '-u', '--universal-binary',
         help='builds the universal binary with the given name')
     parser.add_argument(
-        '--jobs',
-        dest='build_concurrency',
+        '-j', '--concurrency',
         default=1,
         const=0,
         nargs='?',
