@@ -64,6 +64,12 @@ class Project:
             return self.__definition.configuration[key]
         return None
 
+    def build_concurrency(self):
+        concurrency = self.needy.build_concurrency()
+        if self.configuration('max-concurrency') is not None:
+            concurrency = min(concurrency, self.configuration('max-concurrency'))
+        return concurrency
+
     def pre_build(self, output_directory):
         pre_build_commands = self.configuration('pre-build') or []
         for command in pre_build_commands:

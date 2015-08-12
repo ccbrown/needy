@@ -4,6 +4,8 @@ import subprocess
 from .. import project
 from ..cd import cd
 
+import make
+
 
 class AutotoolsProject(project.Project):
 
@@ -98,7 +100,7 @@ class AutotoolsProject(project.Project):
         subprocess.check_call(['./configure'] + configure_args)
 
     def build(self, output_directory):
-        make_args = []
+        make_args = make.get_make_jobs_args(self)
 
         binary_paths = self.target().platform.binary_paths(self.target().architecture)
         if len(binary_paths) > 0:

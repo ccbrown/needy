@@ -5,6 +5,19 @@ import subprocess
 from .. import project
 
 
+# TODO: This really should be part of the MakeProject class, but
+#       other build systems still use some of the MakeProject
+#       arguments and parameters such as AutotoolsProject.
+def get_make_jobs_args(project):
+    concurrency = project.build_concurrency()
+
+    if concurrency > 1:
+        return ['-j', str(concurrency)]
+    elif concurrency == 0:
+        return ['-j']
+    return []
+
+
 class MakeProject(project.Project):
 
     @staticmethod
@@ -52,6 +65,8 @@ class MakeProject(project.Project):
     def build(self, output_directory):
 
         make_args = ['-f', './MakefileNeedyGenerated']
+        make_args += get_make_jobs_args(self)
+
         path_override = None
 
         target_os = None
