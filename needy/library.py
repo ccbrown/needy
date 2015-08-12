@@ -7,6 +7,7 @@ from project import evaluate_conditionals
 from project import ProjectDefinition
 
 from sources.download import Download
+from sources.directory import Directory
 from sources.git import GitRepository
 
 from cd import cd
@@ -31,6 +32,8 @@ class Library:
             self.source = Download(self.configuration['download'], self.configuration['checksum'], self.source_directory, os.path.join(directory, 'download'))
         elif 'repository' in self.configuration:
             self.source = GitRepository(self.configuration['repository'], self.configuration['commit'], self.source_directory)
+        elif 'directory' in self.configuration:
+            self.source = Directory(self.configuration['directory'] if os.path.isabs(self.configuration['directory']) else os.path.join(os.path.dirname(needy.path()), self.configuration['directory']), self.source_directory)
         else:
             raise ValueError('no source specified in configuration')
 
@@ -148,7 +151,7 @@ class Library:
         return os.path.join(self.build_directory(target), 'lib')
 
     def project(self, target, configuration):
-        candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject]
+        candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject]
 
         if configuration:
             configuration = evaluate_conditionals(configuration, target)

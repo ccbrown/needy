@@ -1,0 +1,8 @@
+{
+	"libraries": {
+		"cereal": {
+			"repository": "git@github.com:USCiLab/cereal.git",
+			"commit": "2f9471bc401590cf58b38bbbc33d412dade6d589"
+		}
+	}
+}

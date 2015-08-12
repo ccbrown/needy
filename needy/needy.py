@@ -13,18 +13,24 @@ from target import Target
 
 class Needy:
     def __init__(self, path, parameters):
-        self.path = path
-        self.parameters = parameters
+        self.__path = path
+        self.__parameters = parameters
 
-        with open(self.path, 'r') as needs_file:
+        with open(self.__path, 'r') as needs_file:
             self.needs = json.load(needs_file)
 
-        self.needs_directory = os.path.join(os.path.dirname(self.path), 'needs')
+        self.__needs_directory = os.path.join(os.path.dirname(self.__path), 'needs')
+
+    def path(self):
+        return self.__path
+
+    def parameters(self):
+        return self.__parameters
 
     def platform(self, identifier):
         for platform in available_platforms():
             if identifier == platform.identifier():
-                return platform(self.parameters)
+                return platform(self.__parameters)
         raise ValueError('unknown platform')
 
     def target(self, identifier):
@@ -46,7 +52,7 @@ class Needy:
         ret = []
 
         for name, library_configuration in self.needs['libraries'].iteritems():
-            directory = os.path.join(self.needs_directory, name)
+            directory = os.path.join(self.__needs_directory, name)
             library = Library(library_configuration, directory, self)
             if library.should_build(target):
                 ret.append((name, library))
@@ -63,11 +69,11 @@ class Needy:
         if 'libraries' not in self.needs:
             return
 
-        try:
-            print 'Building libraries for %s %s' % (target.platform.identifier(), target.architecture)
+        print 'Satisfying %s' % self.path()
 
+        try:
             for name, library_configuration in self.needs['libraries'].iteritems():
-                directory = os.path.join(self.needs_directory, name)
+                directory = os.path.join(self.__needs_directory, name)
                 library = Library(library_configuration, directory, self)
                 if library.has_up_to_date_build(target):
                     print Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name
@@ -81,7 +87,7 @@ class Needy:
 
     def satisfy_universal_binary(self, universal_binary):
         try:
-            print 'Building universal binary for %s' % universal_binary
+            print 'Satisfying universal binary %s in %s' % (universal_binary, self.path())
 
             if 'universal-binaries' not in self.needs:
                 raise ValueError('no universal binaries defined')
@@ -95,7 +101,7 @@ class Needy:
             configuration = self.needs['universal-binaries'][universal_binary]
 
             for name, library_configuration in self.needs['libraries'].iteritems():
-                directory = os.path.join(self.needs_directory, name)
+                directory = os.path.join(self.__needs_directory, name)
                 library = Library(library_configuration, directory, self)
                 if library.has_up_to_date_universal_binary(universal_binary, configuration):
                     print Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name

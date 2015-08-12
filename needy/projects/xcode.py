@@ -21,7 +21,7 @@ class XcodeProject(project.Project):
         try:
             with cd(definition.directory):
                 with open(os.devnull, 'w') as devnull:
-                    subprocess.check_call(['xcodebuild', '-list'] + xcodebuild_args, stdout=devnull)
+                    subprocess.check_call(['xcodebuild', '-list'] + xcodebuild_args, stdout=devnull, stderr=devnull)
         except:
             return False
         return True

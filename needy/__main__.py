@@ -21,9 +21,6 @@ def satisfy(args=[]):
 
     needy = Needy(os.path.abspath('needs.json'), parameters)
 
-    print 'Satisfying needs for: %s' % needy.path
-    print 'Needs directory: %s' % needy.needs_directory
-
     if parameters.universal_binary:
         needy.satisfy_universal_binary(parameters.universal_binary)
     else:
