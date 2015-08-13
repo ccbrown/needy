@@ -120,6 +120,11 @@ class MakeProject(project.Project):
                 break
 
             path = match.group(1)
+
+            # shell scripts may contain special characters and probably won't be
+            # part of the resulting path.
+            path = path.rstrip(';"')
+
             if os.path.relpath(path, self.directory()).find('..') == 0:
                 if os.path.relpath(path, output_directory).find('..') == 0:
                     doing_things_outside_prefix = True
