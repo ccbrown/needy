@@ -27,7 +27,7 @@ class SourceProject(project.Project):
             return os.path.join(directory, 'include')
         elif os.path.exists(os.path.join(directory, 'headers')):
             return os.path.join(directory, 'headers')
-        return self.source_directory(directory, configuration)
+        return SourceProject.source_directory(directory, configuration)
 
     @staticmethod
     def is_valid_project(definition):
@@ -45,7 +45,7 @@ class SourceProject(project.Project):
         if source_directory:
             object_directory = os.path.join(output_directory, 'obj')
             os.makedirs(object_directory)
-    
+
             objects = []
 
             for root, dirs, files in os.walk(source_directory):
@@ -54,7 +54,7 @@ class SourceProject(project.Project):
                     output = os.path.join(object_directory, os.path.relpath(input, source_directory))
                     name, extension = os.path.splitext(output)
                     output = name + '.o'
-    
+
                     if self.__compile(input, output):
                         objects.append(output)
 
@@ -65,7 +65,7 @@ class SourceProject(project.Project):
 
         header_directory = self.header_directory(self.directory(), self.configuration())
         include_directory = os.path.join(output_directory, 'include')
-        
+
         if header_directory != source_directory:
             shutil.copytree(header_directory, include_directory)
         else:
