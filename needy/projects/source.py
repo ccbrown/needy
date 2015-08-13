@@ -58,8 +58,9 @@ class SourceProject(project.Project):
                     if self.__compile(input, output):
                         objects.append(output)
 
-            # TODO: link objects
-            raise NotImplementedError('not fully unimplemented')
+            if len(objects) > 0:
+                # TODO: link objects
+                raise NotImplementedError('not fully unimplemented')
 
         # copy headers
 
