@@ -34,6 +34,10 @@ class MakeProject(project.Project):
                 return path
         return None
 
+    @staticmethod
+    def configuration_keys():
+        return ['make-prefix-arg']
+
     def configure(self, output_directory):
         excluded_targets = []
 
@@ -104,13 +108,18 @@ class MakeProject(project.Project):
 
         self.needy.command(['make'] + make_args, environment_overrides=environment_overrides)
 
-        make_install_args = [
+        make_prefix_args = [
             'PREFIX=%s' % output_directory,
             'INSTALLPREFIX=%s' % output_directory,
             'INSTALL_PREFIX=%s' % output_directory
         ]
 
-        recon = subprocess.check_output(['make', 'install', '--recon'] + make_args + make_install_args)
+        if self.configuration('make-prefix-arg') is not None:
+            make_prefix_args += ['%s=%s' % (self.configuration('make-prefix-arg'), output_directory)]
+
+        recon_args = ['make', 'install', '--recon'] + make_args + make_prefix_args
+        recon = subprocess.check_output(recon_args)
+
         doing_things_inside_prefix = False
         doing_things_outside_prefix = False
 
@@ -136,4 +145,4 @@ class MakeProject(project.Project):
         if doing_things_outside_prefix or not doing_things_inside_prefix:
             raise RuntimeError('unable to figure out how to set installation prefix')
 
-        self.needy.command(['make', 'install'] + make_args + make_install_args, environment_overrides=environment_overrides)
+        self.needy.command(['make', 'install'] + make_args + make_prefix_args, environment_overrides=environment_overrides)
