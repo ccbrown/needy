@@ -78,6 +78,7 @@ def ldflags(args=[]):
 
 
 def main(args=sys.argv):
+    colorama.init()
     parser = argparse.ArgumentParser(
         description='Helps with dependencies.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -103,5 +104,4 @@ Use '%s <command> --help' to get help for a specific command.
     return 1
 
 if __name__ == "__main__":
-    colorama.init()
     sys.exit(main(sys.argv))

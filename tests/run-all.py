@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 TESTS_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
-TOP_LEVEL_DIRECTORY = os.path.dirname(TESTS_DIRECTORY)
+NEEDY = os.path.join(os.path.dirname(TESTS_DIRECTORY), 'scripts', 'needy')
 
 
 def test(directory, needy_args, run_dirty=False):
@@ -15,9 +15,7 @@ def test(directory, needy_args, run_dirty=False):
     os.chdir(directory)
     if not run_dirty and os.path.exists('needs'):
         shutil.rmtree('needs')
-    env = os.environ.copy()
-    env['PYTHONPATH'] = TOP_LEVEL_DIRECTORY
-    subprocess.check_call(['python', '-m', 'needy', 'satisfy'] + needy_args, env=env)
+    subprocess.check_call([NEEDY, 'satisfy'] + needy_args)
 
 
 def main(args):
