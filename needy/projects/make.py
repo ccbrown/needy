@@ -106,7 +106,7 @@ class MakeProject(project.Project):
             make_args.append('PATH=%s' % path_override)
             environment_overrides['PATH'] = path_override
 
-        self.needy.command(['make'] + make_args, environment_overrides=environment_overrides)
+        self.needy.command(['make'] + self.project_targets() + make_args, environment_overrides=environment_overrides)
 
         make_prefix_args = [
             'PREFIX=%s' % output_directory,
