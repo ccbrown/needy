@@ -77,7 +77,7 @@ class Project:
         return concurrency
 
     def project_targets(self):
-        targets = self.configuration('project-targets')
+        targets = self.configuration('targets')
         return targets if targets is not None else []
 
     def pre_build(self, output_directory):
