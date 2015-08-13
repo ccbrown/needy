@@ -66,10 +66,10 @@ class Needy:
         return ret
 
     def include_paths(self, target):
-        return [l.include_path(target) for n, l in self.libraries_to_build(target)]
+        return [l.include_path(target) for n, l in self.libraries_to_build(target) if os.path.isdir(l.include_path(target))]
 
     def library_paths(self, target):
-        return [l.library_path(target) for n, l in self.libraries_to_build(target)]
+        return [l.library_path(target) for n, l in self.libraries_to_build(target) if os.path.isdir(l.library_path(target))]
 
     def satisfy_target(self, target):
         if 'libraries' not in self.needs:
