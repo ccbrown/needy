@@ -113,7 +113,7 @@ class AutotoolsProject(project.Project):
         if len(binary_paths) > 0:
             make_args.append('PATH=%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
 
-        subprocess.check_call(['make'] + make_args)
+        subprocess.check_call(['make'] + self.project_targets() + make_args)
         subprocess.check_call(['make', 'install'] + make_args)
 
     def __available_configure_host(self, candidates):

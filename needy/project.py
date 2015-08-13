@@ -2,6 +2,7 @@ import os
 import shlex
 import subprocess
 
+
 # TODO: reevaluate where this function belongs
 def evaluate_conditionals(configuration, target):
     if 'conditionals' not in configuration:
@@ -74,6 +75,10 @@ class Project:
         if self.configuration('max-concurrency') is not None:
             concurrency = min(concurrency, self.configuration('max-concurrency'))
         return concurrency
+
+    def project_targets(self):
+        targets = self.configuration('project-targets')
+        return targets if targets is not None else []
 
     def pre_build(self, output_directory):
         pre_build_commands = self.configuration('pre-build') or []
