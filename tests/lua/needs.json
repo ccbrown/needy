@@ -4,7 +4,7 @@
 			"download": "http://www.lua.org/ftp/lua-5.2.1.tar.gz",
 			"checksum": "ae08f641b45d737d12d30291a5e5f6e3",
 			"project": {
-				"project-targets": ["generic"],
+				"targets": ["generic"],
 				"make-prefix-arg": "INSTALL_TOP"
 			}
 		}
