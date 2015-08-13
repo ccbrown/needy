@@ -3,8 +3,8 @@ import colorama
 import os
 import sys
 
-from needy import Needy
-from platform import available_platforms
+from .needy import Needy
+from .platform import available_platforms
 
 
 def satisfy(args=[]):
@@ -53,9 +53,7 @@ def cflags(args=[]):
     needy = Needy(os.path.abspath('needs.json'), parameters)
     target = needy.target(parameters.target)
 
-    for path in needy.include_paths(target):
-        print '-I%s' % path,
-
+    print(' '.join([('-I%s' % path) for path in needy.include_paths(target)]))
     return 0
 
 
@@ -71,9 +69,7 @@ def ldflags(args=[]):
     needy = Needy(os.path.abspath('needs.json'), parameters)
     target = needy.target(parameters.target)
 
-    for path in needy.library_paths(target):
-        print '-L%s' % path,
-
+    print(' '.join([('-L%s' % path) for path in needy.library_paths(target)]))
     return 0
 
 
@@ -100,7 +96,7 @@ Use '%s <command> --help' to get help for a specific command.
     if parameters.command == 'ldflags':
         return ldflags(parameters.args)
 
-    print '\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0]))
+    print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))
     return 1
 
 if __name__ == "__main__":

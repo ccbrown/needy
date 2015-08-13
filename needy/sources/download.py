@@ -1,11 +1,15 @@
+import io
 import os
-import urllib2
 import binascii
 import hashlib
 import shutil
-import StringIO
 import tarfile
 import zipfile
+
+try:
+    import urllib.request as urllib2
+except ImportError:
+    import urllib2
 
 from ..source import Source
 
@@ -25,11 +29,11 @@ class Download(Source):
 
         self.__fetch()
 
-        print 'Verifying checksum...'
+        print('Verifying checksum...')
         self.__verify_checksum()
-        print 'Checksum verified.'
+        print('Checksum verified.')
 
-        print 'Unpacking to %s' % self.destination
+        print('Unpacking to %s' % self.destination)
         self.__clean_destination_dir()
         self.__unpack()
         self.__trim_lone_dirs()
@@ -39,7 +43,7 @@ class Download(Source):
             os.makedirs(self.cache_directory)
 
         if not os.path.isfile(self.local_download_path):
-            print 'Downloading from %s' % self.url
+            print('Downloading from %s' % self.url)
             download = urllib2.urlopen(self.url, timeout=5)
             with open(self.local_download_path, 'wb') as local_file:
                 while True:
@@ -76,15 +80,10 @@ class Download(Source):
             return
 
     def __tarfile_unpack(self):
-        file_contents = ''
         with open(self.local_download_path, 'rb') as file:
-            file_contents = file.read()
-
-        file_contents_io = StringIO.StringIO(file_contents)
-        tar = tarfile.open(fileobj=file_contents_io, mode='r|*')
-        tar.extractall(self.destination)
-        del tar
-        del file_contents_io
+            tar = tarfile.open(fileobj=file, mode='r|*')
+            tar.extractall(self.destination)
+            del tar
 
     def __zipfile_unpack(self):
         with zipfile.ZipFile(self.local_download_path, 'r') as file:

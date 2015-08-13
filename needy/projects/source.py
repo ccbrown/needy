@@ -90,5 +90,5 @@ class SourceProject(project.Project):
         return True
 
     def __printed_call(self, call):
-        print ' '.join(pipes.quote(s) for s in call)
+        print(' '.join(pipes.quote(s) for s in call))
         subprocess.check_call(call)

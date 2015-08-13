@@ -1,5 +1,7 @@
-from exceptions import NotImplementedError
-
+try:
+    from exceptions import NotImplementedError
+except ImportError:
+    pass
 
 class Source:
     def __init__(self):

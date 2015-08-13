@@ -2,4 +2,4 @@
 
 To run without installing, you can use `python -m needy` from the top level directory. To install, you can run `sudo setup.py install`. After installing, you can invoke needy via simply `needy`. To uninstall, you can use `sudo pip uninstall`.
 
-It's in pretty early stages though, so expect bugs and incomplete features.
+It's in pretty early stages though, so expect bugs and incomplete features. It also isn't yet versioned and is constantly breaking backwards compatibility, so if you use it, it's recommended that you include it with your distribution.

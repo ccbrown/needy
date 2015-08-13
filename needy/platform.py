@@ -1,10 +1,13 @@
-from exceptions import NotImplementedError
+try:
+    from exceptions import NotImplementedError
+except ImportError:
+    pass
 
 
 def available_platforms():
-    from platforms.host import HostPlatform
-    from platforms.ios import IOSPlatform
-    from platforms.android import AndroidPlatform
+    from .platforms.host import HostPlatform
+    from .platforms.ios import IOSPlatform
+    from .platforms.android import AndroidPlatform
     return [HostPlatform, IOSPlatform, AndroidPlatform]
 
 

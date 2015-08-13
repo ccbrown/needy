@@ -7,9 +7,9 @@ import multiprocessing
 
 from colorama import Fore
 
-from library import Library
-from platform import available_platforms
-from target import Target
+from .library import Library
+from .platform import available_platforms
+from .target import Target
 
 
 class Needy:
@@ -75,25 +75,26 @@ class Needy:
         if 'libraries' not in self.needs:
             return
 
-        print 'Satisfying %s' % self.path()
+        print('Satisfying %s' % self.path())
 
         try:
-            for name, library_configuration in self.needs['libraries'].iteritems():
+            for name, library_configuration in self.needs['libraries'].items():
                 directory = os.path.join(self.__needs_directory, name)
                 library = Library(library_configuration, directory, self)
                 if library.has_up_to_date_build(target):
-                    print Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name
+                    print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
                 else:
-                    print Fore.CYAN + '[OUT-OF-DATE]' + Fore.RESET + ' %s' % name
+                    print(Fore.CYAN + '[OUT-OF-DATE]' + Fore.RESET + ' %s' % name)
                     library.build(target)
-                    print Fore.GREEN + '[SUCCESS]' + Fore.RESET + ' %s' % name
+                    print(Fore.GREEN + '[SUCCESS]' + Fore.RESET + ' %s' % name)
         except Exception as e:
-            print Fore.RED + '[ERROR]' + Fore.RESET, e
+            print(Fore.RED + '[ERROR]' + Fore.RESET)
+            print(e)
             raise
 
     def satisfy_universal_binary(self, universal_binary):
         try:
-            print 'Satisfying universal binary %s in %s' % (universal_binary, self.path())
+            print('Satisfying universal binary %s in %s' % (universal_binary, self.path()))
 
             if 'universal-binaries' not in self.needs:
                 raise ValueError('no universal binaries defined')
@@ -110,13 +111,14 @@ class Needy:
                 directory = os.path.join(self.__needs_directory, name)
                 library = Library(library_configuration, directory, self)
                 if library.has_up_to_date_universal_binary(universal_binary, configuration):
-                    print Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name
+                    print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
                 else:
-                    print Fore.CYAN + '[OUT-OF-DATE]' + Fore.RESET + ' %s' % name
+                    print(Fore.CYAN + '[OUT-OF-DATE]' + Fore.RESET + ' %s' % name)
                     library.build_universal_binary(universal_binary, configuration)
-                    print Fore.GREEN + '[SUCCESS]' + Fore.RESET + ' %s' % name
+                    print(Fore.GREEN + '[SUCCESS]' + Fore.RESET + ' %s' % name)
         except Exception as e:
-            print Fore.RED + '[ERROR]' + Fore.RESET, e
+            print(Fore.RED + '[ERROR]' + Fore.RESET)
+            print(e)
             raise
 
     def create_universal_binary(self, inputs, output):

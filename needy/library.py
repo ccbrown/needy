@@ -5,22 +5,22 @@ import subprocess
 
 from operator import itemgetter
 
-from project import evaluate_conditionals
-from project import ProjectDefinition
+from .project import evaluate_conditionals
+from .project import ProjectDefinition
 
-from sources.download import Download
-from sources.directory import Directory
-from sources.git import GitRepository
+from .sources.download import Download
+from .sources.directory import Directory
+from .sources.git import GitRepository
 
-from cd import cd
-from target import Target
+from .cd import cd
+from .target import Target
 
-from projects.androidmk import AndroidMkProject
-from projects.autotools import AutotoolsProject
-from projects.boostbuild import BoostBuildProject
-from projects.make import MakeProject
-from projects.source import SourceProject
-from projects.xcode import XcodeProject
+from .projects.androidmk import AndroidMkProject
+from .projects.autotools import AutotoolsProject
+from .projects.boostbuild import BoostBuildProject
+from .projects.make import MakeProject
+from .projects.source import SourceProject
+from .projects.xcode import XcodeProject
 
 
 class Library:
@@ -62,7 +62,7 @@ class Library:
             for command in post_clean_commands:
                 subprocess.check_call(shlex.split(command))
 
-        print 'Building for %s %s' % (target.platform.identifier(), target.architecture)
+        print('Building for %s %s' % (target.platform.identifier(), target.architecture))
 
         if not project:
             raise RuntimeError('unknown project type')
@@ -90,10 +90,10 @@ class Library:
                 target = Target.Target(self.needy.platform(platform), architecture)
                 if not self.has_up_to_date_build(target):
                     if not self.build(target):
-                        print 'Skipping universal binary %s' % name
+                        print('Skipping universal binary %s' % name)
                         return
 
-        print 'Building universal binary %s' % name
+        print('Building universal binary %s' % name)
 
         files = dict()
         target_count = 0
@@ -126,7 +126,7 @@ class Library:
                 file_name, extension = os.path.splitext(file)
 
                 if extension in ['.a', '.dylib', '.so']:
-                    print 'Creating universal library %s' % file
+                    print('Creating universal library %s' % file)
                     subprocess.check_call(['lipo', '-create'] + builds + ['-output', os.path.join(universal_lib_directory, file)])
         except:
             shutil.rmtree(universal_binary_directory)
