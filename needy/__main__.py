@@ -81,6 +81,8 @@ def main(args=sys.argv):
         epilog=
 """available commands:
   satisfy     satisfies libraries / universal binary needs
+  cflags      emits the compiler flags required to use the satisfied needs
+  ldflags     emits the linker flags required to use the satisfied needs
 
 Use '%s <command> --help' to get help for a specific command.
 """ % os.path.basename(sys.argv[0])
