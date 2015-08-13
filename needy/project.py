@@ -79,11 +79,6 @@ class Project:
         pre_build_commands = self.configuration('pre-build') or []
         for command in pre_build_commands:
             subprocess.check_call(shlex.split(command))
-        needs_file = os.path.join(self.directory(), 'needs.json')
-        if os.path.isfile(needs_file):
-            from needy import Needy
-            recursive_needy = Needy(needs_file, self.needy.parameters())
-            recursive_needy.satisfy_target(self.target())
 
     def configure(self, build_directory):
         pass
