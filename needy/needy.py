@@ -51,6 +51,9 @@ class Needy:
             env.update(environment_overrides)
         subprocess.check_call(arguments, env=env)
 
+    def recursive(self, needs_file):
+        return Needy(needs_file, self.parameters()) if os.path.isfile(needs_file) else None
+
     def libraries_to_build(self, target):
         if 'libraries' not in self.needs:
             return []
@@ -66,10 +69,24 @@ class Needy:
         return ret
 
     def include_paths(self, target):
-        return [l.include_path(target) for n, l in self.libraries_to_build(target) if os.path.isdir(l.include_path(target))]
+        ret = []
+        for n, l in self.libraries_to_build(target):
+            if os.path.isdir(l.include_path(target)):
+                ret.append(l.include_path(target))
+            needy = self.recursive(os.path.join(l.source_directory(), 'needs.json'))
+            if needy:
+                ret.extend(needy.include_paths(target))
+        return ret
 
     def library_paths(self, target):
-        return [l.library_path(target) for n, l in self.libraries_to_build(target) if os.path.isdir(l.library_path(target))]
+        ret = []
+        for n, l in self.libraries_to_build(target):
+            if os.path.isdir(l.library_path(target)):
+                ret.append(l.library_path(target))
+            needy = self.recursive(os.path.join(l.source_directory(), 'needs.json'))
+            if needy:
+                ret.extend(needy.library_paths(target))
+        return ret
 
     def satisfy_target(self, target):
         if 'libraries' not in self.needs:

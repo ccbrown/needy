@@ -28,14 +28,13 @@ class Library:
 
         self.configuration = configuration
         self.directory = directory
-        self.source_directory = os.path.join(directory, 'source')
 
         if 'download' in self.configuration:
-            self.source = Download(self.configuration['download'], self.configuration['checksum'], self.source_directory, os.path.join(directory, 'download'))
+            self.source = Download(self.configuration['download'], self.configuration['checksum'], self.source_directory(), os.path.join(directory, 'download'))
         elif 'repository' in self.configuration:
-            self.source = GitRepository(self.configuration['repository'], self.configuration['commit'], self.source_directory)
+            self.source = GitRepository(self.configuration['repository'], self.configuration['commit'], self.source_directory())
         elif 'directory' in self.configuration:
-            self.source = Directory(self.configuration['directory'] if os.path.isabs(self.configuration['directory']) else os.path.join(os.path.dirname(needy.path()), self.configuration['directory']), self.source_directory)
+            self.source = Directory(self.configuration['directory'] if os.path.isabs(self.configuration['directory']) else os.path.join(os.path.dirname(needy.path()), self.configuration['directory']), self.source_directory())
         else:
             raise ValueError('no source specified in configuration')
 
@@ -143,6 +142,9 @@ class Library:
     def build_directory(self, target):
         return os.path.join(self.directory, 'build', target.platform.identifier(), target.architecture)
 
+    def source_directory(self):
+        return os.path.join(self.directory, 'source')
+
     def universal_binary_directory(self, name):
         return os.path.join(self.directory, 'build', 'universal', name)
 
@@ -161,7 +163,7 @@ class Library:
         scores = [(len(configuration.viewkeys() & c.configuration_keys()), c) for c in candidates]
         candidates = [candidate for score, candidate in sorted(scores, key=itemgetter(0), reverse=True)]
 
-        definition = ProjectDefinition(target, self.source_directory, configuration)
+        definition = ProjectDefinition(target, self.source_directory(), configuration)
 
         with cd(definition.directory):
             for candidate in candidates:

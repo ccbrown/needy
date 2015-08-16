@@ -1,90 +1,167 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "messages.h"
+#include <random>
+
+#include "messages.hpp"
 #include "uv.h"
 
-uv_loop_t* loop = NULL;
+namespace {
 
-void alloc_buffer(uv_handle_t* handle, size_t size, uv_buf_t* buf);
-void connect_cb(uv_stream_t * server, int status);
-void read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t* buf);
-void write_cb(uv_write_t* req, int status);
-void close_cb(uv_handle_t* handle);
-
-int main() {
-    loop = uv_default_loop();
-
-    uv_tcp_t server;
-
-    uv_tcp_init(loop, &server);
-    
-    struct sockaddr_in addr;
-    uv_ip4_addr("127.0.0.1", 3000, &addr);
-    uv_tcp_bind(&server, (sockaddr*)&addr, 0);
-    
-    if (int r = uv_listen((uv_stream_t *)&server, 128, connect_cb)) {
-        fprintf(stderr, "error: %s\n", uv_strerror(r));
-        return r;
+void AssignRandom(GameState* game) {
+    constexpr auto player = GameState::Player::One;
+    auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::mt19937 rng{static_cast<unsigned int>(seed)};
+    std::uniform_int_distribution<int> distribution{0, 2};
+    while (true) {
+        int x = distribution(rng);
+        int y = distribution(rng);
+        if (game->owner(x, y) == GameState::Player::None) {
+            game->assign(x, y, player);
+            return;
+        }
     }
-
-    printf("listening...\n");
-
-    return uv_run(loop, UV_RUN_DEFAULT);
 }
 
-void connect_cb(uv_stream_t* server, int status) {
-    if (status < 0) {
-        fprintf(stderr, "error: %s\n", uv_strerror(status));
-        return;
-    }
-
-    uv_tcp_t* client = (uv_tcp_t*)malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(loop, client);
-
-    if (int r = uv_accept(server, (uv_stream_t*)client)) {
-        fprintf(stderr, "error: %s\n", uv_strerror(r));
-        uv_close((uv_handle_t*)client, close_cb);
-        return;
-    }
-
-    if (int r = uv_read_start((uv_stream_t*)client, alloc_buffer, read_cb)) {
-        fprintf(stderr, "error: %s\n", uv_strerror(r));
-        uv_close((uv_handle_t*)client, close_cb);
-    }
-    
-    printf("established connection\n");
+void AllocBuffer(uv_handle_t* handle, size_t size, uv_buf_t* buf) {
+    buf->base = reinterpret_cast<char*>(malloc(size));
+    buf->len = size;
 }
 
-void read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {    
+void CloseCallback(uv_handle_t* handle) {
+    printf("connection closed\n");
+    delete reinterpret_cast<uv_tcp_t*>(handle);
+}
+
+void ReadCallback(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {    
+    bool shouldCloseConnection = false;
+
     if (nread < 0) {
         if (nread != UV_EOF) {
             fprintf(stderr, "error: %s\n", uv_strerror(nread));
         }
-        uv_close((uv_handle_t*)stream, close_cb);
-    } else {
-        uv_write_t* req = (uv_write_t*)malloc(sizeof(uv_write_t));
-        if (int r = uv_write(req, stream, buf, 1, write_cb)) {
-            fprintf(stderr, "error: %s\n", uv_strerror(r));
-            uv_close((uv_handle_t*)stream, close_cb);
+        shouldCloseConnection = true;
+    }    
+
+    auto data = buf->base;
+    size_t remaining = nread;
+
+    while (remaining && !shouldCloseConnection) {
+        if (remaining < sizeof(MessageType) + sizeof(MessageLength)) {
+            fprintf(stderr, "error: %s\n", "incomplete message prefix");
+            break;
         }
+
+        auto type = *reinterpret_cast<MessageType*>(data);
+        data += sizeof(MessageType);
+        remaining -= sizeof(MessageType);
+
+        size_t length = ntohs(*reinterpret_cast<MessageLength*>(data));
+        data += sizeof(MessageLength);
+        remaining -= sizeof(MessageLength);
+
+        if (remaining < length) {
+            fprintf(stderr, "error: %s\n", "incomplete message");
+            break;
+        }
+
+        switch (type) {
+            case MessageType::GameState: {
+                if (length != sizeof(GameState)) {
+                    fprintf(stderr, "error: %s\n", "malformed gamestate message");
+                    shouldCloseConnection = true;
+                    break;
+                }
+
+                auto game = reinterpret_cast<GameState*>(data);
+                if (game->isOver()) {
+                    shouldCloseConnection = true;
+                    break;
+                }
+                
+                constexpr auto self = GameState::Player::One;
+                AssignRandom(game);
+                
+                if (false
+                    || (game->winner() == self && !String{"You lose!"}.message(stream))
+                    || !game->message(stream)
+                    || game->winner() != GameState::Player::None
+                ) {
+                    shouldCloseConnection = true;
+                }
+
+                break;
+            }
+            default:
+                fprintf(stderr, "error: %s\n", "unknown message type");
+                shouldCloseConnection = true;
+        }
+
+        data += length;
+        remaining -= length;
     }
 
-    free(buf->base);
+    if (shouldCloseConnection) {
+        uv_close(reinterpret_cast<uv_handle_t*>(stream), CloseCallback);
+    }
+    if (buf) {
+        free(buf->base);
+    }
 }
 
-void write_cb(uv_write_t* req, int status) {
-    free(req);
+void ConnectCallback(uv_stream_t* stream, int status) {
     if (status < 0) {
         fprintf(stderr, "error: %s\n", uv_strerror(status));
+        return;
+    }
+
+    auto client = new uv_tcp_t();
+    uv_tcp_init(uv_default_loop(), client);
+
+    auto clientStream = reinterpret_cast<uv_stream_t*>(client);
+
+    if (auto r = uv_accept(stream, clientStream)) {
+        fprintf(stderr, "error: %s\n", uv_strerror(r));
+        uv_close(reinterpret_cast<uv_handle_t*>(client), CloseCallback);
+        return;
+    }
+
+    printf("connection established\n");
+
+    if (auto r = uv_read_start(clientStream, AllocBuffer, ReadCallback)) {
+        fprintf(stderr, "error: %s\n", uv_strerror(r));
+        uv_close(reinterpret_cast<uv_handle_t*>(client), CloseCallback);
+        return;
+    }
+    
+    String string{"Go easy on me, okay?"};
+    
+    GameState game;
+    AssignRandom(&game);
+
+    if (!string.message(clientStream) || !game.message(clientStream)) {
+        uv_close(reinterpret_cast<uv_handle_t*>(client), CloseCallback);
     }
 }
 
-void close_cb(uv_handle_t* handle) {
-    free((uv_tcp_t*)handle);
-}
+} // namespace
 
-void alloc_buffer(uv_handle_t* handle, size_t size, uv_buf_t* buf) {
-    buf->base = (char*)malloc(size);
-    buf->len = size;
+int main(int argc, const char* argv[]) {
+    auto port = argc > 1 ? atoi(argv[1]) : 3000;
+    
+    uv_tcp_t socket;
+    uv_tcp_init(uv_default_loop(), &socket);
+    
+    sockaddr_in addr;
+    uv_ip4_addr("127.0.0.1", port, &addr);
+    uv_tcp_bind(&socket, (sockaddr*)&addr, 0);
+    
+    if (auto r = uv_listen((uv_stream_t*)&socket, 128, ConnectCallback)) {
+        fprintf(stderr, "error: %s\n", uv_strerror(r));
+        return r;
+    }
+
+    printf("listening on port %d...\n", port);
+
+    return uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }

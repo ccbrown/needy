@@ -38,9 +38,15 @@ class SourceProject(project.Project):
         return ['source-directory', 'header-directory']
 
     def build(self, output_directory):
-        source_directory = self.source_directory(self.directory(), self.configuration())
+        # check for needs
+
+        needy = self.needy.recursive(os.path.join(self.directory(), 'needs.json'))
+        if needy:
+            needy.satisfy_target(self.target())
 
         # compile source
+
+        source_directory = self.source_directory(self.directory(), self.configuration())
 
         if source_directory:
             object_directory = os.path.join(output_directory, 'obj')
