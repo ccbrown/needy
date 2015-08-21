@@ -1,8 +1,11 @@
+from __future__ import print_function
+
 import io
 import os
 import binascii
 import hashlib
 import shutil
+import sys
 import tarfile
 import zipfile
 
@@ -12,7 +15,6 @@ except ImportError:
     import urllib2
 
 from ..source import Source
-
 
 class Download(Source):
     def __init__(self, url, checksum, destination, cache_directory):
@@ -45,12 +47,22 @@ class Download(Source):
         if not os.path.isfile(self.local_download_path):
             print('Downloading from %s' % self.url)
             download = urllib2.urlopen(self.url, timeout=5)
+            size = int(download.headers['content-length'])
+            progress = 0
+            print('{:.1%}'.format(float(progress) / size), end='')
+            sys.stdout.flush()
             with open(self.local_download_path, 'wb') as local_file:
+                chunk_size = 1024
                 while True:
-                    chunk = download.read(4 * 1024)
+                    chunk = download.read(chunk_size)
+                    progress = progress + chunk_size
+                    print('\r{:.1%}'.format(float(progress) / size), end='')
+                    sys.stdout.flush()
                     if not chunk:
                         break
                     local_file.write(chunk)
+            print('\r       \r', end='')
+            sys.stdout.flush()
             del download
 
     def __verify_checksum(self):
