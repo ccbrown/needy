@@ -1,5 +1,4 @@
 import argparse
-import colorama
 import os
 import sys
 
@@ -74,7 +73,12 @@ def ldflags(args=[]):
 
 
 def main(args=sys.argv):
-    colorama.init()
+    try:
+        import colorama
+        colorama.init()
+    except ImportError:
+        pass
+
     parser = argparse.ArgumentParser(
         description='Helps with dependencies.',
         formatter_class=argparse.RawDescriptionHelpFormatter,

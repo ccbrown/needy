@@ -5,7 +5,13 @@ import os
 import subprocess
 import multiprocessing
 
-from colorama import Fore
+try:
+    from colorama import Fore
+except ImportError:
+    class EmptyStringAttributes:
+        def __getattr__(self, name):
+            return ''
+    Fore = EmptyStringAttributes()
 
 from .library import Library
 from .platform import available_platforms
