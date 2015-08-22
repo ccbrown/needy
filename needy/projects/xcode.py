@@ -5,6 +5,7 @@ import shutil
 from .. import project
 from ..cd import cd
 
+from source import SourceProject
 
 class XcodeProject(project.Project):
 
@@ -43,13 +44,14 @@ class XcodeProject(project.Project):
             xcodebuild_args.extend(['-arch', self.target().architecture])
 
         extras_build_dir = os.path.join(output_directory, 'extras')
+        include_directory = os.path.join(output_directory, 'include')
 
         subprocess.check_call(['xcodebuild'] + xcodebuild_args + [
             'INSTALL_PATH=%s' % extras_build_dir,
             'INSTALL_ROOT=/',
             'SKIP_INSTALL=NO',
-            'PUBLIC_HEADERS_FOLDER_PATH=%s' % os.path.join(output_directory, 'include'),
-            'PRIVATE_HEADERS_FOLDER_PATH=%s' % os.path.join(output_directory, 'include'),
+            'PUBLIC_HEADERS_FOLDER_PATH=%s' % include_directory,
+            'PRIVATE_HEADERS_FOLDER_PATH=%s' % include_directory,
             'install', 'installhdrs'
         ])
 
@@ -66,3 +68,6 @@ class XcodeProject(project.Project):
 
         if not os.listdir(extras_build_dir):
             os.rmdir(extras_build_dir)
+
+        if not os.path.exists(include_directory):
+            SourceProject.copy_headers(self.directory(), self.configuration(), include_directory)

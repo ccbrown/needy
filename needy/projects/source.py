@@ -30,6 +30,18 @@ class SourceProject(project.Project):
         return SourceProject.source_directory(directory, configuration)
 
     @staticmethod
+    def copy_headers(directory, configuration, destination):
+        source_directory = SourceProject.source_directory(directory, configuration)
+        header_directory = SourceProject.header_directory(directory, configuration)
+
+        if header_directory != source_directory:
+            shutil.copytree(header_directory, destination)
+        else:
+            def non_headers(directory, files):
+                return [f for f in files if os.path.isfile(os.path.join(directory, f)) and os.path.splitext(f)[1] not in ['.h', '.hh', '.hpp']]
+            shutil.copytree(header_directory, destination, ignore=non_headers)
+
+    @staticmethod
     def is_valid_project(definition):
         return SourceProject.header_directory(definition.directory, definition.configuration)
 
@@ -69,16 +81,7 @@ class SourceProject(project.Project):
                 raise NotImplementedError('not fully unimplemented')
 
         # copy headers
-
-        header_directory = self.header_directory(self.directory(), self.configuration())
-        include_directory = os.path.join(output_directory, 'include')
-
-        if header_directory != source_directory:
-            shutil.copytree(header_directory, include_directory)
-        else:
-            def non_headers(directory, files):
-                return [f for f in files if os.path.isfile(os.path.join(directory, f)) and os.path.splitext(f)[1] not in ['.h', '.hh', '.hpp']]
-            shutil.copytree(header_directory, include_directory, ignore=non_headers)
+        self.copy_headers(self.directory(), self.configuration(), os.path.join(output_directory, 'include'))
 
     def __compile(self, input, output):
         name, extension = os.path.splitext(input)
