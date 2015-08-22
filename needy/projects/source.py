@@ -59,6 +59,11 @@ class SourceProject(project.Project):
         # compile source
 
         source_directory = self.source_directory(self.directory(), self.configuration())
+        header_directory = self.header_directory(self.directory(), self.configuration())
+
+        additional_flags = ['-I%s' % source_directory]
+        if header_directory != source_directory:
+            additional_flags.append('-I%s' % header_directory)
 
         if source_directory:
             object_directory = os.path.join(output_directory, 'obj')
@@ -73,7 +78,7 @@ class SourceProject(project.Project):
                     name, extension = os.path.splitext(output)
                     output = name + '.o'
 
-                    if self.__compile(input, output):
+                    if self.__compile(input, output, additional_flags):
                         objects.append(output)
 
             if len(objects) > 0:
@@ -83,16 +88,16 @@ class SourceProject(project.Project):
         # copy headers
         self.copy_headers(self.directory(), self.configuration(), os.path.join(output_directory, 'include'))
 
-    def __compile(self, input, output):
+    def __compile(self, input, output, additional_flags):
         name, extension = os.path.splitext(input)
 
         if not os.path.exists(os.path.dirname(output)):
             os.makedirs(os.path.dirname(output))
 
         if extension == '.c':
-            self.__printed_call(shlex.split(self.target().platform.c_compiler()) + ['-c', input, '-o', output, '-I%s' % self.header_directory])
+            self.__printed_call(shlex.split(self.target().platform.c_compiler(self.target().architecture)) + ['-c', input, '-o', output] + additional_flags)
         elif extension == '.cpp':
-            self.__printed_call(shlex.split(self.target().platform.cxx_compiler()) + ['-c', input, '-o', output, '-I%s' % self.header_directory])
+            self.__printed_call(shlex.split(self.target().platform.cxx_compiler(self.target().architecture)) + ['-c', input, '-o', output] + additional_flags)
         else:
             return False
 
