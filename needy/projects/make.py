@@ -39,6 +39,9 @@ class MakeProject(project.Project):
         return ['make-prefix-arg']
 
     def configure(self, output_directory):
+        if self.__is_cmake_generated():
+            return
+
         excluded_targets = []
 
         if self.target().platform.identifier() != 'host':
@@ -67,9 +70,10 @@ class MakeProject(project.Project):
                     needy_makefile.write(line)
 
     def build(self, output_directory):
-
-        make_args = ['-f', './MakefileNeedyGenerated']
-        make_args += get_make_jobs_args(self)
+        make_args = get_make_jobs_args(self)
+        
+        if not self.__is_cmake_generated():
+           make_args.extend(['-f', './MakefileNeedyGenerated'])
 
         path_override = None
 
@@ -106,18 +110,24 @@ class MakeProject(project.Project):
             make_args.append('PATH=%s' % path_override)
             environment_overrides['PATH'] = path_override
 
-        self.needy.command(['make'] + self.project_targets() + make_args, environment_overrides=environment_overrides)
+        if self.__is_cmake_generated():
+            self.needy.command(['make', 'install/local'] + make_args, environment_overrides=environment_overrides)
+        else:
+            self.needy.command(['make'] + self.project_targets() + make_args, environment_overrides=environment_overrides)
+            make_args.extend(self.__make_prefix_args(make_args, output_directory))
+            self.needy.command(['make', 'install'] + make_args, environment_overrides=environment_overrides)
 
-        make_prefix_args = [
+    def __make_prefix_args(self, other_args, output_directory):
+        if self.configuration('make-prefix-arg') is not None:
+            return ['%s=%s' % (self.configuration('make-prefix-arg'), output_directory)]
+
+        args = [
             'PREFIX=%s' % output_directory,
             'INSTALLPREFIX=%s' % output_directory,
             'INSTALL_PREFIX=%s' % output_directory
         ]
 
-        if self.configuration('make-prefix-arg') is not None:
-            make_prefix_args += ['%s=%s' % (self.configuration('make-prefix-arg'), output_directory)]
-
-        recon_args = ['make', 'install', '--recon'] + make_args + make_prefix_args
+        recon_args = ['make', 'install', '--recon'] + other_args + args
         recon = subprocess.check_output(recon_args)
 
         doing_things_inside_prefix = False
@@ -144,5 +154,13 @@ class MakeProject(project.Project):
 
         if doing_things_outside_prefix or not doing_things_inside_prefix:
             raise RuntimeError('unable to figure out how to set installation prefix')
-
-        self.needy.command(['make', 'install'] + make_args + make_prefix_args, environment_overrides=environment_overrides)
+        
+        return args
+        
+    def __is_cmake_generated(self):
+        try:
+            with open(os.devnull, 'w') as devnull:
+                subprocess.check_call(['make', 'cmake_check_build_system'], stdout=devnull, stderr=devnull)
+            return True
+        except subprocess.CalledProcessError:
+            False

@@ -51,20 +51,25 @@ class Library:
         if not self.should_build(target):
             return False
 
+        print('Building for %s %s' % (target.platform.identifier(), target.architecture))
+
         self.source.clean()
 
         configuration = evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
+        
+        if os.path.isfile(os.path.join(self.source_directory(), 'CMakeLists.txt')):
+            with cd(self.source_directory()):
+                subprocess.check_call(['cmake', '-DCMAKE_INSTALL_PREFIX=%s' % self.build_directory(target), '.'])
+        
         project = self.project(target, configuration)
+
+        if not project:
+            raise RuntimeError('unknown project type')
 
         post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
         with cd(project.directory()):
             for command in post_clean_commands:
                 subprocess.check_call(shlex.split(command))
-
-        print('Building for %s %s' % (target.platform.identifier(), target.architecture))
-
-        if not project:
-            raise RuntimeError('unknown project type')
 
         build_directory = self.build_directory(target)
 

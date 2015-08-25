@@ -1,0 +1,8 @@
+{
+	"libraries": {
+		"cppformat": {
+			"repository": "git@github.com:cppformat/cppformat.git",
+			"commit": "c2ba9e191dd22eacf03090690dd97241dbfec2f9"
+		}
+	}
+}
