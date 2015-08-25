@@ -7,8 +7,12 @@ from .. import project
 class BoostBuildProject(project.Project):
 
     @staticmethod
+    def identifier():
+        return 'boostbuild'
+
+    @staticmethod
     def is_valid_project(definition):
-        return definition.target.platform.identifier() is 'host' and os.path.isfile('Jamroot') and (os.path.isfile('b2') or subprocess.check_output(['b2', '-v']))
+        return definition.target.platform.identifier() == 'host' and os.path.isfile('Jamroot') and (os.path.isfile('b2') or subprocess.check_output(['b2', '-v']))
 
     @staticmethod
     def configuration_keys():

@@ -10,6 +10,10 @@ from .make import get_make_jobs_args
 class AutotoolsProject(project.Project):
 
     @staticmethod
+    def identifier():
+        return 'autotools'
+
+    @staticmethod
     def is_valid_project(definition):
         with cd(definition.directory):
             if os.path.isfile('configure'):

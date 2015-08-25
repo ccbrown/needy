@@ -2,10 +2,7 @@
 	"libraries": {
 		"curl": {
 			"download": "http://curl.haxx.se/download/curl-7.42.1.tar.gz",
-			"checksum": "8df5874c4a67ad55496bf3af548d99a2",
-			"project": {
-				"use-cmake": "no"
-			}
+			"checksum": "8df5874c4a67ad55496bf3af548d99a2"
 		}
 	}
 }

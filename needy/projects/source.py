@@ -10,6 +10,10 @@ from .. import project
 class SourceProject(project.Project):
 
     @staticmethod
+    def identifier():
+        return 'source'
+
+    @staticmethod
     def source_directory(directory, configuration):
         if 'source-directory' in configuration:
             return configuration['source-directory']

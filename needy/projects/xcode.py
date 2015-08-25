@@ -10,6 +10,10 @@ from source import SourceProject
 class XcodeProject(project.Project):
 
     @staticmethod
+    def identifier():
+        return 'xcode'
+
+    @staticmethod
     def is_valid_project(definition):
         if definition.target.platform.identifier() not in ['host', 'ios']:
             return False

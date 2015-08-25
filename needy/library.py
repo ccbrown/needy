@@ -18,6 +18,7 @@ from .target import Target
 from .projects.androidmk import AndroidMkProject
 from .projects.autotools import AutotoolsProject
 from .projects.boostbuild import BoostBuildProject
+from .projects.cmake import CMakeProject
 from .projects.make import MakeProject
 from .projects.source import SourceProject
 from .projects.xcode import XcodeProject
@@ -62,17 +63,7 @@ class Library:
             for command in post_clean_commands:
                 subprocess.check_call(shlex.split(command))
 
-        build_working_directory = self.source_directory()
-        
-        if ('use-cmake' not in configuration or configuration['use-cmake'] != 'no') and os.path.isfile(os.path.join(self.source_directory(), 'CMakeLists.txt')):
-            with cd(self.source_directory()):
-                build_working_directory = os.path.join(self.source_directory(), 'cmake')
-                if not os.path.exists(build_working_directory):
-                    os.makedirs(build_working_directory)
-                with cd(build_working_directory):
-                    subprocess.check_call(['cmake', '-DCMAKE_INSTALL_PREFIX=%s' % self.build_directory(target), self.source_directory()])
-        
-        definition = ProjectDefinition(target, build_working_directory, configuration)
+        definition = ProjectDefinition(target, self.source_directory(), configuration)
         project = self.project(definition)
 
         if not project:
@@ -83,7 +74,7 @@ class Library:
         if not os.path.exists(build_directory):
             os.makedirs(build_directory)
 
-        with cd(build_working_directory):
+        with cd(self.source_directory()):
             try:
                 project.configure(build_directory)
                 project.pre_build(build_directory)
@@ -167,7 +158,13 @@ class Library:
         return os.path.join(self.build_directory(target), 'lib')
 
     def project(self, definition):
-        candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject]
+        candidates = [AndroidMkProject, AutotoolsProject, CMakeProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject]
+
+        if 'type' in definition.configuration:
+            for candidate in candidates:
+                if candidate.identifier() == definition.configuration['type']:
+                    return candidate(definition, self.needy)
+            raise RuntimeError('unknown project type') 
 
         scores = [(len(definition.configuration.viewkeys() & c.configuration_keys()), c) for c in candidates]
         candidates = [candidate for score, candidate in sorted(scores, key=itemgetter(0), reverse=True)]

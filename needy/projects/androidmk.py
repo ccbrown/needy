@@ -8,6 +8,10 @@ from .. import project
 class AndroidMkProject(project.Project):
 
     @staticmethod
+    def identifier():
+        return 'androidmk'
+
+    @staticmethod
     def is_valid_project(definition):
         if definition.target.platform.identifier() not in ['android']:
             return False
