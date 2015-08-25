@@ -57,26 +57,33 @@ class Library:
 
         configuration = evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
         
-        if os.path.isfile(os.path.join(self.source_directory(), 'CMakeLists.txt')):
-            with cd(self.source_directory()):
-                subprocess.check_call(['cmake', '-DCMAKE_INSTALL_PREFIX=%s' % self.build_directory(target), '.'])
+        post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
+        with cd(self.source_directory()):
+            for command in post_clean_commands:
+                subprocess.check_call(shlex.split(command))
+
+        build_working_directory = self.source_directory()
         
-        project = self.project(target, configuration)
+        if ('use-cmake' not in configuration or configuration['use-cmake'] != 'no') and os.path.isfile(os.path.join(self.source_directory(), 'CMakeLists.txt')):
+            with cd(self.source_directory()):
+                build_working_directory = os.path.join(self.source_directory(), 'cmake')
+                if not os.path.exists(build_working_directory):
+                    os.makedirs(build_working_directory)
+                with cd(build_working_directory):
+                    subprocess.check_call(['cmake', '-DCMAKE_INSTALL_PREFIX=%s' % self.build_directory(target), self.source_directory()])
+        
+        definition = ProjectDefinition(target, build_working_directory, configuration)
+        project = self.project(definition)
 
         if not project:
             raise RuntimeError('unknown project type')
-
-        post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
-        with cd(project.directory()):
-            for command in post_clean_commands:
-                subprocess.check_call(shlex.split(command))
 
         build_directory = self.build_directory(target)
 
         if not os.path.exists(build_directory):
             os.makedirs(build_directory)
 
-        with cd(project.directory()):
+        with cd(build_working_directory):
             try:
                 project.configure(build_directory)
                 project.pre_build(build_directory)
@@ -159,16 +166,11 @@ class Library:
     def library_path(self, target):
         return os.path.join(self.build_directory(target), 'lib')
 
-    def project(self, target, configuration):
+    def project(self, definition):
         candidates = [AndroidMkProject, AutotoolsProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject]
 
-        if configuration:
-            configuration = evaluate_conditionals(configuration, target)
-
-        scores = [(len(configuration.viewkeys() & c.configuration_keys()), c) for c in candidates]
+        scores = [(len(definition.configuration.viewkeys() & c.configuration_keys()), c) for c in candidates]
         candidates = [candidate for score, candidate in sorted(scores, key=itemgetter(0), reverse=True)]
-
-        definition = ProjectDefinition(target, self.source_directory(), configuration)
 
         with cd(definition.directory):
             for candidate in candidates:

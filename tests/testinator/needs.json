@@ -4,7 +4,8 @@
 			"repository": "git@github.com:elbeno/testinator.git",
 			"commit": "b6183c43718ccefb7896c47a1d4a9d89388890e7",
 			"project" : {
-				"source-directory" : "src/include"
+			    "use-cmake": "no",
+				"source-directory": "src/include"
 			}
 		}
 	}
