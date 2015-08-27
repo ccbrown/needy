@@ -103,3 +103,6 @@ class Project:
 
     def command(self, arguments, environment_overrides={}):
         return self.needy.command(arguments, environment_overrides=environment_overrides)
+
+    def command_output(self, arguments, environment_overrides={}):
+        return self.needy.command_output(arguments, environment_overrides=environment_overrides)
