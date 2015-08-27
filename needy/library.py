@@ -1,3 +1,6 @@
+import binascii
+import hashlib
+import json
 import os
 import shlex
 import shutil
@@ -27,25 +30,25 @@ from .projects.xcode import XcodeProject
 class Library:
     def __init__(self, configuration, directory, needy):
 
-        self.configuration = configuration
+        self.__configuration = configuration
         self.directory = directory
 
-        if 'download' in self.configuration:
-            self.source = Download(self.configuration['download'], self.configuration['checksum'], self.source_directory(), os.path.join(directory, 'download'))
-        elif 'repository' in self.configuration:
-            self.source = GitRepository(self.configuration['repository'], self.configuration['commit'], self.source_directory())
-        elif 'directory' in self.configuration:
-            self.source = Directory(self.configuration['directory'] if os.path.isabs(self.configuration['directory']) else os.path.join(os.path.dirname(needy.path()), self.configuration['directory']), self.source_directory())
+        if 'download' in self.__configuration:
+            self.source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(directory, 'download'))
+        elif 'repository' in self.__configuration:
+            self.source = GitRepository(self.__configuration['repository'], self.__configuration['commit'], self.source_directory())
+        elif 'directory' in self.__configuration:
+            self.source = Directory(self.__configuration['directory'] if os.path.isabs(self.__configuration['directory']) else os.path.join(os.path.dirname(needy.path()), self.__configuration['directory']), self.source_directory())
         else:
             raise ValueError('no source specified in configuration')
 
         self.needy = needy
 
-    def should_build(self, target):
-        if 'project' not in self.configuration:
-            return True
+    def configuration(self, target):
+        return evaluate_conditionals(self.__configuration['project'] if 'project' in self.__configuration else dict(), target)
 
-        configuration = evaluate_conditionals(self.configuration['project'], target)
+    def should_build(self, target):
+        configuration = self.configuration(target)
         return 'build' not in configuration or configuration['build']
 
     def build(self, target):
@@ -56,7 +59,7 @@ class Library:
 
         self.source.clean()
 
-        configuration = evaluate_conditionals(self.configuration['project'] if 'project' in self.configuration else dict(), target)
+        configuration = self.configuration(target)
         
         post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
         with cd(self.source_directory()):
@@ -71,8 +74,10 @@ class Library:
 
         build_directory = self.build_directory(target)
 
-        if not os.path.exists(build_directory):
-            os.makedirs(build_directory)
+        if os.path.exists(build_directory):
+            shutil.rmtree(build_directory)
+
+        os.makedirs(build_directory)
 
         with cd(self.source_directory()):
             try:
@@ -83,6 +88,12 @@ class Library:
             except:
                 shutil.rmtree(build_directory)
                 raise
+
+        with open(self.build_status_path(target), 'w') as status_file:
+            status = {
+                'configuration': binascii.hexlify(self.__configuration_hash(target))
+            }
+            json.dump(status, status_file)
 
         return True
 
@@ -135,8 +146,23 @@ class Library:
             raise
 
     def has_up_to_date_build(self, target):
-        # TODO: return out-of-date if our configuration changes
-        return not self.should_build(target) or os.path.exists(self.build_directory(target))
+        if not self.should_build(target):
+            return True
+
+        if not os.path.isfile(self.build_status_path(target)):
+            return False
+        
+        configuration = self.configuration(target)
+        
+        try:
+            with open(self.build_status_path(target), 'r') as status_file:
+                status = json.load(status_file)
+                if binascii.unhexlify(status['configuration']) != self.__configuration_hash(target):
+                    return False
+        except ValueError:
+            return False
+
+        return True
 
     def has_up_to_date_universal_binary(self, name, configuration):
         # TODO: return out-of-date if our configuration changes
@@ -144,6 +170,9 @@ class Library:
 
     def build_directory(self, target):
         return os.path.join(self.directory, 'build', target.platform.identifier(), target.architecture)
+
+    def build_status_path(self, target):
+        return os.path.join(self.build_directory(target), 'needy.status')
 
     def source_directory(self):
         return os.path.join(self.directory, 'source')
@@ -175,3 +204,14 @@ class Library:
                     return candidate(definition, self.needy)
 
         raise RuntimeError('unknown project type')
+
+    def __configuration_hash(self, target):
+        hash = hashlib.sha256()
+
+        top = self.__configuration.copy()
+        top['project'] = None
+        hash.update(json.dumps(top, sort_keys=True))
+
+        hash.update(json.dumps(self.configuration(target), sort_keys=True))
+
+        return hash.digest()
