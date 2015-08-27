@@ -60,7 +60,8 @@ class Needy:
         environment_overrides['PWD'] = current_directory()
         env = os.environ.copy()
         env.update(environment_overrides)
-        return subprocess.check_output(arguments, env=env)
+        with open(os.devnull, 'w') as devnull:
+            return subprocess.check_output(arguments, env=env, stderr=devnull)
 
     def recursive(self, needs_file):
         return Needy(needs_file, self.parameters()) if os.path.isfile(needs_file) else None

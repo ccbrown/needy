@@ -230,7 +230,7 @@ class Library:
 
         with cd(definition.directory):
             for candidate in candidates:
-                if candidate.is_valid_project(definition):
+                if candidate.is_valid_project(definition, self.needy):
                     return candidate(definition, self.needy)
 
         raise RuntimeError('unknown project type')

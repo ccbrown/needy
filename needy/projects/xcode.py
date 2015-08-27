@@ -14,7 +14,7 @@ class XcodeProject(project.Project):
         return 'xcode'
 
     @staticmethod
-    def is_valid_project(definition):
+    def is_valid_project(definition, needy):
         if definition.target.platform.identifier() not in ['host', 'ios']:
             return False
 
@@ -25,9 +25,10 @@ class XcodeProject(project.Project):
 
         try:
             with cd(definition.directory):
-                with open(os.devnull, 'w') as devnull:
-                    subprocess.check_call(['xcodebuild', '-list'] + xcodebuild_args, stdout=devnull, stderr=devnull)
+                needy.command_output(['xcodebuild', '-list'] + xcodebuild_args)
         except subprocess.CalledProcessError:
+            return False
+        except OSError:
             return False
         return True
 

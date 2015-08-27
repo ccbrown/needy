@@ -11,7 +11,7 @@ class AndroidMkProject(project.Project):
         return 'androidmk'
 
     @staticmethod
-    def is_valid_project(definition):
+    def is_valid_project(definition, needy):
         if definition.target.platform.identifier() not in ['android']:
             return False
         if not os.path.exists(os.path.join(definition.directory, 'Android.mk')):

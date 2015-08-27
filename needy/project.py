@@ -51,7 +51,7 @@ class Project:
         raise NotImplementedError('Subclasses of Project must override identifier')
 
     @staticmethod
-    def is_valid_project(definition):
+    def is_valid_project(definition, needy):
         raise NotImplementedError('Subclasses of Project must override is_valid_project')
 
     @staticmethod

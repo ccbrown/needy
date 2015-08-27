@@ -24,7 +24,7 @@ class MakeProject(project.Project):
         return 'make'
 
     @staticmethod
-    def is_valid_project(definition):
+    def is_valid_project(definition, needy):
         return MakeProject.get_makefile_path(definition.directory) is not None
 
     @staticmethod

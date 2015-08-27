@@ -15,9 +15,10 @@ class cd:
         global _current_directory
         self.__saved_path = os.getcwd()
         os.chdir(self.__new_path)
+        self.__previous_cd = _current_directory
         _current_directory = self.__new_path
 
     def __exit__(self, etype, value, traceback):
         global _current_directory
         os.chdir(self.__saved_path)
-        _current_directory = None
+        _current_directory = self.__previous_cd

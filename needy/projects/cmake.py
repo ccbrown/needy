@@ -11,7 +11,7 @@ class CMakeProject(project.Project):
         return 'cmake'
 
     @staticmethod
-    def is_valid_project(definition):
+    def is_valid_project(definition, needy):
         return definition.target.platform.identifier() == 'host' and os.path.isfile('CMakeLists.txt')
 
     def configure(self, output_directory):

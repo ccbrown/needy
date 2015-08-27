@@ -45,7 +45,7 @@ class SourceProject(project.Project):
             shutil.copytree(header_directory, destination, ignore=non_headers)
 
     @staticmethod
-    def is_valid_project(definition):
+    def is_valid_project(definition, needy):
         return SourceProject.header_directory(definition.directory, definition.configuration)
 
     @staticmethod

@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 from .. import project
 
@@ -10,8 +11,23 @@ class BoostBuildProject(project.Project):
         return 'boostbuild'
 
     @staticmethod
-    def is_valid_project(definition):
-        return definition.target.platform.identifier() == 'host' and os.path.isfile('Jamroot') and (os.path.isfile('b2') or subprocess.check_output(['b2', '-v']))
+    def is_valid_project(definition, needy):
+        if definition.target.platform.identifier() != 'host':
+            return False
+            
+        if not os.path.isfile('Jamroot'):
+            return False
+        
+        if os.path.isfile('b2'):
+            return True
+
+        try:
+            needy.command_output(['b2', '-v'])
+            return True
+        except subprocess.CalledProcessError:
+            return False
+        except OSError:
+            return False
 
     @staticmethod
     def configuration_keys():
