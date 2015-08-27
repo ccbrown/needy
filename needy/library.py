@@ -4,9 +4,16 @@ import json
 import os
 import shlex
 import shutil
-import tempfile
 
 from operator import itemgetter
+
+try:
+    from colorama import Fore
+except ImportError:
+    class EmptyStringAttributes:
+        def __getattr__(self, name):
+            return ''
+    Fore = EmptyStringAttributes()
 
 from .project import evaluate_conditionals
 from .project import ProjectDefinition
@@ -22,42 +29,17 @@ from .projects.androidmk import AndroidMkProject
 from .projects.autotools import AutotoolsProject
 from .projects.boostbuild import BoostBuildProject
 from .projects.cmake import CMakeProject
+from .projects.custom import CustomProject
 from .projects.make import MakeProject
 from .projects.source import SourceProject
 from .projects.xcode import XcodeProject
-
-
-class SafeDirectory:
-    def __init__(self, library):
-        self.__symlinked = False
-        self.__library = library
-        self.__original_directory = library.directory
-        self.__temp_directory = None
-
-    def __enter__(self):
-        # try to create a symlink for build systems that choke on spaces
-        if ' ' in self.__library.directory:
-            try:
-                self.__temp_directory = tempfile.mkdtemp()
-                path = os.path.join(self.__temp_directory, 'library')
-                os.symlink(self.__library.directory, path)
-                self.__library.directory = path
-                self.__symlinked = True
-            except:
-                pass
-
-    def __exit__(self, etype, value, traceback):
-        if self.__temp_directory:
-            shutil.rmtree(self.__temp_directory)
-        self.__library.directory = self.__original_directory
 
 
 class Library:
     def __init__(self, configuration, directory, needy):
 
         self.__configuration = configuration
-
-        self.directory = directory
+        self.__directory = directory
 
         if 'download' in self.__configuration:
             self.source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(directory, 'download'))
@@ -81,43 +63,45 @@ class Library:
         if not self.should_build(target):
             return False
 
-        with SafeDirectory(self):
-            print('Building for %s %s' % (target.platform.identifier(), target.architecture))
+        print('Building for %s %s' % (target.platform.identifier(), target.architecture))
 
-            self.source.clean()
-    
-            configuration = self.configuration(target)
-            
-            post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
-            with cd(self.source_directory()):
-                if isinstance(post_clean_commands, list):
-                    for command in post_clean_commands:
-                        self.needy.command(shlex.split(command))
-                else:
-                    self.needy.command(shlex.split(post_clean_commands))
-    
-            definition = ProjectDefinition(target, self.source_directory(), configuration)
-            project = self.project(definition)
-    
-            if not project:
-                raise RuntimeError('unknown project type')
-    
-            build_directory = self.build_directory(target)
-    
-            if os.path.exists(build_directory):
+        if ' ' in self.__directory:
+            print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t handle spaces well, so if you have problems, consider moving the project or using a symlink.')
+
+        self.source.clean()
+
+        configuration = self.configuration(target)
+        
+        post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
+        with cd(self.source_directory()):
+            if isinstance(post_clean_commands, list):
+                for command in post_clean_commands:
+                    self.needy.command(shlex.split(command))
+            else:
+                self.needy.command(shlex.split(post_clean_commands))
+
+        definition = ProjectDefinition(target, self.source_directory(), configuration)
+        project = self.project(definition)
+
+        if not project:
+            raise RuntimeError('unknown project type')
+
+        build_directory = self.build_directory(target)
+
+        if os.path.exists(build_directory):
+            shutil.rmtree(build_directory)
+
+        os.makedirs(build_directory)
+        
+        with cd(self.source_directory()):
+            try:
+                project.configure(build_directory)
+                project.pre_build(build_directory)
+                project.build(build_directory)
+                project.post_build(build_directory)
+            except:
                 shutil.rmtree(build_directory)
-    
-            os.makedirs(build_directory)
-            
-            with cd(self.source_directory()):
-                try:
-                    project.configure(build_directory)
-                    project.pre_build(build_directory)
-                    project.build(build_directory)
-                    project.post_build(build_directory)
-                except:
-                    shutil.rmtree(build_directory)
-                    raise
+                raise
 
         with open(self.build_status_path(target), 'w') as status_file:
             status = {
@@ -199,16 +183,16 @@ class Library:
         return os.path.exists(self.universal_binary_directory(name))
 
     def build_directory(self, target):
-        return os.path.join(self.directory, 'build', target.platform.identifier(), target.architecture)
+        return os.path.join(self.__directory, 'build', target.platform.identifier(), target.architecture)
 
     def build_status_path(self, target):
         return os.path.join(self.build_directory(target), 'needy.status')
 
     def source_directory(self):
-        return os.path.join(self.directory, 'source')
+        return os.path.join(self.__directory, 'source')
 
     def universal_binary_directory(self, name):
-        return os.path.join(self.directory, 'build', 'universal', name)
+        return os.path.join(self.__directory, 'build', 'universal', name)
 
     def include_path(self, target):
         return os.path.join(self.build_directory(target), 'include')
@@ -217,7 +201,7 @@ class Library:
         return os.path.join(self.build_directory(target), 'lib')
 
     def project(self, definition):
-        candidates = [AndroidMkProject, AutotoolsProject, CMakeProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject]
+        candidates = [AndroidMkProject, AutotoolsProject, CMakeProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject, CustomProject]
 
         if 'type' in definition.configuration:
             for candidate in candidates:

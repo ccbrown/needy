@@ -82,24 +82,24 @@ class Project:
         targets = self.configuration('targets')
         return targets if targets is not None else []
 
+    def evaluate(self, str_or_list, build_directory):
+        l = str_or_list if isinstance(str_or_list, list) else [str_or_list]
+        return [str.format(build_directory=build_directory, 
+                           platform=self.target().platform.identifier(), 
+                           architecture=self.target().architecture) for str in l]
+
+    def run_commands(self, commands, build_directory):
+        for command in self.evaluate(commands, build_directory):
+            self.command(shlex.split(command))
+
     def pre_build(self, output_directory):
-        pre_build_commands = self.configuration('pre-build') or []
-        if isinstance(pre_build_commands, list):
-	        for command in pre_build_commands:
-	            self.command(shlex.split(command))
-        else:
-            self.command(shlex.split(pre_build_commands))
+        self.run_commands(self.configuration('pre-build') or [], output_directory)
 
     def configure(self, build_directory):
         pass
 
     def post_build(self, output_directory):
-        postbuild_commands = self.configuration('post-build') or []
-        if isinstance(postbuild_commands, list):
-            for command in postbuild_commands:
-                self.command(shlex.split(command.format(build_directory=output_directory)))
-        else:
-            self.command(shlex.split(postbuild_commands.format(build_directory=output_directory)))
+        self.run_commands(self.configuration('post-build') or [], output_directory)
 
     def command(self, arguments, environment_overrides={}):
         return self.needy.command(arguments, environment_overrides=environment_overrides)

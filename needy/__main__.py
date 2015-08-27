@@ -30,7 +30,7 @@ def satisfy(args=[]):
         platform.add_arguments(parser)
     parameters = parser.parse_args(args)
 
-    needy = Needy(os.path.abspath('needs.json'), parameters)
+    needy = Needy('needs.json', parameters)
 
     if parameters.universal_binary:
         needy.satisfy_universal_binary(parameters.universal_binary)
@@ -49,7 +49,7 @@ def cflags(args=[]):
     parser.add_argument('--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parameters = parser.parse_args(args)
 
-    needy = Needy(os.path.abspath('needs.json'), parameters)
+    needy = Needy('needs.json', parameters)
     target = needy.target(parameters.target)
 
     print(' '.join([('-I%s' % path) for path in needy.include_paths(target)]))
@@ -65,7 +65,7 @@ def ldflags(args=[]):
     parser.add_argument('--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parameters = parser.parse_args(args)
 
-    needy = Needy(os.path.abspath('needs.json'), parameters)
+    needy = Needy('needs.json', parameters)
     target = needy.target(parameters.target)
 
     print(' '.join([('-L%s' % path) for path in needy.library_paths(target)]))

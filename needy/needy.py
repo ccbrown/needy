@@ -5,6 +5,8 @@ import os
 import subprocess
 import multiprocessing
 
+from collections import OrderedDict
+
 try:
     from colorama import Fore
 except ImportError:
@@ -20,11 +22,11 @@ from .cd import current_directory
 
 class Needy:
     def __init__(self, path, parameters):
-        self.__path = path
+        self.__path = path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
         self.__parameters = parameters
 
         with open(self.__path, 'r') as needs_file:
-            self.needs = json.load(needs_file)
+            self.needs = json.load(needs_file, object_pairs_hook=OrderedDict)
 
         self.__needs_directory = os.path.join(os.path.dirname(self.__path), 'needs')
 
@@ -75,14 +77,15 @@ class Needy:
         for name, library_configuration in self.needs['libraries'].iteritems():
             directory = os.path.join(self.__needs_directory, name)
             library = Library(library_configuration, directory, self)
-            if library.should_build(target):
-                ret.append((name, library))
+            ret.append((name, library))
 
         return ret
 
     def include_paths(self, target):
         ret = []
         for n, l in self.libraries_to_build(target):
+            if not l.should_build(target):
+                continue
             if os.path.isdir(l.include_path(target)):
                 ret.append(l.include_path(target))
             needy = self.recursive(os.path.join(l.source_directory(), 'needs.json'))
@@ -93,6 +96,8 @@ class Needy:
     def library_paths(self, target):
         ret = []
         for n, l in self.libraries_to_build(target):
+            if not l.should_build(target):
+                continue
             if os.path.isdir(l.library_path(target)):
                 ret.append(l.library_path(target))
             needy = self.recursive(os.path.join(l.source_directory(), 'needs.json'))
@@ -107,9 +112,7 @@ class Needy:
         print('Satisfying %s' % self.path())
 
         try:
-            for name, library_configuration in self.needs['libraries'].items():
-                directory = os.path.join(self.__needs_directory, name)
-                library = Library(library_configuration, directory, self)
+            for name, library in self.libraries_to_build(target):
                 if library.has_up_to_date_build(target):
                     print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
                 else:
@@ -136,9 +139,7 @@ class Needy:
 
             configuration = self.needs['universal-binaries'][universal_binary]
 
-            for name, library_configuration in self.needs['libraries'].iteritems():
-                directory = os.path.join(self.__needs_directory, name)
-                library = Library(library_configuration, directory, self)
+            for name, library in self.libraries_to_build(target):
                 if library.has_up_to_date_universal_binary(universal_binary, configuration):
                     print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
                 else:
@@ -149,6 +150,9 @@ class Needy:
             print(Fore.RED + '[ERROR]' + Fore.RESET)
             print(e)
             raise
+
+    def sorted_libraries(self):
+        return self.needs['libraries'].items()
 
     def create_universal_binary(self, inputs, output):
         name, extension = os.path.splitext(output)

@@ -37,7 +37,7 @@ class AutotoolsProject(project.Project):
         if not os.path.isfile(os.path.join(self.directory(), 'configure')):
             self.command('./autogen.sh')
 
-        configure_args = self.configuration('configure-args') or []
+        configure_args = self.evaluate(self.configuration('configure-args') or [], output_directory)
 
         configure_args.append('--prefix=%s' % output_directory)
 
