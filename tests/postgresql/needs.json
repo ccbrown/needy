@@ -5,14 +5,11 @@
 			"commit": "0ed1e572b644e064e480e14d2f6afe03d11638a7",
 			"project": {
 				"max-concurrency": 1,
-				"conditionals": [
-					{
-						"platform": "host",
-						"false": {
-							"build": false
-						}
+				"conditionals": {
+					"platform": {
+					    "!host": { "build": false }
 					}
-				]
+				}
 			}
 		}
 	}

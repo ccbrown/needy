@@ -4,14 +4,11 @@
 			"download": "http://www.cryptopp.com/cryptopp562.zip",
 			"checksum": "7ed022585698df48e65ce9218f6c6a67",
 			"project": {
-				"conditionals": [
-					{
-						"platform": "android",
-						"true": {
-							"build": false
-						}
+				"conditionals": {
+					"platform": {
+					    "android": { "build": false }
 					}
-				]
+				}
 			}
 		}
 	}

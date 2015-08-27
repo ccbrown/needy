@@ -4,18 +4,13 @@
 			"repository": "git@github.com:boostorg/boost.git",
 			"commit": "9ccd3390c8e9ef05f4cb681d15b2e14eac48886e",
 			"project": {
-				"post-clean": [
-					"./bootstrap.sh"
-				],
-				"b2-args": ["--with-filesystem"],
-				"conditionals": [
-					{
-						"platform": "host",
-						"false": {
-							"build": false
-						}
+				"post-clean": "./bootstrap.sh",
+				"b2-args": "--with-filesystem",
+				"conditionals": {
+					"platform": {
+						"!host": { "build": false }
 					}
-				]
+				}
 			}
 		}
 	}

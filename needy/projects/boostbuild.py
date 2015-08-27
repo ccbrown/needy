@@ -44,7 +44,7 @@ class BoostBuildProject(project.Project):
 
     def build(self, output_directory):
         b2 = './b2' if os.path.isfile('b2') else 'b2'
-        b2_args = self.configuration('b2-args') or []
+        b2_args = self.evaluate(self.configuration('b2-args'), output_directory)
         b2_args += self.get_build_concurrency_args()
         self.command([b2] + b2_args)
         self.command([b2, 'install', '--prefix=%s' % output_directory] + b2_args)

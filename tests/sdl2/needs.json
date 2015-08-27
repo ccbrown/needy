@@ -5,14 +5,11 @@
 			"checksum": "fe6c61d2e9df9ef570e7e80c6e822537",
 			"project": {
 				"linkage": "static",
-				"conditionals": [
-					{
-						"platform": "ios",
-						"true": {
-							"xcode-project": "./Xcode-iOS/SDL/SDL.xcodeproj"
-						}
+				"conditionals": {
+					"platform": {
+					    "ios": { "xcode-project": "./Xcode-iOS/SDL/SDL.xcodeproj" }
 					}
-				]
+				}
 			}
 		}
 	}

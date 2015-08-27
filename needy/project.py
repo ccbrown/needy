@@ -8,28 +8,16 @@ def evaluate_conditionals(configuration, target):
 
     ret = configuration.copy()
 
-    for conditional in configuration['conditionals']:
-        is_true = True
-        for key, value in conditional.iteritems():
-            if not is_true:
-                break
+    for key, cases in configuration['conditionals'].iteritems():
+        value = None
+        if key == 'platform':
+            value = target.platform.identifier()
+        else:
+            raise ValueError('unknown conditional key')
 
-            if key == 'true' or key == 'false':
-                continue
-
-            if key == 'platform':
-                if isinstance(value, list):
-                    is_true = target.platform.identifier() in value
-                else:
-                    is_true = target.platform.identifier() == value
-            else:
-                raise ValueError('unknown conditional key')
-
-        if is_true:
-            if 'true' in conditional:
-                ret.update(conditional['true'])
-        elif 'false' in conditional:
-            ret.update(conditional['false'])
+        for case, config in cases.iteritems():
+            if case == value or (case[0] == '!' and case != '!{}'.format(value)):
+                ret.update(config)
 
     return ret
 
@@ -79,11 +67,10 @@ class Project:
         return concurrency
 
     def project_targets(self):
-        targets = self.configuration('targets')
-        return targets if targets is not None else []
+        return self.configuration('targets') or []
 
     def evaluate(self, str_or_list, build_directory):
-        l = str_or_list if isinstance(str_or_list, list) else [str_or_list]
+        l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
         return [str.format(build_directory=build_directory, 
                            platform=self.target().platform.identifier(), 
                            architecture=self.target().architecture) for str in l]
@@ -93,13 +80,13 @@ class Project:
             self.command(shlex.split(command))
 
     def pre_build(self, output_directory):
-        self.run_commands(self.configuration('pre-build') or [], output_directory)
+        self.run_commands(self.configuration('pre-build'), output_directory)
 
     def configure(self, build_directory):
         pass
 
     def post_build(self, output_directory):
-        self.run_commands(self.configuration('post-build') or [], output_directory)
+        self.run_commands(self.configuration('post-build'), output_directory)
 
     def command(self, arguments, environment_overrides={}):
         return self.needy.command(arguments, environment_overrides=environment_overrides)
