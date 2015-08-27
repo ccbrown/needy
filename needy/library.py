@@ -52,11 +52,11 @@ class Library:
 
         self.needy = needy
 
-    def configuration(self, target):
+    def project_configuration(self, target):
         return evaluate_conditionals(self.__configuration['project'] if 'project' in self.__configuration else dict(), target)
 
     def should_build(self, target):
-        configuration = self.configuration(target)
+        configuration = self.project_configuration(target)
         return 'build' not in configuration or configuration['build']
 
     def build(self, target):
@@ -70,7 +70,7 @@ class Library:
 
         self.source.clean()
 
-        configuration = self.configuration(target)
+        configuration = self.project_configuration(target)
         
         post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
         with cd(self.source_directory()):
@@ -166,15 +166,12 @@ class Library:
         if not os.path.isfile(self.build_status_path(target)):
             return False
         
-        configuration = self.configuration(target)
+        configuration = self.project_configuration(target)
         
-        try:
-            with open(self.build_status_path(target), 'r') as status_file:
-                status = json.load(status_file)
-                if binascii.unhexlify(status['configuration']) != self.__configuration_hash(target):
-                    return False
-        except ValueError:
-            return False
+        with open(self.build_status_path(target), 'r') as status_file:
+            status = json.load(status_file)
+            if 'configuration' not in status or binascii.unhexlify(status['configuration']) != self.__configuration_hash(target):
+                return False
 
         return True
 
@@ -230,6 +227,6 @@ class Library:
         top.pop('project', None)
         hash.update(json.dumps(top, sort_keys=True))
 
-        hash.update(json.dumps(self.configuration(target), sort_keys=True))
+        hash.update(json.dumps(self.project_configuration(target), sort_keys=True))
 
         return hash.digest()

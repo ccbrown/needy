@@ -22,6 +22,8 @@ def evaluate_conditionals(configuration, target):
             if case in values or (case[0] == '!' and case[1:] not in values):
                 ret.update(config)
 
+    ret.pop('conditionals')
+
     return ret
 
 
