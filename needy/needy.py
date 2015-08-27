@@ -154,9 +154,6 @@ class Needy:
             print(e)
             raise
 
-    def sorted_libraries(self):
-        return self.needs['libraries'].items()
-
     def create_universal_binary(self, inputs, output):
         name, extension = os.path.splitext(output)
         if extension not in ['.a', '.so', '.dylib']:
