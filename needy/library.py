@@ -227,7 +227,7 @@ class Library:
         hash = hashlib.sha256()
 
         top = self.__configuration.copy()
-        top['project'] = None
+        top.pop('project', None)
         hash.update(json.dumps(top, sort_keys=True))
 
         hash.update(json.dumps(self.configuration(target), sort_keys=True))

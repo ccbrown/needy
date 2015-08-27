@@ -1,5 +1,6 @@
 import os
 import shlex
+import sys
 
 
 def evaluate_conditionals(configuration, target):
@@ -9,14 +10,16 @@ def evaluate_conditionals(configuration, target):
     ret = configuration.copy()
 
     for key, cases in configuration['conditionals'].iteritems():
-        value = None
+        values = []
         if key == 'platform':
-            value = target.platform.identifier()
+            values.append(target.platform.identifier())
+            if target.platform.identifier() == 'host':
+                values.append(sys.platform)
         else:
             raise ValueError('unknown conditional key')
 
         for case, config in cases.iteritems():
-            if case == value or (case[0] == '!' and case != '!{}'.format(value)):
+            if case in values or (case[0] == '!' and case[1:] not in values):
                 ret.update(config)
 
     return ret
