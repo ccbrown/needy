@@ -50,7 +50,7 @@ class XcodeProject(project.Project):
         extras_build_dir = os.path.join(output_directory, 'extras')
         include_directory = os.path.join(output_directory, 'include')
 
-        subprocess.check_call(['xcodebuild'] + xcodebuild_args + [
+        self.command(['xcodebuild'] + xcodebuild_args + [
             'INSTALL_PATH=%s' % extras_build_dir,
             'INSTALL_ROOT=/',
             'SKIP_INSTALL=NO',

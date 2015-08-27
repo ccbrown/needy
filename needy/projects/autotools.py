@@ -33,7 +33,7 @@ class AutotoolsProject(project.Project):
 
     def configure(self, output_directory):
         if not os.path.isfile(os.path.join(self.directory(), 'configure')):
-            subprocess.check_call('./autogen.sh')
+            self.command('./autogen.sh')
 
         configure_args = self.configuration('configure-args') or []
 
@@ -108,7 +108,7 @@ class AutotoolsProject(project.Project):
             else:
                 raise ValueError('unknown linkage')
 
-        subprocess.check_call(['./configure'] + configure_args)
+        self.command(['./configure'] + configure_args)
 
     def build(self, output_directory):
         make_args = get_make_jobs_args(self)
@@ -117,8 +117,8 @@ class AutotoolsProject(project.Project):
         if len(binary_paths) > 0:
             make_args.append('PATH=%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
 
-        subprocess.check_call(['make'] + self.project_targets() + make_args)
-        subprocess.check_call(['make', 'install'] + make_args)
+        self.command(['make'] + self.project_targets() + make_args)
+        self.command(['make', 'install'] + make_args)
 
     def __available_configure_host(self, candidates):
         with open(os.path.join(self.directory(), 'configure'), 'r') as file:

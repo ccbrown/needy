@@ -1,15 +1,23 @@
 import os
 
+_current_directory = None
 
-# from http://stackoverflow.com/questions/15427361
+def current_directory():
+    """ returns the current directory as given to cd (which means unresolved symlinks) """
+    global _current_directory
+    return _current_directory or os.getcwd()
+
 class cd:
-    """Context manager for changing the current working directory"""
-    def __init__(self, newPath):
-        self.newPath = os.path.expanduser(newPath)
+    def __init__(self, new_path):
+        self.__new_path = os.path.expanduser(new_path)
 
     def __enter__(self):
-        self.savedPath = os.getcwd()
-        os.chdir(self.newPath)
+        global _current_directory
+        self.__saved_path = os.getcwd()
+        os.chdir(self.__new_path)
+        _current_directory = self.__new_path
 
     def __exit__(self, etype, value, traceback):
-        os.chdir(self.savedPath)
+        global _current_directory
+        os.chdir(self.__saved_path)
+        _current_directory = None

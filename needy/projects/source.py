@@ -2,7 +2,6 @@ import pipes
 import os
 import shlex
 import shutil
-import subprocess
 
 from .. import project
 
@@ -109,4 +108,4 @@ class SourceProject(project.Project):
 
     def __printed_call(self, call):
         print(' '.join(pipes.quote(s) for s in call))
-        subprocess.check_call(call)
+        self.command(call)

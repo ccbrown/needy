@@ -1,9 +1,7 @@
 import os
 import shlex
-import subprocess
 
 
-# TODO: reevaluate where this function belongs
 def evaluate_conditionals(configuration, target):
     if 'conditionals' not in configuration:
         return configuration
@@ -86,13 +84,22 @@ class Project:
 
     def pre_build(self, output_directory):
         pre_build_commands = self.configuration('pre-build') or []
-        for command in pre_build_commands:
-            subprocess.check_call(shlex.split(command))
+        if isinstance(pre_build_commands, list):
+	        for command in pre_build_commands:
+	            self.command(shlex.split(command))
+        else:
+            self.command(shlex.split(pre_build_commands))
 
     def configure(self, build_directory):
         pass
 
     def post_build(self, output_directory):
         postbuild_commands = self.configuration('post-build') or []
-        for command in postbuild_commands:
-            subprocess.check_call(shlex.split(command.format(build_directory=output_directory)))
+        if isinstance(postbuild_commands, list):
+            for command in postbuild_commands:
+                self.command(shlex.split(command.format(build_directory=output_directory)))
+        else:
+            self.command(shlex.split(postbuild_commands.format(build_directory=output_directory)))
+
+    def command(self, arguments, environment_overrides={}):
+        return self.needy.command(arguments, environment_overrides=environment_overrides)

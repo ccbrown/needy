@@ -4,7 +4,7 @@ import json
 import os
 import shlex
 import shutil
-import subprocess
+import tempfile
 
 from operator import itemgetter
 
@@ -27,10 +27,36 @@ from .projects.source import SourceProject
 from .projects.xcode import XcodeProject
 
 
+class SafeDirectory:
+    def __init__(self, library):
+        self.__symlinked = False
+        self.__library = library
+        self.__original_directory = library.directory
+        self.__temp_directory = None
+
+    def __enter__(self):
+        # try to create a symlink for build systems that choke on spaces
+        if ' ' in self.__library.directory:
+            try:
+                self.__temp_directory = tempfile.mkdtemp()
+                path = os.path.join(self.__temp_directory, 'library')
+                os.symlink(self.__library.directory, path)
+                self.__library.directory = path
+                self.__symlinked = True
+            except:
+                pass
+
+    def __exit__(self, etype, value, traceback):
+        if self.__temp_directory:
+            shutil.rmtree(self.__temp_directory)
+        self.__library.directory = self.__original_directory
+
+
 class Library:
     def __init__(self, configuration, directory, needy):
 
         self.__configuration = configuration
+
         self.directory = directory
 
         if 'download' in self.__configuration:
@@ -55,39 +81,43 @@ class Library:
         if not self.should_build(target):
             return False
 
-        print('Building for %s %s' % (target.platform.identifier(), target.architecture))
+        with SafeDirectory(self):
+            print('Building for %s %s' % (target.platform.identifier(), target.architecture))
 
-        self.source.clean()
-
-        configuration = self.configuration(target)
-        
-        post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
-        with cd(self.source_directory()):
-            for command in post_clean_commands:
-                subprocess.check_call(shlex.split(command))
-
-        definition = ProjectDefinition(target, self.source_directory(), configuration)
-        project = self.project(definition)
-
-        if not project:
-            raise RuntimeError('unknown project type')
-
-        build_directory = self.build_directory(target)
-
-        if os.path.exists(build_directory):
-            shutil.rmtree(build_directory)
-
-        os.makedirs(build_directory)
-
-        with cd(self.source_directory()):
-            try:
-                project.configure(build_directory)
-                project.pre_build(build_directory)
-                project.build(build_directory)
-                project.post_build(build_directory)
-            except:
+            self.source.clean()
+    
+            configuration = self.configuration(target)
+            
+            post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
+            with cd(self.source_directory()):
+                if isinstance(post_clean_commands, list):
+                    for command in post_clean_commands:
+                        self.needy.command(shlex.split(command))
+                else:
+                    self.needy.command(shlex.split(post_clean_commands))
+    
+            definition = ProjectDefinition(target, self.source_directory(), configuration)
+            project = self.project(definition)
+    
+            if not project:
+                raise RuntimeError('unknown project type')
+    
+            build_directory = self.build_directory(target)
+    
+            if os.path.exists(build_directory):
                 shutil.rmtree(build_directory)
-                raise
+    
+            os.makedirs(build_directory)
+            
+            with cd(self.source_directory()):
+                try:
+                    project.configure(build_directory)
+                    project.pre_build(build_directory)
+                    project.build(build_directory)
+                    project.post_build(build_directory)
+                except:
+                    shutil.rmtree(build_directory)
+                    raise
 
         with open(self.build_status_path(target), 'w') as status_file:
             status = {
@@ -140,7 +170,7 @@ class Library:
 
                 if extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % file)
-                    subprocess.check_call(['lipo', '-create'] + builds + ['-output', os.path.join(universal_lib_directory, file)])
+                    self.needy.command(['lipo', '-create'] + builds + ['-output', os.path.join(universal_lib_directory, file)])
         except:
             shutil.rmtree(universal_binary_directory)
             raise

@@ -1,6 +1,5 @@
 import os
 import re
-import subprocess
 
 from .. import project
 
@@ -124,7 +123,7 @@ class MakeProject(project.Project):
         ]
 
         recon_args = ['make', 'install', '--recon'] + other_args + args
-        recon = subprocess.check_output(recon_args)
+        recon = self.command_output(recon_args)
 
         doing_things_inside_prefix = False
         doing_things_outside_prefix = False

@@ -1,5 +1,4 @@
 import os
-import subprocess
 
 from .. import project
 
@@ -31,5 +30,5 @@ class BoostBuildProject(project.Project):
         b2 = './b2' if os.path.isfile('b2') else 'b2'
         b2_args = self.configuration('b2-args') or []
         b2_args += self.get_build_concurrency_args()
-        subprocess.check_call([b2] + b2_args)
-        subprocess.check_call([b2, 'install', '--prefix=%s' % output_directory] + b2_args)
+        self.command([b2] + b2_args)
+        self.command([b2, 'install', '--prefix=%s' % output_directory] + b2_args)

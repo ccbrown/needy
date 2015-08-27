@@ -16,7 +16,7 @@ except ImportError:
 from .library import Library
 from .platform import available_platforms
 from .target import Target
-
+from .cd import current_directory
 
 class Needy:
     def __init__(self, path, parameters):
@@ -50,12 +50,17 @@ class Needy:
         platform = self.platform(parts[0])
         return Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
 
-    def command(self, arguments, environment_overrides=None):
-        env = None
-        if environment_overrides:
-            env = os.environ.copy()
-            env.update(environment_overrides)
+    def command(self, arguments, environment_overrides={}):
+        environment_overrides['PWD'] = current_directory()
+        env = os.environ.copy()
+        env.update(environment_overrides)
         subprocess.check_call(arguments, env=env)
+
+    def command_output(self, arguments, environment_overrides={}):
+        environment_overrides['PWD'] = current_directory()
+        env = os.environ.copy()
+        env.update(environment_overrides)
+        return subprocess.check_output(arguments, env=env)
 
     def recursive(self, needs_file):
         return Needy(needs_file, self.parameters()) if os.path.isfile(needs_file) else None

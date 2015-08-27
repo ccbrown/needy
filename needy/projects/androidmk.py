@@ -1,6 +1,5 @@
 import os
 import shutil
-import subprocess
 
 from .. import project
 
@@ -36,6 +35,6 @@ class AndroidMkProject(project.Project):
             'APP_ABI=%s' % abi
         ]
 
-        subprocess.check_call(['ndk-build'] + ndk_build_args)
+        self.command(['ndk-build'] + ndk_build_args)
         shutil.move(os.path.join(output_directory, 'lib-temp', abi), os.path.join(output_directory, 'lib'))
         shutil.rmtree(os.path.join(output_directory, 'lib-temp'))

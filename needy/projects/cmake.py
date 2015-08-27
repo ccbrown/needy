@@ -1,5 +1,4 @@
 import os
-import subprocess
 
 from .. import project
 from ..cd import cd
@@ -20,9 +19,9 @@ class CMakeProject(project.Project):
         if not os.path.exists(cmake_directory):
             os.makedirs(cmake_directory)
         with cd(cmake_directory):
-            subprocess.check_call(['cmake', '-G', 'Unix Makefiles', '-DCMAKE_INSTALL_PREFIX=%s' % output_directory, self.directory()])
+            self.command(['cmake', '-G', 'Unix Makefiles', '-DCMAKE_INSTALL_PREFIX=%s' % output_directory, self.directory()])
 
     def build(self, output_directory):
         cmake_directory = os.path.join(self.directory(), 'cmake')
         with cd(cmake_directory):
-            subprocess.check_call(['make', 'install/local'])
+            self.command(['make', 'install/local'])
