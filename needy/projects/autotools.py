@@ -43,22 +43,6 @@ class AutotoolsProject(project.Project):
 
         linkage = self.configuration('linkage')
 
-        c_compiler = self.target().platform.c_compiler(self.target().architecture)
-        if c_compiler:
-            configure_args.append('CC=%s' % c_compiler)
-
-        cxx_compiler = self.target().platform.cxx_compiler(self.target().architecture)
-        if cxx_compiler:
-            configure_args.append('CXX=%s' % cxx_compiler)
-
-        libraries = self.target().platform.libraries(self.target().architecture)
-        if len(libraries) > 0:
-            configure_args.append('LDFLAGS=%s' % ' '.join(libraries))
-
-        binary_paths = self.target().platform.binary_paths(self.target().architecture)
-        if len(binary_paths) > 0:
-            configure_args.append('PATH=%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
-
         if self.target().platform.identifier() == 'ios':
             if not linkage:
                 linkage = 'static'

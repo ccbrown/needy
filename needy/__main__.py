@@ -46,7 +46,7 @@ def cflags(args=[]):
         description='Gets compiler flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('--target', default='host', help='gets flags for this target (example: ios:armv7)')
+    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parameters = parser.parse_args(args)
 
     needy = Needy('needs.json', parameters)
@@ -62,13 +62,13 @@ def ldflags(args=[]):
         description='Gets linker flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('--target', default='host', help='gets flags for this target (example: ios:armv7)')
+    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
+    parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
     needy = Needy('needs.json', parameters)
-    target = needy.target(parameters.target)
 
-    print(' '.join([('-L%s' % path) for path in needy.library_paths(target)]))
+    print(' '.join([('-L%s' % path) for path in needy.library_paths(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))]))
     return 0
 
 

@@ -68,7 +68,7 @@ class Needy:
     def recursive(self, needs_file):
         return Needy(needs_file, self.parameters()) if os.path.isfile(needs_file) else None
 
-    def libraries_to_build(self, target):
+    def libraries_to_build(self):
         if 'libraries' not in self.needs:
             return []
 
@@ -83,7 +83,7 @@ class Needy:
 
     def include_paths(self, target):
         ret = []
-        for n, l in self.libraries_to_build(target):
+        for n, l in self.libraries_to_build():
             if not l.should_build(target):
                 continue
             if os.path.isdir(l.include_path(target)):
@@ -93,16 +93,19 @@ class Needy:
                 ret.extend(needy.include_paths(target))
         return ret
 
-    def library_paths(self, target):
+    def library_paths(self, target_or_universal_binary):
         ret = []
-        for n, l in self.libraries_to_build(target):
-            if not l.should_build(target):
-                continue
-            if os.path.isdir(l.library_path(target)):
-                ret.append(l.library_path(target))
+        for n, l in self.libraries_to_build():
+            if isinstance(target_or_universal_binary, Target):
+                if not l.should_build(target_or_universal_binary):
+                    continue
+                if os.path.isdir(l.library_path(target_or_universal_binary)):
+                    ret.append(l.library_path(target_or_universal_binary))
+            else:
+                ret.append(l.library_path(target_or_universal_binary))
             needy = self.recursive(os.path.join(l.source_directory(), 'needs.json'))
             if needy:
-                ret.extend(needy.library_paths(target))
+                ret.extend(needy.library_paths(target_or_universal_binary))
         return ret
 
     def satisfy_target(self, target):
@@ -112,7 +115,7 @@ class Needy:
         print('Satisfying %s' % self.path())
 
         try:
-            for name, library in self.libraries_to_build(target):
+            for name, library in self.libraries_to_build():
                 if library.has_up_to_date_build(target):
                     print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
                 else:
@@ -139,7 +142,7 @@ class Needy:
 
             configuration = self.needs['universal-binaries'][universal_binary]
 
-            for name, library in self.libraries_to_build(target):
+            for name, library in self.libraries_to_build():
                 if library.has_up_to_date_universal_binary(universal_binary, configuration):
                     print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
                 else:

@@ -114,7 +114,7 @@ class Library:
     def build_universal_binary(self, name, configuration):
         for platform, architectures in configuration.iteritems():
             for architecture in architectures:
-                target = Target.Target(self.needy.platform(platform), architecture)
+                target = Target(self.needy.platform(platform), architecture)
                 if not self.has_up_to_date_build(target):
                     if not self.build(target):
                         print('Skipping universal binary %s' % name)
@@ -128,7 +128,7 @@ class Library:
         for platform, architectures in configuration.iteritems():
             for architecture in architectures:
                 target_count = target_count + 1
-                target = Target.Target(self.needy.platform(platform), architecture)
+                target = Target(self.needy.platform(platform), architecture)
                 lib_directory = os.path.join(self.build_directory(target), 'lib')
                 for file in os.listdir(lib_directory):
                     if not os.path.isfile(os.path.join(lib_directory, file)):
@@ -179,7 +179,11 @@ class Library:
         return True
 
     def has_up_to_date_universal_binary(self, name, configuration):
-        # TODO: return out-of-date if our configuration changes
+        for platform, architectures in configuration.iteritems():
+            for architecture in architectures:
+                target = Target(self.needy.platform(platform), architecture)
+                if self.should_build(target) and not self.has_up_to_date_build(target):
+                    return False
         return os.path.exists(self.universal_binary_directory(name))
 
     def build_directory(self, target):
@@ -197,8 +201,8 @@ class Library:
     def include_path(self, target):
         return os.path.join(self.build_directory(target), 'include')
 
-    def library_path(self, target):
-        return os.path.join(self.build_directory(target), 'lib')
+    def library_path(self, target_or_universal_binary):
+        return os.path.join(self.build_directory(target_or_universal_binary) if isinstance(target_or_universal_binary, Target) else self.universal_binary_directory(target_or_universal_binary), 'lib')
 
     def project(self, definition):
         candidates = [AndroidMkProject, AutotoolsProject, CMakeProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject, CustomProject]

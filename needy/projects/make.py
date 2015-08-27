@@ -73,25 +73,7 @@ class MakeProject(project.Project):
         make_args = get_make_jobs_args(self)
         make_args.extend(['-f', './MakefileNeedyGenerated'])
 
-        path_override = None
-
         target_os = None
-
-        c_compiler = self.target().platform.c_compiler(self.target().architecture)
-        if c_compiler:
-            make_args.append('CC=%s' % c_compiler)
-
-        cxx_compiler = self.target().platform.cxx_compiler(self.target().architecture)
-        if cxx_compiler:
-            make_args.append('CXX=%s' % cxx_compiler)
-
-        libraries = self.target().platform.libraries(self.target().architecture)
-        if len(libraries) > 0:
-            make_args.append('LDFLAGS=%s' % ' '.join(libraries))
-
-        binary_paths = self.target().platform.binary_paths(self.target().architecture)
-        if len(binary_paths) > 0:
-            path_override = '%s:%s' % (':'.join(binary_paths), os.environ['PATH'])
 
         if self.target().platform.identifier() == 'android':
             target_os = 'Linux'
@@ -103,10 +85,6 @@ class MakeProject(project.Project):
                 'OS=%s' % target_os,
                 'TARGET_OS=%s' % target_os
             ])
-
-        if path_override:
-            make_args.append('PATH=%s' % path_override)
-            environment_overrides['PATH'] = path_override
 
         self.needy.command(['make'] + self.project_targets() + make_args, environment_overrides=environment_overrides)
         make_args.extend(self.__make_prefix_args(make_args, output_directory))

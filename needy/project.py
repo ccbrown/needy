@@ -79,6 +79,27 @@ class Project:
         for command in self.evaluate(commands, build_directory):
             self.command(shlex.split(command))
 
+    def environment_overrides(self):
+        ret = {}
+
+        c_compiler = self.target().platform.c_compiler(self.target().architecture)
+        if c_compiler:
+            ret['CC'] = c_compiler
+
+        cxx_compiler = self.target().platform.cxx_compiler(self.target().architecture)
+        if cxx_compiler:
+            ret['CXX'] = cxx_compiler
+
+        libraries = self.target().platform.libraries(self.target().architecture)
+        if len(libraries) > 0:
+            ret['LDFLAGS'] = ' '.join(libraries)
+
+        binary_paths = self.target().platform.binary_paths(self.target().architecture)
+        if len(binary_paths) > 0:
+            ret['PATH'] = ('%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
+
+        return ret
+
     def pre_build(self, output_directory):
         self.run_commands(self.configuration('pre-build'), output_directory)
 
@@ -89,7 +110,9 @@ class Project:
         self.run_commands(self.configuration('post-build'), output_directory)
 
     def command(self, arguments, environment_overrides={}):
-        return self.needy.command(arguments, environment_overrides=environment_overrides)
+        env = environment_overrides.copy()
+        env.update(self.environment_overrides())
+        self.needy.command(arguments, environment_overrides=env)
 
     def command_output(self, arguments, environment_overrides={}):
         return self.needy.command_output(arguments, environment_overrides=environment_overrides)
