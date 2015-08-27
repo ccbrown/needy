@@ -6,9 +6,9 @@ except ImportError:
 
 def available_platforms():
     from .platforms.host import HostPlatform
-    from .platforms.ios import IOSPlatform
+    from .platforms.iphone import iPhonePlatform
     from .platforms.android import AndroidPlatform
-    return [HostPlatform, IOSPlatform, AndroidPlatform]
+    return [HostPlatform, iPhonePlatform, AndroidPlatform]
 
 
 class Platform:

@@ -15,7 +15,7 @@ def satisfy(args=[]):
     parser.add_argument(
         '-t', '--target',
         default='host',
-        help='builds needs for this target (example: ios:armv7)')
+        help='builds needs for this target (example: iphone:armv7)')
     parser.add_argument(
         '-u', '--universal-binary',
         help='builds the universal binary with the given name')
@@ -46,7 +46,7 @@ def cflags(args=[]):
         description='Gets compiler flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
+    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: iphone:armv7)')
     parameters = parser.parse_args(args)
 
     needy = Needy('needs.json', parameters)
@@ -62,7 +62,7 @@ def ldflags(args=[]):
         description='Gets linker flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
+    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: iphone:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
