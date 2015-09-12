@@ -1,0 +1,22 @@
+{
+	"libraries": {
+		"openssl": {
+			"repository": "git@github.com:openssl/openssl.git",
+			"commit": "OpenSSL_1_0_1p",
+			"project": {
+				"conditionals": {
+					"platform": {
+						"darwin": {
+							"build-steps": [
+								"bash ./Configure darwin64-x86_64-cc --prefix={build_directory}",
+								"make",
+								"make test",
+								"make install"
+							]
+						}
+					}
+				}
+			}
+		}
+	}
+}
