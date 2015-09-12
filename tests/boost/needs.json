@@ -2,10 +2,14 @@
 	"libraries": {
 		"boost": {
 			"repository": "git@github.com:boostorg/boost.git",
-			"commit": "9ccd3390c8e9ef05f4cb681d15b2e14eac48886e",
+			"commit": "boost-1.59.0",
 			"project": {
 				"post-clean": "./bootstrap.sh",
-				"b2-args": "--with-filesystem",
+				"pre-build": "b2 headers",
+				"b2-args": [
+					"--with-filesystem",
+					"--with-thread"
+				],
 				"conditionals": {
 					"platform": {
 						"!host": { "build": false }
