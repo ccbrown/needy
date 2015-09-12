@@ -4,3 +4,6 @@ needs/
 build/
 dist/
 *.egg-info/
+
+example/client/client
+example/server/server
