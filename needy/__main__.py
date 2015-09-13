@@ -17,7 +17,7 @@ def satisfy(args=[]):
     parser.add_argument(
         'library',
         default=None,
-        nargs='?',
+        nargs='*',
         help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument(
         '-t', '--target',

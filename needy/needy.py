@@ -69,15 +69,21 @@ class Needy:
     def recursive(self, needs_file):
         return Needy(needs_file, self.parameters()) if os.path.isfile(needs_file) else None
 
-    def libraries_to_build(self, filter=None):
+    def libraries_to_build(self, filters=None):
         if 'libraries' not in self.needs:
             return []
 
         ret = []
 
         for name, library_configuration in self.needs['libraries'].iteritems():
-            if filter and not fnmatch.fnmatchcase(name, filter):
-                continue
+            if filters:
+                match = False
+                for filter in filters:
+                    if fnmatch.fnmatchcase(name, filter):
+                        match = True
+                        break
+                if not match:
+                    continue
             directory = os.path.join(self.__needs_directory, name)
             library = Library(library_configuration, directory, self)
             ret.append((name, library))
@@ -116,14 +122,14 @@ class Needy:
         l = Library(self.needs['libraries'][library], directory, self)
         return l.build_directory(target_or_universal_binary)
 
-    def satisfy_target(self, target, filter=None):
+    def satisfy_target(self, target, filters=None):
         if 'libraries' not in self.needs:
             return
 
         print('Satisfying %s' % self.path())
 
         try:
-            for name, library in self.libraries_to_build(filter):
+            for name, library in self.libraries_to_build(filters):
                 if library.has_up_to_date_build(target):
                     print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
                 else:
@@ -135,7 +141,7 @@ class Needy:
             print(e)
             raise
 
-    def satisfy_universal_binary(self, universal_binary, filter=None):
+    def satisfy_universal_binary(self, universal_binary, filters=None):
         try:
             print('Satisfying universal binary %s in %s' % (universal_binary, self.path()))
 
@@ -150,7 +156,7 @@ class Needy:
 
             configuration = self.needs['universal-binaries'][universal_binary]
 
-            for name, library in self.libraries_to_build(filter):
+            for name, library in self.libraries_to_build(filters):
                 if library.has_up_to_date_universal_binary(universal_binary, configuration):
                     print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
                 else:
