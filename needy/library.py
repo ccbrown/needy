@@ -183,8 +183,10 @@ class Library:
                     return False
         return os.path.exists(self.universal_binary_directory(name))
 
-    def build_directory(self, target):
-        return os.path.join(self.__directory, 'build', target.platform.identifier(), target.architecture)
+    def build_directory(self, target_or_universal_binary):
+        if isinstance(target_or_universal_binary, Target):
+            return os.path.join(self.__directory, 'build', target_or_universal_binary.platform.identifier(), target_or_universal_binary.architecture)
+        return self.universal_binary_directory(target_or_universal_binary)
 
     def build_status_path(self, target):
         return os.path.join(self.build_directory(target), 'needy.status')
@@ -199,7 +201,7 @@ class Library:
         return os.path.join(self.build_directory(target), 'include')
 
     def library_path(self, target_or_universal_binary):
-        return os.path.join(self.build_directory(target_or_universal_binary) if isinstance(target_or_universal_binary, Target) else self.universal_binary_directory(target_or_universal_binary), 'lib')
+        return os.path.join(self.build_directory(target_or_universal_binary), 'lib')
 
     def project(self, definition):
         candidates = [AndroidMkProject, AutotoolsProject, CMakeProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject, CustomProject]

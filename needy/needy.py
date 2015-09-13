@@ -108,6 +108,11 @@ class Needy:
                 ret.extend(needy.library_paths(target_or_universal_binary))
         return ret
 
+    def build_directory(self, library, target_or_universal_binary):        
+        directory = os.path.join(self.__needs_directory, library)
+        l = Library(self.needs['libraries'][library], directory, self)
+        return l.build_directory(target_or_universal_binary)
+
     def satisfy_target(self, target):
         if 'libraries' not in self.needs:
             return

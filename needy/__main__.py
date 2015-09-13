@@ -73,6 +73,21 @@ def ldflags(args=[]):
     print(' '.join([('-L%s' % path) for path in needy.library_paths(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))]), end='')
     return 0
 
+def builddir(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s builddir' % os.path.basename(sys.argv[0]),
+        description='Gets the build directory for a need.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('-t', '--target', default='host', help='gets the directory for this target (example: iphone:armv7)')
+    parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary')
+    parser.add_argument('library', help='the library to get the directory for')
+    parameters = parser.parse_args(args)
+
+    needy = Needy('needs.json', parameters)
+
+    print(needy.build_directory(parameters.library, parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target)), end='')
+    return 0
 
 def main(args=sys.argv):
     try:
@@ -89,6 +104,7 @@ def main(args=sys.argv):
   satisfy     satisfies libraries / universal binary needs
   cflags      emits the compiler flags required to use the satisfied needs
   ldflags     emits the linker flags required to use the satisfied needs
+  builddir    emits the build directory for a need
 
 Use '%s <command> --help' to get help for a specific command.
 """ % os.path.basename(sys.argv[0])
@@ -103,6 +119,8 @@ Use '%s <command> --help' to get help for a specific command.
         return cflags(parameters.args)
     if parameters.command == 'ldflags':
         return ldflags(parameters.args)
+    if parameters.command == 'builddir':
+        return builddir(parameters.args)
 
     print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))
     return 1
