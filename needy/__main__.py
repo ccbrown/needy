@@ -15,6 +15,11 @@ def satisfy(args=[]):
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
+        'library',
+        default=None,
+        nargs='?',
+        help='the library to satisfy. shell-style wildcards are allowed')
+    parser.add_argument(
         '-t', '--target',
         default='host',
         help='builds needs for this target (example: iphone:armv7)')
@@ -35,9 +40,9 @@ def satisfy(args=[]):
     needy = Needy('needs.json', parameters)
 
     if parameters.universal_binary:
-        needy.satisfy_universal_binary(parameters.universal_binary)
+        needy.satisfy_universal_binary(parameters.universal_binary, parameters.library)
     else:
-        needy.satisfy_target(needy.target(parameters.target))
+        needy.satisfy_target(needy.target(parameters.target), parameters.library)
 
     return 0
 
@@ -79,9 +84,9 @@ def builddir(args=[]):
         description='Gets the build directory for a need.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.add_argument('library', help='the library to get the directory for')
     parser.add_argument('-t', '--target', default='host', help='gets the directory for this target (example: iphone:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary')
-    parser.add_argument('library', help='the library to get the directory for')
     parameters = parser.parse_args(args)
 
     needy = Needy('needs.json', parameters)
