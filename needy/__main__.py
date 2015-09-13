@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import argparse
 import os
 import sys
@@ -52,7 +54,7 @@ def cflags(args=[]):
     needy = Needy('needs.json', parameters)
     target = needy.target(parameters.target)
 
-    print(' '.join([('-I%s' % path) for path in needy.include_paths(target)]))
+    print(' '.join([('-I%s' % path) for path in needy.include_paths(target)]), end='')
     return 0
 
 
@@ -68,7 +70,7 @@ def ldflags(args=[]):
 
     needy = Needy('needs.json', parameters)
 
-    print(' '.join([('-L%s' % path) for path in needy.library_paths(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))]))
+    print(' '.join([('-L%s' % path) for path in needy.library_paths(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))]), end='')
     return 0
 
 
