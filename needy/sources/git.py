@@ -13,7 +13,7 @@ class GitRepository(Source):
         self.directory = directory
 
     def clean(self):
-        if not os.path.exists(self.directory):
+        if not os.path.exists(os.path.join(self.directory, '.git')):
             self.__fetch()
 
         with cd(self.directory):
