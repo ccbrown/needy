@@ -118,14 +118,21 @@ Use '%s <command> --help' to get help for a specific command.
     parser.add_argument('args', nargs=argparse.REMAINDER)
     parameters = parser.parse_args(args[1:])
 
-    if parameters.command == 'satisfy':
-        return satisfy(parameters.args)
-    if parameters.command == 'cflags':
-        return cflags(parameters.args)
-    if parameters.command == 'ldflags':
-        return ldflags(parameters.args)
-    if parameters.command == 'builddir':
-        return builddir(parameters.args)
+    commands = {
+        'satisfy': satisfy,
+        'cflags': cflags,
+        'ldflags': ldflags,
+        'builddir': builddir,
+    }
+
+    if parameters.command in commands:
+        return commands[parameters.command](parameters.args)
+    elif parameters.command == 'help':
+        if len(parameters.args) == 1 and parameters.args[0] in commands:
+            commands[parameters.args[0]](['--help'])
+        else:
+            parser.print_help()
+        return 1
 
     print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))
     return 1

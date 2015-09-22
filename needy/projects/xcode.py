@@ -15,7 +15,7 @@ class XcodeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        if definition.target.platform.identifier() not in ['host', 'ios']:
+        if definition.target.platform.identifier() not in ['host', 'iphone', 'appletv']:
             return False
 
         xcodebuild_args = []
@@ -42,8 +42,10 @@ class XcodeProject(project.Project):
         if self.configuration('xcode-project'):
             xcodebuild_args.extend(['-project', self.configuration('xcode-project')])
 
-        if self.target().platform.identifier() == 'ios':
+        if self.target().platform.identifier() == 'iphone':
             xcodebuild_args.extend(['-sdk', 'iphoneos'])
+        elif self.target().platform.identifier() == 'appletv':
+            xcodebuild_args.extend(['-sdk', 'appletvos'])
 
         if self.target().architecture:
             xcodebuild_args.extend(['-arch', self.target().architecture])

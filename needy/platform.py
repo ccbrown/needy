@@ -6,9 +6,10 @@ except ImportError:
 
 def available_platforms():
     from .platforms.host import HostPlatform
+    from .platforms.appletv import AppleTVPlatform
     from .platforms.iphone import iPhonePlatform
     from .platforms.android import AndroidPlatform
-    return [HostPlatform, iPhonePlatform, AndroidPlatform]
+    return [HostPlatform, AppleTVPlatform, iPhonePlatform, AndroidPlatform]
 
 
 class Platform:
