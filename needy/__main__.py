@@ -6,6 +6,7 @@ import sys
 
 from .needy import Needy
 from .platform import available_platforms
+from .generator import available_generators
 
 
 def satisfy(args=[]):
@@ -94,6 +95,25 @@ def builddir(args=[]):
     print(needy.build_directory(parameters.library, parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target)), end='')
     return 0
 
+def generate(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s generate' % os.path.basename(sys.argv[0]),
+        description='Generates useful files.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        'file',
+        default=None,
+        nargs='+',
+        choices=[g.identifier() for g in available_generators()],
+        help='the file to generate')
+    parameters = parser.parse_args(args)
+
+    needy = Needy('needs.json', parameters)
+    needy.generate(parameters.file)
+
+    return 0
+
 def main(args=sys.argv):
     try:
         import colorama
@@ -110,6 +130,7 @@ def main(args=sys.argv):
   cflags      emits the compiler flags required to use the satisfied needs
   ldflags     emits the linker flags required to use the satisfied needs
   builddir    emits the build directory for a need
+  generate    generates useful files
 
 Use '%s <command> --help' to get help for a specific command.
 """ % os.path.basename(sys.argv[0])
@@ -123,6 +144,7 @@ Use '%s <command> --help' to get help for a specific command.
         'cflags': cflags,
         'ldflags': ldflags,
         'builddir': builddir,
+        'generate': generate,
     }
 
     if parameters.command in commands:

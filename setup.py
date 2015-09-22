@@ -17,6 +17,7 @@ setup(
     author_email='ccbrown112@gmail.com',
     packages=[
         'needy',
+        'needy.generators',
         'needy.platforms',
         'needy.projects',
         'needy.sources'

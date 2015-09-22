@@ -18,6 +18,7 @@ except ImportError:
 
 from .library import Library
 from .platform import available_platforms
+from .generator import available_generators
 from .target import Target
 from .cd import current_directory
 
@@ -33,6 +34,9 @@ class Needy:
 
     def path(self):
         return self.__path
+    
+    def needs_directory(self):
+        return self.__needs_directory
 
     def parameters(self):
         return self.__parameters
@@ -175,3 +179,10 @@ class Needy:
 
         subprocess.check_call(['lipo', '-create'] + inputs + ['-output', output])
         return True
+
+    def generate(self, files):
+        if not os.path.exists(self.needs_directory()):
+            os.makedirs(self.needs_directory())
+        for generator in available_generators():
+            if generator.identifier() in files:
+                generator().generate(self)
