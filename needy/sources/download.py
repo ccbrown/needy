@@ -68,12 +68,15 @@ class Download(Source):
     def __verify_checksum(self):
         checksum = binascii.unhexlify(self.checksum)
 
-        if len(checksum) != hashlib.md5().digest_size:
-            raise ValueError('unknown checksum type')
-
         with open(self.local_download_path, 'rb') as file:
             file_contents = file.read()
-            hash = hashlib.md5()
+            hash = None
+            if len(checksum) == hashlib.md5().digest_size:
+                hash = hashlib.md5()
+            elif len(checksum) == hashlib.sha1().digest_size:
+                hash = hashlib.sha1()
+            else:
+                raise ValueError('unknown checksum type')
             hash.update(file_contents)
             if checksum != hash.digest():
                 raise ValueError('incorrect checksum')

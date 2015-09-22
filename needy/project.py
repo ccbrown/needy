@@ -21,6 +21,7 @@ def evaluate_conditionals(configuration, target):
         for case, config in cases.iteritems():
             if case in values or (case[0] == '!' and case[1:] not in values):
                 ret.update(config)
+                break
 
     ret.pop('conditionals')
 
