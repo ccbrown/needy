@@ -18,17 +18,30 @@ path-constant NEEDY : %s ;
 path-constant BASE_DIR : %s ;
 path-constant NEEDS_FILE : %s ;
 
+feature.feature needyargs : : free ;
+toolset.flags $(__name__).satisfy-lib NEEDYARGS <needyargs> ;
+
 rule needlib ( name : extra-sources * : requirements * : default-build * : usage-requirements * )
 {
-    local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(name)" ] ;
+    local target = $(name) ;
+    
+    if <target-os>iphone in $(requirements) {
+        target = "$(name) -u iphone" ;
+    } else if <target-os>android in $(requirements) {
+        target = "$(name) -t android:armv7" ;
+    } else if <target-os>asappletv in $(requirements) {
+        target = "$(name) -t appletv:arm64" ;
+    }
+    
+    local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
 
-    feature.feature needyargs : : free ;
-    toolset.flags $(__name__).satisfy-lib NEEDYARGS <needyargs> ;
-
-    make lib$(name).touch : $(NEEDS_FILE) : @satisfy-lib : <needyargs>$(name) ;
+    make lib$(name).touch : $(NEEDS_FILE) : @satisfy-lib : $(requirements) <needyargs>$(target) ;
     actions satisfy-lib
     {
-        cd $(BASE_DIR) && $(NEEDY) satisfy $(NEEDYARGS)
+        cd $(BASE_DIR)
+        $(NEEDY) satisfy $(NEEDYARGS)
+        cd -
+        touch $(<)
     }
 
     alias $(name)
@@ -41,11 +54,15 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
           $(usage-requirements)
     ;
 }
-
 """ % (os.path.abspath(sys.argv[0]), os.path.dirname(needy.path()), needy.path())
 
         for library in needy.libraries_to_build():
-            contents += 'needlib {} ;\n'.format(library[0])
+            contents += """
+needlib {0} ;
+needlib {0} : : <target-os>iphone ;
+needlib {0} : : <target-os>android ;
+needlib {0} : : <target-os>appletv ;
+""".format(library[0])
 
         with open(path, 'w') as jamfile:
             jamfile.write(contents)
