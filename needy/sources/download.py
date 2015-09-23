@@ -49,20 +49,23 @@ class Download(Source):
             download = urllib2.urlopen(self.url, timeout=5)
             size = int(download.headers['content-length'])
             progress = 0
-            print('{:.1%}'.format(float(progress) / size), end='')
-            sys.stdout.flush()
+            if sys.stdout.isatty():
+                print('{:.1%}'.format(float(progress) / size), end='')
+                sys.stdout.flush()
             with open(self.local_download_path, 'wb') as local_file:
                 chunk_size = 1024
                 while True:
                     chunk = download.read(chunk_size)
                     progress = progress + chunk_size
-                    print('\r{:.1%}'.format(float(progress) / size), end='')
-                    sys.stdout.flush()
+                    if sys.stdout.isatty():
+                        print('\r{:.1%}'.format(float(progress) / size), end='')
+                        sys.stdout.flush()
                     if not chunk:
                         break
                     local_file.write(chunk)
-            print('\r       \r', end='')
-            sys.stdout.flush()
+            if sys.stdout.isatty():
+                print('\r       \r', end='')
+                sys.stdout.flush()
             del download
 
     def __verify_checksum(self):
