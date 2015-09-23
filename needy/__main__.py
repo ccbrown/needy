@@ -147,14 +147,18 @@ Use '%s <command> --help' to get help for a specific command.
         'generate': generate,
     }
 
-    if parameters.command in commands:
-        return commands[parameters.command](parameters.args)
-    elif parameters.command == 'help':
-        if len(parameters.args) == 1 and parameters.args[0] in commands:
-            commands[parameters.args[0]](['--help'])
-        else:
-            parser.print_help()
-        return 1
+    lock_fd = os.open('.needy_lock', os.O_RDWR | os.O_EXLOCK)
+    try:
+        if parameters.command in commands:
+            return commands[parameters.command](parameters.args)
+        elif parameters.command == 'help':
+            if len(parameters.args) == 1 and parameters.args[0] in commands:
+                commands[parameters.args[0]](['--help'])
+            else:
+                parser.print_help()
+            return 1
+    finally:
+        os.close(lock_fd)
 
     print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))
     return 1
