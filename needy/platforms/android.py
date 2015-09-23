@@ -2,13 +2,13 @@ from ..platform import Platform
 
 import os
 
-DEFAULT_ANDROID_API_LEVEL = '21'
-
 
 class AndroidPlatform(Platform):
     def __init__(self, parameters):
         Platform.__init__(self, parameters)
-        self.api_level = parameters.android_api_level if 'android_api_level' in parameters else DEFAULT_ANDROID_API_LEVEL
+        self.api_level = parameters.android_api_level if 'android_api_level' in parameters else None
+        self.__toolchain = parameters.android_toolchain if 'android_toolchain' in parameters else None
+        self.__runtime = parameters.android_runtime if 'android_runtime' in parameters else None
 
     @staticmethod
     def identifier():
@@ -16,7 +16,9 @@ class AndroidPlatform(Platform):
 
     @staticmethod
     def add_arguments(parser):
-        parser.add_argument('--android-api-level', default=DEFAULT_ANDROID_API_LEVEL, help='the android API level to build for')
+        parser.add_argument('--android-api-level', default=None, help='the android API level to build for. this overrides the toolchain\'s sysroot')
+        parser.add_argument('--android-toolchain', default=None, help='the android toolchain to build with')
+        parser.add_argument('--android-runtime', default='libstdc++', choices=['libstdc++', 'gnustl_shared'], help='the android runtime to use')
 
     def toolchain(self, architecture):
         if architecture.find('arm') >= 0:
@@ -25,7 +27,7 @@ class AndroidPlatform(Platform):
             raise ValueError('unsupported architecture')
 
     def toolchain_path(self, architecture):
-        path = os.path.join(self.ndk_home(), 'toolchains', self.toolchain(architecture), 'prebuilt', 'darwin-x86_64')
+        path = self.__toolchain or os.path.join(self.ndk_home(), 'toolchains', self.toolchain(architecture), 'prebuilt', 'darwin-x86_64')
         if not os.path.exists(path):
             raise ValueError('missing toolchain: %s' % path)
         return path
@@ -57,27 +59,37 @@ class AndroidPlatform(Platform):
         return [os.path.join(toolchain_path, self.binary_prefix(architecture), 'bin'), os.path.join(toolchain_path, 'bin')]
 
     def include_paths(self, architecture):
-        ret = [
-            self.sysroot_path(architecture),
-            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'include'),
-            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'include', 'backward'),
-            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'include')
-        ]
+        ret = []
+        
+        if self.__runtime == 'gnustl_shared':
+            ret.extend([
+                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'include'),
+                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'include', 'backward'),
+                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'include')
+            ])
 
         return ret
 
     def libraries(self, architecture):
-        return [
-            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libgnustl_shared.so'),
-            os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libsupc++.a')
-        ]
+        if self.__runtime == 'gnustl_shared':
+            return [
+                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libgnustl_shared.so'),
+                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libsupc++.a')
+            ]
+        else:
+            return [ '-lcompiler_rt_static', '-lstdc++' , '-lm' ]
 
     def __compiler_args(self, architecture):
-        ret = ['--sysroot=%s' % self.sysroot_path(architecture)]
+        ret = []
+
+        if self.api_level:
+            ret.append('--sysroot=%s' % self.sysroot_path(architecture))
 
         if architecture.find('arm') >= 0:
-            ret.append('-mthumb')
-            ret.append('-march=%s' % architecture)
+            if architecture == 'armv7':
+                ret.append('-march=armv7-a')
+            else:
+                ret.append('-march=%s' % architecture)
 
         include_paths = self.include_paths(architecture)
         for path in include_paths:
@@ -86,10 +98,12 @@ class AndroidPlatform(Platform):
         return ret
 
     def c_compiler(self, architecture):
-        return 'arm-linux-androideabi-gcc %s' % ' '.join(self.__compiler_args(architecture))
+        exe = 'gcc' if self.__runtime == 'gnustl_shared' else 'clang'
+        return 'arm-linux-androideabi-{} {}'.format(exe, ' '.join(self.__compiler_args(architecture)))
 
     def cxx_compiler(self, architecture):
-        return 'arm-linux-androideabi-g++ %s' % ' '.join(self.__compiler_args(architecture))
+        exe = 'g++' if self.__runtime == 'gnustl_shared' else 'clang++'
+        return 'arm-linux-androideabi-{} {}'.format(exe, ' '.join(self.__compiler_args(architecture)))
 
     def ndk_home(self):
         ndk_home = os.getenv('ANDROID_NDK_HOME', os.getenv('NDK_HOME'))

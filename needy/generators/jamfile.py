@@ -29,19 +29,23 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
         target = "$(name) -u iphone" ;
     } else if <target-os>android in $(requirements) {
         target = "$(name) -t android:armv7" ;
-    } else if <target-os>asappletv in $(requirements) {
+    } else if <target-os>appletv in $(requirements) {
         target = "$(name) -t appletv:arm64" ;
     }
-    
-    local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
 
-    make lib$(name).touch : $(NEEDS_FILE) : @satisfy-lib : $(requirements) <needyargs>$(target) ;
+    local args = $(target) ;
+    
+    if <target-os>android in $(requirements) {
+        args += "--android-toolchain=$(ANDROID_TOOLCHAIN)" ;
+    }
+
+    local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
+    local includedir = "$(builddir)/include" ;
+    
+    make lib$(name).touch : $(NEEDS_FILE) : @satisfy-lib : $(requirements) <needyargs>$(args) ;
     actions satisfy-lib
     {
-        cd $(BASE_DIR)
-        $(NEEDY) satisfy $(NEEDYARGS)
-        cd -
-        touch $(<)
+        cd $(BASE_DIR) && $(NEEDY) satisfy $(NEEDYARGS) && cd - && touch $(<)
     }
 
     alias $(name)
@@ -49,7 +53,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
         : $(requirements) 
         : $(default-build) 
         : <dependency>lib$(name).touch
-          <include>$(builddir)/include
+          <include>$(includedir)
           <linkflags>-L$(builddir)/lib
           $(usage-requirements)
     ;

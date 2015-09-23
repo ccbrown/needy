@@ -75,10 +75,6 @@ class AutotoolsProject(project.Project):
                 elif not configure_host:
                     configure_host = 'arm-linux-androideabi'
 
-                configure_args.extend([
-                    'CFLAGS=-mthumb -march=%s' % self.target().architecture
-                ])
-
             configure_args.extend([
                 '--host=%s' % configure_host,
                 '--with-sysroot=%s' % sysroot
