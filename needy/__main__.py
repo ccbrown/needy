@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import argparse
+import fcntl
 import os
 import sys
 
@@ -147,8 +148,9 @@ Use '%s <command> --help' to get help for a specific command.
         'generate': generate,
     }
 
-    lock_fd = os.open('.needy_lock', os.O_RDWR | os.O_CREAT | os.O_EXLOCK)
+    lock_fd = os.open('.needy_lock', os.O_RDWR | os.O_CREAT)
     try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
         if parameters.command in commands:
             return commands[parameters.command](parameters.args)
         elif parameters.command == 'help':
