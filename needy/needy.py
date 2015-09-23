@@ -78,6 +78,7 @@ class Needy:
             return []
 
         ret = []
+        added = []
 
         for name, library_configuration in self.needs['libraries'].iteritems():
             if filters:
@@ -91,6 +92,28 @@ class Needy:
             directory = os.path.join(self.__needs_directory, name)
             library = Library(library_configuration, directory, self)
             ret.append((name, library))
+            added.append(name)
+
+        # todo: make this work for more than the simplest dependencies
+        should_continue = True
+        while should_continue:
+            should_continue = False
+            for name, library in ret:
+                if 'dependencies' not in library.configuration():
+                    continue    
+                str_or_list = library.configuration()['dependencies']
+                dependencies = str_or_list if isinstance(str_or_list, list) else [str_or_list]
+                for name in dependencies:
+                    if name in added:
+                        continue
+                    directory = os.path.join(self.__needs_directory, name)
+                    library = Library(self.needs['libraries'][name], directory, self)
+                    ret.insert(0, (name, library))
+                    added.append(name)
+                    should_continue = True
+                    break
+                if should_continue:
+                    break
 
         return ret
 
