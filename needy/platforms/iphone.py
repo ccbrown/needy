@@ -25,7 +25,7 @@ class iPhonePlatform(Platform):
     @staticmethod
     def detection_macro(architecture):
         if architecture == 'arm64':
-            return '__LP64__'
+            return 'TARGET_OS_IOS && !TARGET_OS_SIMULATOR && __LP64__'
         elif architecture == 'armv7':
-            return '!__LP64__'
+            return 'TARGET_OS_IOS && !TARGET_OS_SIMULATOR && !__LP64__'
         return None

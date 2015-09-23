@@ -160,11 +160,11 @@ class Library:
                     self.needy.command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
 
                 if extension in ['.h', '.hpp']:
-                    header_contents = ""
+                    header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for target, header in builds:
                         macro = target.platform.detection_macro(target.architecture)
                         if not macro:
-                            header_contents = ""
+                            header_contents = ''
                             break
                         header_path = os.path.relpath(header, os.path.dirname(output_path))
                         header_contents += '#if {}\n#include "{}"\n#endif\n'.format(macro, header_path) 

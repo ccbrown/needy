@@ -21,3 +21,7 @@ class AppleTVPlatform(Platform):
 
     def cxx_compiler(self, architecture):
         return 'xcrun -sdk appletvos clang++ -arch %s -mtvos-version-min=%s' % (architecture, self.__minimum_version)
+
+    @staticmethod
+    def detection_macro(architecture):
+        return 'TARGET_OS_TV && !TARGET_OS_SIMULATOR'
