@@ -147,7 +147,7 @@ Use '%s <command> --help' to get help for a specific command.
         'generate': generate,
     }
 
-    lock_fd = os.open('.needy_lock', os.O_RDWR | os.O_EXLOCK)
+    lock_fd = os.open('.needy_lock', os.O_RDWR | os.O_CREAT | os.O_EXLOCK)
     try:
         if parameters.command in commands:
             return commands[parameters.command](parameters.args)
