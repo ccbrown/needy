@@ -25,4 +25,8 @@ class iPhoneSimulatorPlatform(Platform):
 
     @staticmethod
     def detection_macro(architecture):
-        return 'TARGET_OS_IOS && TARGET_OS_SIMULATOR'
+        if architecture == 'x86_64':
+            return 'TARGET_OS_IOS && TARGET_OS_SIMULATOR && __LP64__'
+        elif architecture == 'i386':
+            return 'TARGET_OS_IOS && TARGET_OS_SIMULATOR && !__LP64__'
+        return None
