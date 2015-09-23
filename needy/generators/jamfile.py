@@ -26,11 +26,19 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     local target = $(name) ;
     
     if <target-os>iphone in $(requirements) {
-        target = "$(name) -u iphone" ;
+        if <architecture>arm in $(requirements) {
+            target = "$(name) -u iphone" ;
+        } else {
+            target = "$(name) -u iphonesim" ;
+        }
     } else if <target-os>android in $(requirements) {
         target = "$(name) -t android:armv7" ;
     } else if <target-os>appletv in $(requirements) {
-        target = "$(name) -t appletv:arm64" ;
+        if <architecture>arm in $(requirements) {
+            target = "$(name) -t appletv:arm64" ;
+        } else {
+            target = "$(name) -t appletvsim" ;
+        }
     }
 
     local args = $(target) ;
@@ -63,9 +71,11 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
         for library in needy.libraries_to_build():
             contents += """
 needlib {0} ;
-needlib {0} : : <target-os>iphone ;
+needlib {0} : : <target-os>iphone <architecture>arm ;
+needlib {0} : : <target-os>iphone <architecture>x86 ;
 needlib {0} : : <target-os>android ;
-needlib {0} : : <target-os>appletv ;
+needlib {0} : : <target-os>appletv <architecture>arm ;
+needlib {0} : : <target-os>appletv <architecture>x86 ;
 """.format(library[0])
 
         with open(path, 'w') as jamfile:
