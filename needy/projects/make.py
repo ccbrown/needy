@@ -90,6 +90,13 @@ class MakeProject(project.Project):
         make_args.extend(self.__make_prefix_args(make_args, output_directory))
         self.needy.command(['make', 'install'] + make_args, environment_overrides=environment_overrides)
 
+        lib_dir = os.path.join(output_directory, 'lib')
+        linkage = self.configuration('linkage')
+        if linkage == 'static':
+            dylibs = [ f for f in os.listdir(lib_dir) if f.endswith('.so') or f.endswith('.dylib') ]
+            for dylib in dylibs:
+                os.remove(os.path.join(lib_dir, dylib))
+
     def __make_prefix_args(self, other_args, output_directory):
         if self.configuration('make-prefix-arg') is not None:
             return ['%s=%s' % (self.configuration('make-prefix-arg'), output_directory)]
