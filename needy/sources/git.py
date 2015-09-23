@@ -22,10 +22,11 @@ class GitRepository(Source):
             subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
 
     def __fetch(self):
-        if not os.path.exists(self.directory):
-            os.makedirs(self.directory)
+        if not os.path.exists(os.path.dirname(self.directory)):
+            os.makedirs(os.path.dirname(self.directory))
 
+        with cd(os.path.dirname(self.directory)):
+            subprocess.check_call(['git', 'clone', self.repository, os.path.basename(self.directory)])
+        
         with cd(self.directory):
-            if not os.path.exists(os.path.join(self.directory, '.git')):
-                subprocess.check_call(['git', 'clone', self.repository, '.'])
-                subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
+            subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
