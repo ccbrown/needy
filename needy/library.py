@@ -37,7 +37,6 @@ from .projects.xcode import XcodeProject
 
 class Library:
     def __init__(self, configuration, directory, needy):
-
         self.__configuration = configuration
         self.__directory = directory
 
@@ -51,6 +50,9 @@ class Library:
             raise ValueError('no source specified in configuration')
 
         self.needy = needy
+
+    def configuration(self):
+        return self.__configuration
 
     def project_configuration(self, target):
         return evaluate_conditionals(self.__configuration['project'] if 'project' in self.__configuration else dict(), target)
@@ -122,39 +124,56 @@ class Library:
 
         print('Building universal binary %s' % name)
 
-        files = dict()
+        universal_files = dict()
         target_count = 0
 
         for platform, architectures in configuration.iteritems():
             for architecture in architectures:
                 target_count = target_count + 1
                 target = Target(self.needy.platform(platform), architecture)
-                lib_directory = os.path.join(self.build_directory(target), 'lib')
-                for file in os.listdir(lib_directory):
-                    if not os.path.isfile(os.path.join(lib_directory, file)):
-                        continue
-                    if file not in files:
-                        files[file] = []
-                    files[file].append(os.path.join(lib_directory, file))
+                for root, dirs, files in os.walk(self.build_directory(target)):
+                    for file in files:
+                        key = os.path.join(os.path.relpath(root, self.build_directory(target)), file)
+                        if key not in universal_files:
+                            universal_files[key] = []
+                        universal_files[key].append((target, os.path.join(root, file)))
 
         universal_binary_directory = self.universal_binary_directory(name)
 
         if os.path.exists(universal_binary_directory):
             shutil.rmtree(universal_binary_directory)
-
-        universal_lib_directory = os.path.join(self.universal_binary_directory(name), 'lib')
-        os.makedirs(universal_lib_directory)
+            
+        os.makedirs(universal_binary_directory)
 
         try:
-            for file, builds in files.iteritems():
+            for file, builds in universal_files.iteritems():
                 if len(builds) != target_count:
                     continue
 
                 file_name, extension = os.path.splitext(file)
+                output_path = os.path.join(universal_binary_directory, file)
 
                 if extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % file)
-                    self.needy.command(['lipo', '-create'] + builds + ['-output', os.path.join(universal_lib_directory, file)])
+                    if not os.path.exists(os.path.dirname(output_path)):
+                        os.makedirs(os.path.dirname(output_path))
+                    self.needy.command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
+
+                if extension in ['.h', '.hpp']:
+                    header_contents = ""
+                    for target, header in builds:
+                        macro = target.platform.detection_macro(target.architecture)
+                        if not macro:
+                            header_contents = ""
+                            break
+                        header_path = os.path.relpath(header, os.path.dirname(output_path))
+                        header_contents += '#if {}\n#include "{}"\n#endif\n'.format(macro, header_path) 
+                    if header_contents:
+                        print('Creating universal header %s' % file)
+                        if not os.path.exists(os.path.dirname(output_path)):
+                            os.makedirs(os.path.dirname(output_path))
+                        with open(output_path, 'w') as f:
+                            f.write(header_contents)
         except:
             shutil.rmtree(universal_binary_directory)
             raise

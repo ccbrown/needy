@@ -41,3 +41,8 @@ class Platform:
     def libraries(self, architecture):
         """ returns additional libraries that should be linked to """
         return []
+
+    @staticmethod
+    def detection_macro(architecture):
+        """ returns a macro that can be used to detect whether or not this is the compiled platform + architecture """
+        return None

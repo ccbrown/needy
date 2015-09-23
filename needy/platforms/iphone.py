@@ -21,3 +21,11 @@ class iPhonePlatform(Platform):
 
     def cxx_compiler(self, architecture):
         return 'xcrun -sdk iphoneos clang++ -arch %s -mios-version-min=%s' % (architecture, self.__minimum_version)
+
+    @staticmethod
+    def detection_macro(architecture):
+        if architecture == 'arm64':
+            return '__LP64__'
+        elif architecture == 'armv7':
+            return '!__LP64__'
+        return None
