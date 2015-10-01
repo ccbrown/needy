@@ -42,11 +42,6 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     }
 
     local args = $(target) %s ;
-    
-    if <target-os>android in $(requirements) {
-        args += "--android-toolchain=$(ANDROID_TOOLCHAIN)" ;
-    }
-
     local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
     local includedir = "$(builddir)/include" ;
     
