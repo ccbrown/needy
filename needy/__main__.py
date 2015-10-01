@@ -108,6 +108,11 @@ def generate(args=[]):
         nargs='+',
         choices=[g.identifier() for g in available_generators()],
         help='the file to generate')
+    parser.add_argument(
+        '--satisfy-args',
+        default='',
+        nargs='?',
+        help='arguments to use when satisfying needs')
     parameters = parser.parse_args(args)
 
     needy = Needy('needs.json', parameters)

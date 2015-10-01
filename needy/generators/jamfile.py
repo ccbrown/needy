@@ -41,7 +41,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
         }
     }
 
-    local args = $(target) ;
+    local args = $(target) %s ;
     
     if <target-os>android in $(requirements) {
         args += "--android-toolchain=$(ANDROID_TOOLCHAIN)" ;
@@ -66,7 +66,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
           $(usage-requirements)
     ;
 }
-""" % (os.path.abspath(sys.argv[0]), os.path.dirname(needy.path()), needy.path())
+""" % (os.path.abspath(sys.argv[0]), os.path.dirname(needy.path()), needy.path(), needy.parameters().satisfy_args)
 
         for library in needy.libraries_to_build():
             contents += """
