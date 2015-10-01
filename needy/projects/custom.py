@@ -4,8 +4,6 @@ import subprocess
 from .. import project
 from ..cd import cd
 
-from .make import get_make_jobs_args
-
 
 class CustomProject(project.Project):
 
