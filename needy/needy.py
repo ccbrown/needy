@@ -57,18 +57,23 @@ class Needy:
         platform = self.platform(parts[0])
         return Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
 
-    def command(self, arguments, environment_overrides={}):
+    def command(self, cmd, environment_overrides={}):
         environment_overrides['PWD'] = current_directory()
         env = os.environ.copy()
         env.update(environment_overrides)
-        subprocess.check_call(arguments, env=env)
+        if isinstance(cmd, list):
+            subprocess.check_call(cmd, env=env)
+        else:
+            subprocess.check_call(cmd, env=env, shell=True)
 
-    def command_output(self, arguments, environment_overrides={}):
+    def command_output(self, cmd, environment_overrides={}):
         environment_overrides['PWD'] = current_directory()
         env = os.environ.copy()
         env.update(environment_overrides)
         with open(os.devnull, 'w') as devnull:
-            return subprocess.check_output(arguments, env=env, stderr=devnull)
+            if isinstance(cmd, list):
+                return subprocess.check_output(cmd, env=env, stderr=devnull)
+            return subprocess.check_output(cmd, env=env, stderr=devnull, shell=True)
 
     def recursive(self, needs_file):
         return Needy(needs_file, self.parameters()) if os.path.isfile(needs_file) else None

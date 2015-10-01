@@ -1,5 +1,4 @@
 import os
-import shlex
 import sys
 
 
@@ -83,7 +82,7 @@ class Project:
 
     def run_commands(self, commands, build_directory):
         for command in self.evaluate(commands, build_directory):
-            self.command(shlex.split(command))
+            self.command(command)
 
     def environment_overrides(self):
         ret = {}
@@ -115,10 +114,10 @@ class Project:
     def post_build(self, output_directory):
         self.run_commands(self.configuration('post-build'), output_directory)
 
-    def command(self, arguments, environment_overrides={}):
+    def command(self, cmd, environment_overrides={}):
         env = environment_overrides.copy()
         env.update(self.environment_overrides())
-        self.needy.command(arguments, environment_overrides=env)
+        self.needy.command(cmd, environment_overrides=env)
 
     def command_output(self, arguments, environment_overrides={}):
         return self.needy.command_output(arguments, environment_overrides=environment_overrides)
