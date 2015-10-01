@@ -78,17 +78,21 @@ class MakeProject(project.Project):
         if self.target().platform.identifier() == 'android':
             target_os = 'Linux'
 
-        environment_overrides = dict()
-
         if target_os:
             make_args.extend([
                 'OS=%s' % target_os,
                 'TARGET_OS=%s' % target_os
             ])
 
-        self.needy.command(['make'] + self.project_targets() + make_args, environment_overrides=environment_overrides)
+        make_args.extend([
+            'ARCH=%s' % self.target().architecture,
+            'CC=%s' % self.target().platform.c_compiler(self.target().architecture),
+            'CXX=%s' % self.target().platform.cxx_compiler(self.target().architecture)
+        ])
+
+        self.needy.command(['make'] + self.project_targets() + make_args)
         make_args.extend(self.__make_prefix_args(make_args, output_directory))
-        self.needy.command(['make', 'install'] + make_args, environment_overrides=environment_overrides)
+        self.needy.command(['make', 'install'] + make_args)
 
         lib_dir = os.path.join(output_directory, 'lib')
         linkage = self.configuration('linkage')
