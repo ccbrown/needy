@@ -2,7 +2,7 @@ from ..platform import Platform
 
 import platform
 
-DEFAULT_MIN_IOS_VERSION = '5.0'
+DEFAULT_MIN_IOS_VERSION = '6.0'
 
 
 class iPhoneSimulatorPlatform(Platform):

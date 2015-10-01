@@ -16,11 +16,14 @@ class AppleTVPlatform(Platform):
     def add_arguments(parser):
         parser.add_argument('--minimum-tvos-version', default=DEFAULT_MIN_TVOS_VERSION, help='the minimum tvOS version to build for')
 
+    def __common_compiler_args(self, architecture):
+        return '-arch %s -mtvos-version-min=%s -fembed-bitcode' % (architecture, self.__minimum_version)
+
     def c_compiler(self, architecture):
-        return 'xcrun -sdk appletvos clang -arch %s -mtvos-version-min=%s' % (architecture, self.__minimum_version)
+        return 'xcrun -sdk appletvos clang %s' % self.__common_compiler_args(architecture)
 
     def cxx_compiler(self, architecture):
-        return 'xcrun -sdk appletvos clang++ -arch %s -mtvos-version-min=%s' % (architecture, self.__minimum_version)
+        return 'xcrun -sdk appletvos clang++ %s' % self.__common_compiler_args(architecture)
 
     @staticmethod
     def detection_macro(architecture):
