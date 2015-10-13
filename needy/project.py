@@ -18,7 +18,7 @@ def evaluate_conditionals(configuration, target):
             raise ValueError('unknown conditional key')
 
         for case, config in cases.iteritems():
-            if case in values or (case[0] == '!' and case[1:] not in values):
+            if case in values or (case[0] == '!' and case[1:] not in values) or case == '*':
                 ret.update(config)
                 break
 
