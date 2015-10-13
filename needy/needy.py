@@ -82,8 +82,7 @@ class Needy:
         if 'libraries' not in self.needs:
             return []
 
-        ret = []
-        added = []
+        names = []
 
         for name, library_configuration in self.needs['libraries'].iteritems():
             if filters:
@@ -94,31 +93,47 @@ class Needy:
                         break
                 if not match:
                     continue
-            directory = os.path.join(self.__needs_directory, name)
-            library = Library(library_configuration, directory, self)
-            ret.append((name, library))
-            added.append(name)
+            names.append(name)
 
-        # todo: make this work for more than the simplest dependencies
-        should_continue = True
-        while should_continue:
-            should_continue = False
-            for name, library in ret:
-                if 'dependencies' not in library.configuration():
-                    continue    
-                str_or_list = library.configuration()['dependencies']
-                dependencies = str_or_list if isinstance(str_or_list, list) else [str_or_list]
-                for name in dependencies:
-                    if name in added:
-                        continue
-                    directory = os.path.join(self.__needs_directory, name)
-                    library = Library(self.needs['libraries'][name], directory, self)
-                    ret.insert(0, (name, library))
-                    added.append(name)
-                    should_continue = True
-                    break
-                if should_continue:
-                    break
+        graph = {}
+        libraries = {}
+
+        while len(names):
+            name = names.pop()
+            directory = os.path.join(self.__needs_directory, name)
+            library = Library(self.needs['libraries'][name], directory, self)
+            libraries[name] = library
+            if 'dependencies' not in library.configuration():
+                graph[name] = set()
+                continue
+            str_or_list = library.configuration()['dependencies']
+            dependencies = str_or_list if isinstance(str_or_list, list) else [str_or_list]
+            graph[name] = set(dependencies)
+            for dependency in dependencies:
+                if dependency not in graph:
+                    names.append(dependency)
+
+        s = []
+
+        for name, dependencies in graph.iteritems():
+            if len(dependencies) == 0:
+                s.append(name)
+
+        ret = []
+
+        while len(s):
+            name = s.pop()
+            ret.append((name, libraries[name]))
+            for n, deps in graph.iteritems():
+                if name not in deps:
+                    continue
+                deps.remove(name)
+                if len(deps) == 0:
+                    s.append(n)
+
+        for name, deps in graph.iteritems():
+            if len(deps):
+                raise ValueError('circular dependency detected')
 
         return ret
 
