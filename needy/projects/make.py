@@ -108,29 +108,7 @@ class MakeProject(project.Project):
         recon_args = ['make', 'install', '--recon'] + other_args + args
         recon = self.command_output(recon_args)
 
-        doing_things_inside_prefix = False
-        doing_things_outside_prefix = False
-
-        while True:
-            match = re.search(' (/.+?[^\\\\])( |$)', recon, re.MULTILINE)
-            if match is None:
-                break
-
-            path = match.group(1)
-
-            # shell scripts may contain special characters and probably won't be
-            # part of the resulting path.
-            path = path.rstrip(';"')
-
-            if os.path.relpath(path, self.directory()).find('..') == 0:
-                if os.path.relpath(path, output_directory).find('..') == 0:
-                    doing_things_outside_prefix = True
-                else:
-                    doing_things_inside_prefix = True
-
-            recon = recon[match.end() - 1:]
-
-        if doing_things_outside_prefix or not doing_things_inside_prefix:
+        if recon.find(output_directory) < 0:
             raise RuntimeError('unable to figure out how to set installation prefix')
-        
+
         return args

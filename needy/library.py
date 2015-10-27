@@ -2,7 +2,6 @@ import binascii
 import hashlib
 import json
 import os
-import shlex
 import shutil
 
 from operator import itemgetter
@@ -78,9 +77,9 @@ class Library:
         with cd(self.source_directory()):
             if isinstance(post_clean_commands, list):
                 for command in post_clean_commands:
-                    self.needy.command(shlex.split(command))
+                    self.needy.command(command)
             else:
-                self.needy.command(shlex.split(post_clean_commands))
+                self.needy.command(post_clean_commands)
 
         definition = ProjectDefinition(target, self.source_directory(), configuration)
         project = self.project(definition)
