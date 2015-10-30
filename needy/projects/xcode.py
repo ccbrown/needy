@@ -7,6 +7,7 @@ from ..cd import cd
 
 from source import SourceProject
 
+
 class XcodeProject(project.Project):
 
     @staticmethod
@@ -15,7 +16,7 @@ class XcodeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        if definition.target.platform.identifier() not in ['host', 'iphone', 'appletv']:
+        if definition.target.platform.identifier() not in ['host', 'iphoneos', 'iphonesimulator', 'appletvos', 'appletvsimulator']:
             return False
 
         xcodebuild_args = []
@@ -42,10 +43,7 @@ class XcodeProject(project.Project):
         if self.configuration('xcode-project'):
             xcodebuild_args.extend(['-project', self.configuration('xcode-project')])
 
-        if self.target().platform.identifier() == 'iphone':
-            xcodebuild_args.extend(['-sdk', 'iphoneos'])
-        elif self.target().platform.identifier() == 'appletv':
-            xcodebuild_args.extend(['-sdk', 'appletvos'])
+        xcodebuild_args.extend(['-sdk', self.target().platform.identifier()])
 
         if self.target().architecture:
             xcodebuild_args.extend(['-arch', self.target().architecture])

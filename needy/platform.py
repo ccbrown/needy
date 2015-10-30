@@ -5,13 +5,25 @@ except ImportError:
 
 
 def available_platforms():
+    import sys
+
     from .platforms.host import HostPlatform
-    from .platforms.appletv import AppleTVPlatform
-    from .platforms.appletvsim import AppleTVSimulatorPlatform
-    from .platforms.iphone import iPhonePlatform
-    from .platforms.iphonesim import iPhoneSimulatorPlatform
     from .platforms.android import AndroidPlatform
-    return [HostPlatform, AppleTVPlatform, AppleTVSimulatorPlatform, iPhonePlatform, iPhoneSimulatorPlatform, AndroidPlatform]
+    platforms = [HostPlatform, AndroidPlatform]
+
+    if sys.platform == 'darwin':
+        from .platforms.appletvos import AppleTVPlatform
+        from .platforms.appletvsimulator import AppleTVSimulatorPlatform
+        from .platforms.iphoneos import iPhonePlatform
+        from .platforms.iphonesimulator import iPhoneSimulatorPlatform
+        platforms.extend([
+            AppleTVPlatform,
+            AppleTVSimulatorPlatform,
+            iPhonePlatform,
+            iPhoneSimulatorPlatform,
+        ])
+
+    return platforms
 
 
 class Platform:

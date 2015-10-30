@@ -24,7 +24,7 @@ def satisfy(args=[]):
     parser.add_argument(
         '-t', '--target',
         default='host',
-        help='builds needs for this target (example: iphone:armv7)')
+        help='builds needs for this target (example: iphoneos:armv7)')
     parser.add_argument(
         '-u', '--universal-binary',
         help='builds the universal binary with the given name')
@@ -60,7 +60,7 @@ def cflags(args=[]):
         description='Gets compiler flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: iphone:armv7)')
+    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: iphoneos:armv7)')
     parameters = parser.parse_args(args)
 
     needy = Needy('needs.json', parameters)
@@ -76,14 +76,16 @@ def ldflags(args=[]):
         description='Gets linker flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: iphone:armv7)')
+    parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: iphoneos:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
     needy = Needy('needs.json', parameters)
 
-    print(' '.join([('-L%s' % path) for path in needy.library_paths(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))]), end='')
+    print(' '.join([('-L%s' % path) for path in needy.library_paths(
+        parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))]), end='')
     return 0
+
 
 def builddir(args=[]):
     parser = argparse.ArgumentParser(
@@ -92,14 +94,17 @@ def builddir(args=[]):
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('library', help='the library to get the directory for')
-    parser.add_argument('-t', '--target', default='host', help='gets the directory for this target (example: iphone:armv7)')
+    parser.add_argument(
+        '-t', '--target', default='host', help='gets the directory for this target (example: iphoneos:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary')
     parameters = parser.parse_args(args)
 
     needy = Needy('needs.json', parameters)
 
-    print(needy.build_directory(parameters.library, parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target)), end='')
+    print(needy.build_directory(parameters.library,
+                                parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target)), end='')
     return 0
+
 
 def generate(args=[]):
     parser = argparse.ArgumentParser(
@@ -125,6 +130,7 @@ def generate(args=[]):
 
     return 0
 
+
 def main(args=sys.argv):
     try:
         import colorama
@@ -135,8 +141,7 @@ def main(args=sys.argv):
     parser = argparse.ArgumentParser(
         description='Helps with dependencies.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=
-"""available commands:
+        epilog="""available commands:
   satisfy     satisfies libraries / universal binary needs
   cflags      emits the compiler flags required to use the satisfied needs
   ldflags     emits the linker flags required to use the satisfied needs

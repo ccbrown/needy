@@ -24,20 +24,19 @@ toolset.flags $(__name__).satisfy-lib NEEDYARGS <needyargs> ;
 rule needlib ( name : extra-sources * : requirements * : default-build * : usage-requirements * )
 {
     local target = $(name) ;
-    
     if <target-os>iphone in $(requirements) {
         if <architecture>arm in $(requirements) {
-            target = "$(name) -u iphone" ;
+            target = "$(name) -u iphoneos" ;
         } else {
-            target = "$(name) -u iphonesim" ;
+            target = "$(name) -u iphonesimulator" ;
         }
     } else if <target-os>android in $(requirements) {
         target = "$(name) -t android:armv7" ;
     } else if <target-os>appletv in $(requirements) {
         if <architecture>arm in $(requirements) {
-            target = "$(name) -t appletv:arm64" ;
+            target = "$(name) -u appletvos" ;
         } else {
-            target = "$(name) -t appletvsim" ;
+            target = "$(name) -u appletvsimulator" ;
         }
     }
 

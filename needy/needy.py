@@ -22,6 +22,7 @@ from .generator import available_generators
 from .target import Target
 from .cd import current_directory
 
+
 class Needy:
     def __init__(self, path, parameters):
         self.__path = path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
@@ -34,7 +35,7 @@ class Needy:
 
     def path(self):
         return self.__path
-    
+
     def needs_directory(self):
         return self.__needs_directory
 
@@ -164,7 +165,7 @@ class Needy:
                 ret.extend(needy.library_paths(target_or_universal_binary))
         return ret
 
-    def build_directory(self, library, target_or_universal_binary):        
+    def build_directory(self, library, target_or_universal_binary):
         directory = os.path.join(self.__needs_directory, library)
         l = Library(self.needs['libraries'][library], directory, self)
         return l.build_directory(target_or_universal_binary)
@@ -196,7 +197,7 @@ class Needy:
                 raise ValueError('no universal binaries defined')
 
             if universal_binary not in self.needs['universal-binaries']:
-                raise ValueError('unknown universal binary')
+                raise ValueError('unknown universal binary ({})'.format(universal_binary))
 
             if 'libraries' not in self.needs:
                 return
