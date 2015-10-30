@@ -1,29 +1,40 @@
+import sys
+
 try:
     from exceptions import NotImplementedError
 except ImportError:
     pass
 
+_available_platforms = None
+
 
 def available_platforms():
-    import sys
+    global _available_platforms
 
-    from .platforms.host import HostPlatform
-    from .platforms.android import AndroidPlatform
-    platforms = [HostPlatform, AndroidPlatform]
+    if _available_platforms is None:
+        from .platforms.host import HostPlatform
+        from .platforms.android import AndroidPlatform
+        platforms = [HostPlatform, AndroidPlatform]
 
-    if sys.platform == 'darwin':
-        from .platforms.appletvos import AppleTVPlatform
-        from .platforms.appletvsimulator import AppleTVSimulatorPlatform
-        from .platforms.iphoneos import iPhonePlatform
-        from .platforms.iphonesimulator import iPhoneSimulatorPlatform
-        platforms.extend([
-            AppleTVPlatform,
-            AppleTVSimulatorPlatform,
-            iPhonePlatform,
-            iPhoneSimulatorPlatform,
-        ])
+        if sys.platform == 'darwin':
+            from .platforms.macosx import MacOSXPlatform
+            from .platforms.appletvos import AppleTVPlatform
+            from .platforms.appletvsimulator import AppleTVSimulatorPlatform
+            from .platforms.iphoneos import iPhonePlatform
+            from .platforms.iphonesimulator import iPhoneSimulatorPlatform
+            platforms.extend([
+                MacOSXPlatform,
+                AppleTVPlatform,
+                AppleTVSimulatorPlatform,
+                iPhonePlatform,
+                iPhoneSimulatorPlatform,
+            ])
 
-    return platforms
+        _available_platforms = {}
+        for platform in platforms:
+            _available_platforms[platform.identifier()] = platform
+
+    return _available_platforms
 
 
 class Platform:

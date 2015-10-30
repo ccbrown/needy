@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import multiprocessing
+import sys
 
 from collections import OrderedDict
 
@@ -48,10 +49,14 @@ class Needy:
         return multiprocessing.cpu_count()
 
     def platform(self, identifier):
-        for platform in available_platforms():
-            if identifier == platform.identifier():
-                return platform(self.__parameters)
-        raise ValueError('unknown platform')
+        if sys.platform == 'darwin' and identifier == 'host':
+            identifier = 'macosx'
+
+        platform = available_platforms().get(identifier, None)
+        if platform is not None:
+            return platform(self.__parameters)
+
+        raise ValueError('unknown platform (%s)' % identifier)
 
     def target(self, identifier):
         parts = identifier.split(':')

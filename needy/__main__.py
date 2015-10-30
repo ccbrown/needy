@@ -40,7 +40,7 @@ def satisfy(args=[]):
         action='store_true',
         help='force a build even when the target is up-to-date')
 
-    for platform in available_platforms():
+    for platform in available_platforms().values():
         platform.add_arguments(parser)
     parameters = parser.parse_args(args)
 

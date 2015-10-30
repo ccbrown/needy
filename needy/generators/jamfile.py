@@ -12,7 +12,10 @@ class JamfileGenerator(Generator):
     def generate(self, needy):
         path = os.path.join(needy.needs_directory(), 'Jamfile')
         contents = """import feature ;
+import modules ;
 import toolset ;
+
+OS = [ modules.peek : OS ] ;
 
 path-constant NEEDY : %s ;
 path-constant BASE_DIR : %s ;
@@ -38,6 +41,8 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
         } else {
             target = "$(name) -u appletvsimulator" ;
         }
+    } else if $(OS) = MACOSX {
+        target = "$(name) -u macosx" ;
     }
 
     local args = $(target) %s ;
