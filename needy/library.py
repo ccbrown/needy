@@ -178,6 +178,9 @@ class Library:
             raise
 
     def has_up_to_date_build(self, target):
+        if self.needy.parameters().force_build:
+            return False
+
         if not self.should_build(target):
             return True
 
@@ -194,6 +197,9 @@ class Library:
         return True
 
     def has_up_to_date_universal_binary(self, name, configuration):
+        if self.needy.parameters().force_build:
+            return False
+
         for platform, architectures in configuration.iteritems():
             for architecture in architectures:
                 target = Target(self.needy.platform(platform), architecture)

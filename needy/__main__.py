@@ -35,6 +35,11 @@ def satisfy(args=[]):
         nargs='?',
         type=int,
         help='number of jobs to process concurrently')
+    parser.add_argument(
+        '-f', '--force-build',
+        action='store_true',
+        help='force a build even when the target is up-to-date')
+
     for platform in available_platforms():
         platform.add_arguments(parser)
     parameters = parser.parse_args(args)
