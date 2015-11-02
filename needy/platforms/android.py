@@ -1,5 +1,7 @@
 from ..platform import Platform
 
+import hashlib
+import json
 import os
 
 
@@ -19,6 +21,11 @@ class AndroidPlatform(Platform):
         parser.add_argument('--android-api-level', default=None, help='the android API level to build for. this overrides the toolchain\'s sysroot')
         parser.add_argument('--android-toolchain', default=None, help='the android toolchain to build with')
         parser.add_argument('--android-runtime', default='libstdc++', choices=['libstdc++', 'gnustl_shared'], help='the android runtime to use')
+
+    def configuration_hash(self, architecture):
+        hash = hashlib.sha256()
+        hash.update(self.__compiler_args(architecture))
+        return hash.hexdigest()
 
     def toolchain(self, architecture):
         if architecture.find('arm') >= 0:
@@ -58,14 +65,20 @@ class AndroidPlatform(Platform):
         toolchain_path = self.toolchain_path(architecture)
         return [os.path.join(toolchain_path, self.binary_prefix(architecture), 'bin'), os.path.join(toolchain_path, 'bin')]
 
+    def __gnustl_path(self):
+        return os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9')
+
+    def __gunstl_lib_path(self, architecture):
+        return os.path.join(self.__gnustl_path(), 'libs', self.__cxx_stl_architecture_name(architecture))
+
     def include_paths(self, architecture):
         ret = []
-        
+
         if self.__runtime == 'gnustl_shared':
             ret.extend([
-                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'include'),
-                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'include', 'backward'),
-                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'include')
+                os.path.join(self.__gnustl_path(), 'include'),
+                os.path.join(self.__gnustl_path(), 'include', 'backward'),
+                os.path.join(self.__gunstl_lib_path(architecture), 'include')
             ])
 
         return ret
@@ -73,11 +86,11 @@ class AndroidPlatform(Platform):
     def libraries(self, architecture):
         if self.__runtime == 'gnustl_shared':
             return [
-                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libgnustl_shared.so'),
-                os.path.join(self.ndk_home(), 'sources', 'cxx-stl', 'gnu-libstdc++', '4.9', 'libs', self.__cxx_stl_architecture_name(architecture), 'libsupc++.a')
+                os.path.join(self.__gnustl_path(), 'libgnustl_shared.so'),
+                os.path.join(self.__gunstl_lib_path(architecture), 'libsupc++.a')
             ]
         else:
-            return [ '-lcompiler_rt_static', '-lstdc++' , '-lm' ]
+            return ['-lcompiler_rt_static', '-lstdc++', '-lm']
 
     def __compiler_args(self, architecture):
         ret = []

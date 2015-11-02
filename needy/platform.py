@@ -26,6 +26,10 @@ class Platform:
     def add_arguments(parser):
         pass
 
+    def configuration_hash(self, architecture):
+        """ returns a configuration hash in hex that can be used to detemine when a rebuild is necessary """
+        return None
+
     def default_architecture(self):
         """ returns the architecture to use if none is given """
         return None

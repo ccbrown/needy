@@ -106,7 +106,7 @@ class Library:
 
         with open(self.build_status_path(target), 'w') as status_file:
             status = {
-                'configuration': binascii.hexlify(self.__configuration_hash(target))
+                'configuration': self.__configuration_hash(target)
             }
             json.dump(status, status_file)
 
@@ -191,7 +191,7 @@ class Library:
         
         with open(self.build_status_path(target), 'r') as status_file:
             status = json.load(status_file)
-            if 'configuration' not in status or binascii.unhexlify(status['configuration']) != self.__configuration_hash(target):
+            if 'configuration' not in status or status['configuration'] != self.__configuration_hash(target):
                 return False
 
         return True
@@ -255,4 +255,8 @@ class Library:
 
         hash.update(json.dumps(self.project_configuration(target), sort_keys=True))
 
-        return hash.digest()
+        platform_configuration_hash = target.platform.configuration_hash(target.architecture)
+        if platform_configuration_hash:
+            hash.update(platform_configuration_hash)
+
+        return hash.hexdigest()
