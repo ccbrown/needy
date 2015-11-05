@@ -108,15 +108,15 @@ class AndroidPlatform(Platform):
         for path in include_paths:
             ret.append('-I%s' % path)
 
-        return ret
+        return ' '.join(ret)
 
     def c_compiler(self, architecture):
         exe = 'gcc' if self.__runtime == 'gnustl_shared' else 'clang'
-        return 'arm-linux-androideabi-{} {}'.format(exe, ' '.join(self.__compiler_args(architecture)))
+        return 'arm-linux-androideabi-{} {}'.format(exe, self.__compiler_args(architecture))
 
     def cxx_compiler(self, architecture):
         exe = 'g++' if self.__runtime == 'gnustl_shared' else 'clang++'
-        return 'arm-linux-androideabi-{} {}'.format(exe, ' '.join(self.__compiler_args(architecture)))
+        return 'arm-linux-androideabi-{} {}'.format(exe, self.__compiler_args(architecture))
 
     def ndk_home(self):
         ndk_home = os.getenv('ANDROID_NDK_HOME', os.getenv('NDK_HOME'))

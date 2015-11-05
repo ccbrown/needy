@@ -190,7 +190,10 @@ class Library:
         configuration = self.project_configuration(target)
         
         with open(self.build_status_path(target), 'r') as status_file:
-            status = json.load(status_file)
+            status_text = status_file.read()
+            if not status_text.strip():
+                return False
+            status = json.loads(status_text)
             if 'configuration' not in status or status['configuration'] != self.__configuration_hash(target):
                 return False
 
