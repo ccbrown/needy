@@ -11,6 +11,20 @@ class JamfileGenerator(Generator):
 
     def generate(self, needy):
         path = os.path.join(needy.needs_directory(), 'Jamfile')
+        target_args = {
+            'ios': '-t ios',
+            'iossimulator': '-t iossimulator',
+            'tvos': '-t tvos',
+            'tvossimulator': '-t tvossimulator',
+            'osx': '-t osx',
+        }
+
+        if 'universal-binaries' in needy.needs:
+            for universal_binary in needy.needs['universal-binaries']:
+                configuration = needy.needs['universal-binaries'][universal_binary]
+                for platform, architectures in configuration.iteritems():
+                    target_args[platform] = '-u ' + universal_binary
+
         contents = """import feature ;
 import modules ;
 import toolset ;
@@ -29,20 +43,20 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     local target = $(name) ;
     if <target-os>iphone in $(requirements) {
         if <architecture>arm in $(requirements) {
-            target = "$(name) -u iphoneos" ;
+            target = "$(name) %s" ;
         } else {
-            target = "$(name) -u iphonesimulator" ;
+            target = "$(name) %s" ;
         }
     } else if <target-os>android in $(requirements) {
         target = "$(name) -t android:armv7" ;
     } else if <target-os>appletv in $(requirements) {
         if <architecture>arm in $(requirements) {
-            target = "$(name) -u appletvos" ;
+            target = "$(name) %s" ;
         } else {
-            target = "$(name) -u appletvsimulator" ;
+            target = "$(name) %s" ;
         }
     } else if $(OS) = MACOSX {
-        target = "$(name) -u macosx" ;
+        target = "$(name) %s" ;
     }
 
     local args = $(target) %s ;
@@ -65,7 +79,16 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
           $(usage-requirements)
     ;
 }
-""" % (os.path.abspath(sys.argv[0]), os.path.dirname(needy.path()), needy.path(), needy.parameters().satisfy_args)
+""" % (
+    os.path.abspath(sys.argv[0]),
+    os.path.dirname(needy.path()),
+    needy.path(),
+    target_args['ios'],
+    target_args['iossimulator'],
+    target_args['tvos'],
+    target_args['tvossimulator'],
+    target_args['osx'],
+    needy.parameters().satisfy_args)
 
         for library in needy.libraries_to_build():
             contents += """

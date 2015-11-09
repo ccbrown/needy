@@ -6,11 +6,15 @@ class tvOSPlatform(XcodePlatform):
 
     @staticmethod
     def identifier():
+        return 'tvos'
+
+    @staticmethod
+    def sdk():
         return 'appletvos'
 
     @staticmethod
     def os_name():
-        return 'tvOS'
+        return 'tvos'
 
     @staticmethod
     def minimum_version():
@@ -35,6 +39,10 @@ class tvOSSimulatorPlatform(tvOSPlatform):
     @staticmethod
     def identifier():
         return 'appletvsimulator'
+
+    @staticmethod
+    def sdk():
+        return 'tvossimulator'
 
     @staticmethod
     def add_arguments(parser):

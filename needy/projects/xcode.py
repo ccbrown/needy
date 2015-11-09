@@ -16,7 +16,7 @@ class XcodeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        if definition.target.platform.identifier() not in ['macosx', 'iphoneos', 'iphonesimulator', 'appletvos', 'appletvsimulator']:
+        if definition.target.platform.identifier() not in ['osx', 'ios', 'iossimulator', 'tvos', 'tvossimulator']:
             return False
 
         xcodebuild_args = []

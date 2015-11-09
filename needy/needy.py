@@ -49,9 +49,6 @@ class Needy:
         return multiprocessing.cpu_count()
 
     def platform(self, identifier):
-        if sys.platform == 'darwin' and identifier == 'host':
-            identifier = 'macosx'
-
         platform = available_platforms().get(identifier, None)
         if platform is not None:
             return platform(self.__parameters)

@@ -6,11 +6,15 @@ class iOSPlatform(XcodePlatform):
 
     @staticmethod
     def identifier():
+        return 'ios'
+
+    @staticmethod
+    def sdk():
         return 'iphoneos'
 
     @staticmethod
     def os_name():
-        return 'iOS'
+        return 'ios'
 
     @staticmethod
     def minimum_version():
@@ -35,6 +39,10 @@ class iOSPlatform(XcodePlatform):
 class iOSSimulatorPlatform(iOSPlatform):
     @staticmethod
     def identifier():
+        return 'iossimulator'
+
+    @staticmethod
+    def sdk():
         return 'iphonesimulator'
 
     @staticmethod

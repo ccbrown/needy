@@ -43,7 +43,7 @@ class AutotoolsProject(project.Project):
 
         linkage = self.configuration('linkage')
 
-        if self.target().platform.identifier() in ['iphoneos', 'appletvos']:
+        if self.target().platform.identifier() in ['ios', 'tvos']:
             if not linkage:
                 linkage = 'static'
 

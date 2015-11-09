@@ -8,6 +8,10 @@ class OSXPlatform(XcodePlatform):
 
     @staticmethod
     def identifier():
+        return 'osx'
+
+    @staticmethod
+    def sdk():
         return 'macosx'
 
     @staticmethod
@@ -20,7 +24,7 @@ class OSXPlatform(XcodePlatform):
 
     @staticmethod
     def add_arguments(parser):
-        parser.add_argument('--minimum-macosx-version', default=OSXPlatform.minimum_version(),
+        parser.add_argument('--minimum-osx-version', default=OSXPlatform.minimum_version(),
                             help='the minimum OS X version to build for')
 
     @staticmethod
