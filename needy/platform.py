@@ -17,17 +17,15 @@ def available_platforms():
         platforms = [HostPlatform, AndroidPlatform]
 
         if sys.platform == 'darwin':
-            from .platforms.macosx import MacOSXPlatform
-            from .platforms.appletvos import AppleTVPlatform
-            from .platforms.appletvsimulator import AppleTVSimulatorPlatform
-            from .platforms.iphoneos import iPhonePlatform
-            from .platforms.iphonesimulator import iPhoneSimulatorPlatform
+            from .platforms.osx import OSXPlatform
+            from .platforms.ios import iOSPlatform, iOSSimulatorPlatform
+            from .platforms.tvos import tvOSPlatform, tvOSSimulatorPlatform
             platforms.extend([
-                MacOSXPlatform,
-                AppleTVPlatform,
-                AppleTVSimulatorPlatform,
-                iPhonePlatform,
-                iPhoneSimulatorPlatform,
+                OSXPlatform,
+                iOSPlatform,
+                iOSSimulatorPlatform,
+                tvOSPlatform,
+                tvOSSimulatorPlatform,
             ])
 
         _available_platforms = {}
