@@ -31,43 +31,43 @@ import toolset ;
 
 OS = [ modules.peek : OS ] ;
 
-path-constant NEEDY : %s ;
-path-constant BASE_DIR : %s ;
-path-constant NEEDS_FILE : %s ;
+path-constant NEEDY : {needy} ;
+path-constant BASE_DIR : {base_dir} ;
+path-constant NEEDS_FILE : {needs_file} ;
 
 feature.feature needyargs : : free ;
 toolset.flags $(__name__).satisfy-lib NEEDYARGS <needyargs> ;
 
 rule needlib ( name : extra-sources * : requirements * : default-build * : usage-requirements * )
-{
+{{
     local target = $(name) ;
-    if <target-os>iphone in $(requirements) {
-        if <architecture>arm in $(requirements) {
-            target = "$(name) %s" ;
-        } else {
-            target = "$(name) %s" ;
-        }
-    } else if <target-os>android in $(requirements) {
+    if <target-os>iphone in $(requirements) {{
+        if <architecture>arm in $(requirements) {{
+            target = "$(name) {ios}" ;
+        }} else {{
+            target = "$(name) {iossimulator}" ;
+        }}
+    }} else if <target-os>android in $(requirements) {{
         target = "$(name) -t android:armv7" ;
-    } else if <target-os>appletv in $(requirements) {
-        if <architecture>arm in $(requirements) {
-            target = "$(name) %s" ;
-        } else {
-            target = "$(name) %s" ;
-        }
-    } else if $(OS) = MACOSX {
-        target = "$(name) %s" ;
-    }
+    }} else if <target-os>appletv in $(requirements) {{
+        if <architecture>arm in $(requirements) {{
+            target = "$(name) {tvos}" ;
+        }} else {{
+            target = "$(name) {tvossimulator}" ;
+        }}
+    }} else if $(OS) = MACOSX {{
+        target = "$(name) {osx}" ;
+    }}
 
-    local args = $(target) %s ;
+    local args = $(target) {satisfy_args} ;
     local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
     local includedir = "$(builddir)/include" ;
     
     make lib$(name).touch : $(NEEDS_FILE) : @satisfy-lib : $(requirements) <needyargs>$(args) ;
     actions satisfy-lib
-    {
+    {{
         cd $(BASE_DIR) && $(NEEDY) satisfy $(NEEDYARGS) && cd - && touch $(<)
-    }
+    }}
 
     alias $(name)
         : $(extra-sources) 
@@ -78,17 +78,13 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
           <linkflags>-L$(builddir)/lib
           $(usage-requirements)
     ;
-}
-""" % (
-    os.path.abspath(sys.argv[0]),
-    os.path.dirname(needy.path()),
-    needy.path(),
-    target_args['ios'],
-    target_args['iossimulator'],
-    target_args['tvos'],
-    target_args['tvossimulator'],
-    target_args['osx'],
-    needy.parameters().satisfy_args)
+}}
+""".format(
+    needy=os.path.abspath(sys.argv[0]),
+    base_dir=os.path.dirname(needy.path()),
+    needs_file=needy.path(),
+    satisfy_args=needy.parameters().satisfy_args,
+    **target_args)
 
         for library in needy.libraries_to_build():
             contents += """
