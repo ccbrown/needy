@@ -152,13 +152,20 @@ class Library:
                 file_name, extension = os.path.splitext(file)
                 output_path = os.path.join(universal_binary_directory, file)
 
-                if extension in ['.a', '.dylib', '.so']:
-                    print('Creating universal library %s' % file)
-                    if not os.path.exists(os.path.dirname(output_path)):
-                        os.makedirs(os.path.dirname(output_path))
-                    self.needy.command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
+                if not os.path.exists(os.path.dirname(output_path)):
+                    os.makedirs(os.path.dirname(output_path))
 
-                if extension in ['.h', '.hpp']:
+                if target_count == 1:
+                    print('Copying %s' % file)
+                    path = builds[0][1]
+                    if os.path.islink(path):
+                        os.symlink(os.readlink(path), output_path)
+                    else:
+                        shutil.copy(path, output_path)
+                elif extension in ['.a', '.dylib', '.so']:
+                    print('Creating universal library %s' % file)
+                    self.needy.command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
+                elif extension in ['.h', '.hpp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for target, header in builds:
                         macro = target.platform.detection_macro(target.architecture)
@@ -166,11 +173,9 @@ class Library:
                             header_contents = ''
                             break
                         header_path = os.path.relpath(header, os.path.dirname(output_path))
-                        header_contents += '#if {}\n#include "{}"\n#endif\n'.format(macro, header_path) 
+                        header_contents += '#if {}\n#include "{}"\n#endif\n'.format(macro, header_path)
                     if header_contents:
                         print('Creating universal header %s' % file)
-                        if not os.path.exists(os.path.dirname(output_path)):
-                            os.makedirs(os.path.dirname(output_path))
                         with open(output_path, 'w') as f:
                             f.write(header_contents)
         except:
