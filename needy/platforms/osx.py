@@ -11,6 +11,10 @@ class OSXPlatform(XcodePlatform):
         return 'osx'
 
     @staticmethod
+    def is_host():
+        return True
+
+    @staticmethod
     def sdk():
         return 'macosx'
 

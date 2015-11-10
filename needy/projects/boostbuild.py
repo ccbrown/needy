@@ -12,7 +12,7 @@ class BoostBuildProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        if definition.target.platform.identifier() != 'host':
+        if not definition.target.platform.is_host():
             return False
             
         if not os.path.isfile('Jamroot'):

@@ -44,7 +44,7 @@ class MakeProject(project.Project):
     def configure(self, output_directory):
         excluded_targets = []
 
-        if self.target().platform.identifier() != 'host':
+        if not self.target().platform.is_host():
             excluded_targets.extend(['test', 'tests', 'check'])
 
         makefile_path = MakeProject.get_makefile_path()

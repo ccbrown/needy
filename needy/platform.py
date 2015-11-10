@@ -5,35 +5,35 @@ try:
 except ImportError:
     pass
 
-_available_platforms = None
-
-
 def available_platforms():
-    global _available_platforms
+    from .platforms.generic import GenericPlatform
+    from .platforms.android import AndroidPlatform
+    platforms = [GenericPlatform, AndroidPlatform]
 
-    if _available_platforms is None:
-        from .platforms.host import HostPlatform
-        from .platforms.android import AndroidPlatform
-        platforms = [HostPlatform, AndroidPlatform]
+    if sys.platform == 'darwin':
+        from .platforms.osx import OSXPlatform
+        from .platforms.ios import iOSPlatform, iOSSimulatorPlatform
+        from .platforms.tvos import tvOSPlatform, tvOSSimulatorPlatform
+        platforms.extend([
+            OSXPlatform,
+            iOSPlatform,
+            iOSSimulatorPlatform,
+            tvOSPlatform,
+            tvOSSimulatorPlatform,
+        ])
 
-        if sys.platform == 'darwin':
-            from .platforms.osx import OSXPlatform
-            from .platforms.ios import iOSPlatform, iOSSimulatorPlatform
-            from .platforms.tvos import tvOSPlatform, tvOSSimulatorPlatform
-            platforms.extend([
-                OSXPlatform,
-                iOSPlatform,
-                iOSSimulatorPlatform,
-                tvOSPlatform,
-                tvOSSimulatorPlatform,
-            ])
+    ret = {}
+    for platform in platforms:
+        ret[platform.identifier()] = platform
+    return ret
 
-        _available_platforms = {}
-        for platform in platforms:
-            _available_platforms[platform.identifier()] = platform
+def host_platform():
+    if sys.platform == 'darwin':
+        from .platforms.osx import OSXPlatform
+        return OSXPlatform
 
-    return _available_platforms
-
+    from .platforms.generic import GenericPlatform
+    return GenericPlatform
 
 class Platform:
     def __init__(self, parameters):
@@ -42,6 +42,10 @@ class Platform:
     @staticmethod
     def identifier():
         raise NotImplementedError('identifier')
+
+    @staticmethod
+    def is_host():
+        return False
 
     @staticmethod
     def add_arguments(parser):

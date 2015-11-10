@@ -18,7 +18,7 @@ except ImportError:
     Fore = EmptyStringAttributes()
 
 from .library import Library
-from .platform import available_platforms
+from .platform import available_platforms, host_platform
 from .generator import available_generators
 from .target import Target
 from .cd import current_directory
@@ -49,7 +49,7 @@ class Needy:
         return multiprocessing.cpu_count()
 
     def platform(self, identifier):
-        platform = available_platforms().get(identifier, None)
+        platform = host_platform() if identifier == 'host' else available_platforms().get(identifier, None)
         if platform is not None:
             return platform(self.__parameters)
 

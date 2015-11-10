@@ -12,7 +12,7 @@ class CMakeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        return definition.target.platform.identifier() == 'host' and os.path.isfile('CMakeLists.txt')
+        return definition.target.platform.is_host() and os.path.isfile('CMakeLists.txt')
 
     def configure(self, output_directory):
         cmake_directory = os.path.join(self.directory(), 'cmake')
