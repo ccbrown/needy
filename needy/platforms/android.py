@@ -25,7 +25,7 @@ class AndroidPlatform(Platform):
     def configuration_hash(self, architecture):
         hash = hashlib.sha256()
         hash.update(self.__compiler_args(architecture))
-        return hash.hexdigest()
+        return hash.digest()
 
     def toolchain(self, architecture):
         if architecture.find('arm') >= 0:

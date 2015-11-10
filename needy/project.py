@@ -14,6 +14,8 @@ def evaluate_conditionals(configuration, target):
             values.append(target.platform.identifier())
             if target.platform.identifier() == 'host':
                 values.append(sys.platform)
+                if sys.platform == 'darwin':
+                    values.append('osx')
         else:
             raise ValueError('unknown conditional key')
 

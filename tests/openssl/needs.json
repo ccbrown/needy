@@ -6,7 +6,7 @@
 			"project": {
 				"conditionals": {
 					"platform": {
-						"darwin": {
+						"osx": {
 							"build-steps": [
 								"bash ./Configure darwin64-x86_64-cc --prefix={build_directory}",
 								"make",
