@@ -38,11 +38,11 @@ class tvOSSimulatorPlatform(tvOSPlatform):
 
     @staticmethod
     def identifier():
-        return 'appletvsimulator'
+        return 'tvossimulator'
 
     @staticmethod
     def sdk():
-        return 'tvossimulator'
+        return 'appletvsimulator'
 
     @staticmethod
     def add_arguments(parser):
