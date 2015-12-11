@@ -21,8 +21,8 @@ class cd:
 
     def __enter__(self):
         global _current_directory
-        os.chdir(self.__new_path)
         self.__previous_directory = current_directory()
+        os.chdir(self.__new_path)
         _current_directory = self.__new_path
 
     def __exit__(self, etype, value, traceback):
