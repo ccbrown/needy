@@ -30,7 +30,9 @@ class GenericPlatform(Platform):
             command = os.environ['CC']
         elif self.__command_exists('clang'):
             command = 'clang'
-        return '%s -arch %s' % (command, architecture)
+        if platform.system() == 'Darwin':
+            return '%s -arch %s' % (command, architecture)
+        return '%s -m%s' % (command, '32' if architecture == 'i386' else '64')
 
     def cxx_compiler(self, architecture):
         command = 'g++'
@@ -38,4 +40,6 @@ class GenericPlatform(Platform):
             command = os.environ['CXX']
         elif self.__command_exists('clang++'):
             command = 'clang++'
-        return '%s -arch %s' % (command, architecture)
+        if platform.system() == 'Darwin':
+            return '%s -arch %s' % (command, architecture)
+        return '%s -m%s' % (command, '32' if architecture == 'i386' else '64')
