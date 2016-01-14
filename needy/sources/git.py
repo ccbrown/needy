@@ -18,8 +18,7 @@ class GitRepository(Source):
 
         with cd(self.directory):
             subprocess.check_call(['git', 'clean', '-xfd'])
-            subprocess.check_call(['git', 'reset', '--hard', 'HEAD'])
-            subprocess.check_call(['git', 'pull'])
+            subprocess.check_call(['git', 'fetch'])
             subprocess.check_call(['git', 'reset', '--hard', self.commit])
             subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
 
