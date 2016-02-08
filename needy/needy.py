@@ -32,6 +32,14 @@ class Needy:
 
         self.__needs_directory = os.path.join(self.__path, 'needs')
 
+        directory = self.__path
+        while directory:
+            if os.path.exists(os.path.join(directory, 'needs.json')):
+                self.__needs_directory = os.path.join(directory, 'needs')
+            directory = os.path.dirname(directory)
+            if directory == os.sep:
+                break
+
     def path(self):
         return self.__path
 
