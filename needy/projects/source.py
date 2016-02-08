@@ -55,7 +55,7 @@ class SourceProject(project.Project):
     def build(self, output_directory):
         # check for needs
 
-        needy = self.needy.recursive(os.path.join(self.directory(), 'needs.json'))
+        needy = self.needy.recursive(self.directory())
         if needy:
             needy.satisfy_target(self.target())
 

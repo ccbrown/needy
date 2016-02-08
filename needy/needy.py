@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import fnmatch
 import json
 import os
@@ -29,10 +27,10 @@ class Needy:
         self.__path = path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
         self.__parameters = parameters
 
-        with open(self.__path, 'r') as needs_file:
+        with open(os.path.join(self.__path, 'needs.json'), 'r') as needs_file:
             self.needs = json.load(needs_file, object_pairs_hook=OrderedDict)
 
-        self.__needs_directory = os.path.join(os.path.dirname(self.__path), 'needs')
+        self.__needs_directory = os.path.join(self.__path, 'needs')
 
     def path(self):
         return self.__path
@@ -78,8 +76,8 @@ class Needy:
                 return subprocess.check_output(cmd, env=env, stderr=devnull)
             return subprocess.check_output(cmd, env=env, stderr=devnull, shell=True)
 
-    def recursive(self, needs_file):
-        return Needy(needs_file, self.parameters()) if os.path.isfile(needs_file) else None
+    def recursive(self, path):
+        return Needy(path, self.parameters()) if os.path.isfile(os.path.join(path, 'needs.json')) else None
 
     def libraries_to_build(self, filters=None):
         if 'libraries' not in self.needs:
@@ -147,7 +145,7 @@ class Needy:
                 continue
             if os.path.isdir(l.include_path(target)):
                 ret.append(l.include_path(target))
-            needy = self.recursive(os.path.join(l.source_directory(), 'needs.json'))
+            needy = self.recursive(l.source_directory())
             if needy:
                 ret.extend(needy.include_paths(target))
         return ret
@@ -162,7 +160,7 @@ class Needy:
                     ret.append(l.library_path(target_or_universal_binary))
             else:
                 ret.append(l.library_path(target_or_universal_binary))
-            needy = self.recursive(os.path.join(l.source_directory(), 'needs.json'))
+            needy = self.recursive(l.source_directory())
             if needy:
                 ret.extend(needy.library_paths(target_or_universal_binary))
         return ret
@@ -176,7 +174,7 @@ class Needy:
         if 'libraries' not in self.needs:
             return
 
-        print('Satisfying %s' % self.path())
+        print('Satisfying needs in %s' % self.path())
 
         try:
             for name, library in self.libraries_to_build(filters):

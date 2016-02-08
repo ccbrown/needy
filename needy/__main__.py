@@ -44,7 +44,7 @@ def satisfy(args=[]):
         platform.add_arguments(parser)
     parameters = parser.parse_args(args)
 
-    needy = Needy('needs.json', parameters)
+    needy = Needy('.', parameters)
 
     if parameters.universal_binary:
         needy.satisfy_universal_binary(parameters.universal_binary, parameters.library)
@@ -63,7 +63,7 @@ def cflags(args=[]):
     parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parameters = parser.parse_args(args)
 
-    needy = Needy('needs.json', parameters)
+    needy = Needy('.', parameters)
     target = needy.target(parameters.target)
 
     print(' '.join([('-I%s' % path) for path in needy.include_paths(target)]), end='')
@@ -80,7 +80,7 @@ def ldflags(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
-    needy = Needy('needs.json', parameters)
+    needy = Needy('.', parameters)
 
     print(' '.join([('-L%s' % path) for path in needy.library_paths(
         parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))]), end='')
@@ -99,7 +99,7 @@ def builddir(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary')
     parameters = parser.parse_args(args)
 
-    needy = Needy('needs.json', parameters)
+    needy = Needy('.', parameters)
 
     print(needy.build_directory(parameters.library,
                                 parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target)), end='')
@@ -125,7 +125,7 @@ def generate(args=[]):
         help='arguments to use when satisfying needs')
     parameters = parser.parse_args(args)
 
-    needy = Needy('needs.json', parameters)
+    needy = Needy('.', parameters)
     needy.generate(parameters.file)
 
     return 0
