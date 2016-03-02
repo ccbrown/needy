@@ -60,7 +60,7 @@ class Project:
         return self.__definition.directory
 
     def configuration(self, key=None):
-        if key == None:
+        if key is None:
             return self.__definition.configuration
         if key in self.__definition.configuration:
             return self.__definition.configuration[key]
@@ -77,8 +77,8 @@ class Project:
 
     def evaluate(self, str_or_list, build_directory):
         l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
-        return [str.format(build_directory=build_directory, 
-                           platform=self.target().platform.identifier(), 
+        return [str.format(build_directory=build_directory,
+                           platform=self.target().platform.identifier(),
                            architecture=self.target().architecture) for str in l]
 
     def run_commands(self, commands, build_directory):
@@ -114,6 +114,13 @@ class Project:
 
     def post_build(self, output_directory):
         self.run_commands(self.configuration('post-build'), output_directory)
+        build_dirs = [os.path.join(output_directory, d) for d in ['include', 'lib']]
+        self.__create_directories(build_dirs)
+
+    def __create_directories(self, dirs):
+        for d in dirs:
+            if not os.path.exists(d):
+                os.makedirs(d)
 
     def command(self, cmd, environment_overrides={}):
         env = environment_overrides.copy()
