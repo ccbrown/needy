@@ -72,7 +72,7 @@ class Library:
         self.source.clean()
 
         configuration = self.project_configuration(target)
-        
+
         post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
         with cd(self.source_directory()):
             if isinstance(post_clean_commands, list):
@@ -93,7 +93,7 @@ class Library:
             shutil.rmtree(build_directory)
 
         os.makedirs(build_directory)
-        
+
         with cd(self.source_directory()):
             try:
                 project.configure(build_directory)
@@ -141,7 +141,7 @@ class Library:
 
         if os.path.exists(universal_binary_directory):
             shutil.rmtree(universal_binary_directory)
-            
+
         os.makedirs(universal_binary_directory)
 
         try:
@@ -191,9 +191,9 @@ class Library:
 
         if not os.path.isfile(self.build_status_path(target)):
             return False
-        
+
         configuration = self.project_configuration(target)
-        
+
         with open(self.build_status_path(target), 'r') as status_file:
             status_text = status_file.read()
             if not status_text.strip():
@@ -242,7 +242,7 @@ class Library:
             for candidate in candidates:
                 if candidate.identifier() == definition.configuration['type']:
                     return candidate(definition, self.needy)
-            raise RuntimeError('unknown project type') 
+            raise RuntimeError('unknown project type')
 
         scores = [(len(definition.configuration.viewkeys() & c.configuration_keys()), c) for c in candidates]
         candidates = [candidate for score, candidate in sorted(scores, key=itemgetter(0), reverse=True)]

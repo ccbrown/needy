@@ -62,7 +62,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     local args = $(target) {satisfy_args} ;
     local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
     local includedir = "$(builddir)/include" ;
-    
+
     make lib$(name).touch : $(NEEDS_FILE) : @satisfy-lib : $(requirements) <needyargs>$(args) ;
     actions satisfy-lib
     {{
@@ -70,9 +70,9 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     }}
 
     alias $(name)
-        : $(extra-sources) 
-        : $(requirements) 
-        : $(default-build) 
+        : $(extra-sources)
+        : $(requirements)
+        : $(default-build)
         : <dependency>lib$(name).touch
           <include>$(includedir)
           <linkflags>-L$(builddir)/lib

@@ -14,10 +14,10 @@ class BoostBuildProject(project.Project):
     def is_valid_project(definition, needy):
         if not definition.target.platform.is_host():
             return False
-            
+
         if not os.path.isfile('Jamroot'):
             return False
-        
+
         if os.path.isfile('b2'):
             return True
 
