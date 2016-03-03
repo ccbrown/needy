@@ -2,6 +2,7 @@ from .xcode import XcodePlatform
 
 import platform
 
+
 class OSXPlatform(XcodePlatform):
     def __init__(self, parameters):
         XcodePlatform.__init__(self, parameters)
@@ -41,4 +42,3 @@ class OSXPlatform(XcodePlatform):
 
     def default_architecture(self):
         return platform.machine()
-
