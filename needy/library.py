@@ -123,7 +123,7 @@ class Library:
 
         print('Building universal binary %s' % name)
 
-        universal_files = dict()
+        universal_paths = dict()
         target_count = 0
 
         for platform, architectures in configuration.iteritems():
@@ -131,11 +131,11 @@ class Library:
                 target_count = target_count + 1
                 target = Target(self.needy.platform(platform), architecture)
                 for root, dirs, files in os.walk(self.build_directory(target)):
-                    for file in files:
-                        key = os.path.join(os.path.relpath(root, self.build_directory(target)), file)
-                        if key not in universal_files:
-                            universal_files[key] = []
-                        universal_files[key].append((target, os.path.join(root, file)))
+                    for path in files + dirs:
+                        key = os.path.join(os.path.relpath(root, self.build_directory(target)), path)
+                        if key not in universal_paths:
+                            universal_paths[key] = []
+                        universal_paths[key].append((target, os.path.join(root, path)))
 
         universal_binary_directory = self.universal_binary_directory(name)
 
@@ -145,25 +145,27 @@ class Library:
         os.makedirs(universal_binary_directory)
 
         try:
-            for file, builds in universal_files.iteritems():
+            for path, builds in universal_paths.iteritems():
                 if len(builds) != target_count:
                     continue
 
-                file_name, extension = os.path.splitext(file)
-                output_path = os.path.join(universal_binary_directory, file)
+                file_name, extension = os.path.splitext(path)
+                output_path = os.path.join(universal_binary_directory, path)
 
-                if not os.path.exists(os.path.dirname(output_path)):
-                    os.makedirs(os.path.dirname(output_path))
+                self.__make_output_dirs_for_builds(output_path, builds)
+
+                if any([os.path.isdir(source_path) for _, source_path in builds]):
+                    continue
 
                 if target_count == 1:
-                    print('Copying %s' % file)
-                    path = builds[0][1]
-                    if os.path.islink(path):
-                        os.symlink(os.readlink(path), output_path)
+                    print('Copying %s' % path)
+                    source_path = builds[0][1]
+                    if os.path.islink(source_path):
+                        os.symlink(os.readlink(source_path), output_path)
                     else:
-                        shutil.copy(path, output_path)
+                        shutil.copy(source_path, output_path)
                 elif extension in ['.a', '.dylib', '.so']:
-                    print('Creating universal library %s' % file)
+                    print('Creating universal library %s' % path)
                     self.needy.command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
                 elif extension in ['.h', '.hpp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
@@ -175,12 +177,18 @@ class Library:
                         header_path = os.path.relpath(header, os.path.dirname(output_path))
                         header_contents += '#if {}\n#include "{}"\n#endif\n'.format(macro, header_path)
                     if header_contents:
-                        print('Creating universal header %s' % file)
+                        print('Creating universal header %s' % path)
                         with open(output_path, 'w') as f:
                             f.write(header_contents)
         except:
             shutil.rmtree(universal_binary_directory)
             raise
+
+    def __make_output_dirs_for_builds(self, output_path, builds):
+        for _, source_dir in builds:
+            dir = output_path if os.path.isdir(source_dir) else os.path.dirname(output_path)
+            if not os.path.exists(dir):
+                os.makedirs(dir)
 
     def has_up_to_date_build(self, target):
         if self.needy.parameters().force_build:

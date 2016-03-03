@@ -1,5 +1,6 @@
 from .xcode import XcodePlatform
 
+
 class tvOSPlatform(XcodePlatform):
     def __init__(self, parameters):
         XcodePlatform.__init__(self, parameters)
@@ -31,6 +32,7 @@ class tvOSPlatform(XcodePlatform):
 
     def default_architecture(self):
         return 'arm64'
+
 
 class tvOSSimulatorPlatform(tvOSPlatform):
     def __init__(self, parameters):
