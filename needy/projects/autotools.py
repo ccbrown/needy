@@ -38,6 +38,7 @@ class AutotoolsProject(project.Project):
             self.command('./autogen.sh')
 
         configure_args = self.evaluate(self.configuration('configure-args') or [], output_directory)
+        has_host = any([arg.startswith('--host=') or arg.startswith('--host=') for arg in configure_args])
 
         configure_args.append('--prefix=%s' % output_directory)
 
@@ -47,38 +48,48 @@ class AutotoolsProject(project.Project):
             if not linkage:
                 linkage = 'static'
 
-            configure_host = self.__available_configure_host([
-                '%s-apple-darwin' % self.target().architecture, 'arm*-apple-darwin', 'arm-apple-darwin', 'arm*', 'arm'
-            ])
-
-            if configure_host == 'arm*-apple-darwin':
-                configure_host = '%s-apple-darwin' % self.target().architecture
-            elif configure_host == 'arm*':
-                configure_host = self.target().architecture
-            elif not configure_host:
-                configure_host = 'arm-apple-darwin'
-
-            configure_args.append('--host=%s' % configure_host)
+            if not has_host:
+                candidates = [
+                    '%s-apple-darwin' % self.target().architecture, 'arm*-apple-darwin', 
+                    'arm-apple-darwin', 'arm*', 'arm'
+                ]
+                if self.target().architecture == 'arm64':
+                    candidates.insert(0, 'aarch64-apple-darwin')
+                    candidates.insert(0, 'aarch64')
+                configure_host = self.__available_configure_host(candidates)
+    
+                if configure_host == 'arm*-apple-darwin':
+                    configure_host = '%s-apple-darwin' % self.target().architecture
+                elif configure_host == 'arm*':
+                    configure_host = self.target().architecture
+                elif not configure_host:
+                    configure_host = 'arm-apple-darwin'
+    
+                configure_args.append('--host=%s' % configure_host)
         elif self.target().platform.identifier() == 'android':
             toolchain = self.target().platform.toolchain_path(self.target().architecture)
             sysroot = self.target().platform.sysroot_path(self.target().architecture)
 
-            if self.target().architecture.find('arm') >= 0:
-                configure_host = self.__available_configure_host([
-                    'linux*android*', 'arm*', 'arm'
-                ])
+            if not has_host:
+                if self.target().architecture.find('arm') >= 0:
+                    candidates = [
+                        'linux*android*', 'arm*', 'arm'
+                    ]
+                    if self.target().architecture == 'arm64':
+                        candidates.insert(0, 'aarch64-linux-android')
+                        candidates.insert(0, 'aarch64')
+                    configure_host = self.__available_configure_host(candidates)
+    
+                    if configure_host == 'linux*android*':
+                        configure_host = 'arm-linux-androideabi'
+                    elif configure_host == 'arm*':
+                        configure_host = self.target().architecture
+                    elif not configure_host:
+                        configure_host = 'arm-linux-androideabi'
 
-                if configure_host == 'linux*android*':
-                    configure_host = 'arm-linux-androideabi'
-                elif configure_host == 'arm*':
-                    configure_host = self.target().architecture
-                elif not configure_host:
-                    configure_host = 'arm-linux-androideabi'
+                configure_args.append('--host=%s' % configure_host)
 
-            configure_args.extend([
-                '--host=%s' % configure_host,
-                '--with-sysroot=%s' % sysroot
-            ])
+            configure_args.append('--with-sysroot=%s' % sysroot)
 
         if linkage:
             if linkage == 'static':

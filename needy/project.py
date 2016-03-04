@@ -3,29 +3,36 @@ import sys
 
 
 def evaluate_conditionals(configuration, target):
-    if 'conditionals' not in configuration:
-        return configuration
+    should_continue = True
+    while should_continue:
+        if 'conditionals' not in configuration:
+            return configuration
 
-    ret = configuration.copy()
+        copy = configuration.copy()
+        copy.pop('conditionals')
+        should_continue = False
+    
+        for key, cases in configuration['conditionals'].iteritems():
+            values = []
+            if key == 'platform':
+                values.append(target.platform.identifier())
+                if target.platform.is_host():
+                    values.append('host')
+                    values.append(sys.platform)
+            elif key == 'architecture':
+                values.append(target.architecture)
+            else:
+                raise ValueError('unknown conditional key')
+    
+            for case, config in cases.iteritems():
+                if case in values or (case[0] == '!' and case[1:] not in values) or case == '*':
+                    should_continue = True
+                    copy.update(config)
+                    break
+    
+        configuration = copy
 
-    for key, cases in configuration['conditionals'].iteritems():
-        values = []
-        if key == 'platform':
-            values.append(target.platform.identifier())
-            if target.platform.is_host():
-                values.append('host')
-                values.append(sys.platform)
-        else:
-            raise ValueError('unknown conditional key')
-
-        for case, config in cases.iteritems():
-            if case in values or (case[0] == '!' and case[1:] not in values) or case == '*':
-                ret.update(config)
-                break
-
-    ret.pop('conditionals')
-
-    return ret
+    return configuration
 
 
 class ProjectDefinition:
