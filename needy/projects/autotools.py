@@ -54,14 +54,17 @@ class AutotoolsProject(project.Project):
                     'arm-apple-darwin', 'arm*', 'arm'
                 ]
                 if self.target().architecture == 'arm64':
-                    candidates.insert(0, 'aarch64-apple-darwin')
                     candidates.insert(0, 'aarch64')
+                    candidates.insert(0, 'aarch64*')
+                    candidates.insert(0, 'aarch64-apple-darwin')
                 configure_host = self.__available_configure_host(candidates)
     
                 if configure_host == 'arm*-apple-darwin':
                     configure_host = '%s-apple-darwin' % self.target().architecture
                 elif configure_host == 'arm*':
                     configure_host = self.target().architecture
+                elif configure_host == 'aarch64*':
+                    configure_host = 'aarch64-apple-darwin'
                 elif not configure_host:
                     configure_host = 'arm-apple-darwin'
     
@@ -76,14 +79,17 @@ class AutotoolsProject(project.Project):
                         'linux*android*', 'arm*', 'arm'
                     ]
                     if self.target().architecture == 'arm64':
-                        candidates.insert(0, 'aarch64-linux-android')
                         candidates.insert(0, 'aarch64')
+                        candidates.insert(0, 'aarch64*')
+                        candidates.insert(0, 'aarch64-linux-android')
                     configure_host = self.__available_configure_host(candidates)
-    
+
                     if configure_host == 'linux*android*':
                         configure_host = 'arm-linux-androideabi'
                     elif configure_host == 'arm*':
                         configure_host = self.target().architecture
+                    elif configure_host == 'aarch64*':
+                        configure_host = 'aarch64-linux-android'
                     elif not configure_host:
                         configure_host = 'arm-linux-androideabi'
 

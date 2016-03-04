@@ -90,7 +90,7 @@ class AndroidPlatform(Platform):
                 os.path.join(self.__gunstl_lib_path(architecture), 'libsupc++.a')
             ]
         else:
-            return ['-lcompiler_rt_static', '-lstdc++', '-lm']
+            return ['-lstdc++', '-lm']
 
     def __compiler_args(self, architecture):
         ret = []
