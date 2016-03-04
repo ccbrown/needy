@@ -5,6 +5,7 @@ try:
 except ImportError:
     pass
 
+
 def available_platforms():
     from .platforms.generic import GenericPlatform
     from .platforms.android import AndroidPlatform
@@ -27,6 +28,7 @@ def available_platforms():
         ret[platform.identifier()] = platform
     return ret
 
+
 def host_platform():
     if sys.platform == 'darwin':
         from .platforms.osx import OSXPlatform
@@ -34,6 +36,7 @@ def host_platform():
 
     from .platforms.generic import GenericPlatform
     return GenericPlatform
+
 
 class Platform:
     def __init__(self, parameters):
