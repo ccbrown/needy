@@ -22,6 +22,7 @@ from .sources.directory import Directory
 from .sources.git import GitRepository
 
 from .cd import cd
+from .override_environment import OverrideEnvironment
 from .target import Target
 
 from .projects.androidmk import AndroidMkProject
@@ -67,50 +68,60 @@ class Library:
         print('Building for %s %s' % (target.platform.identifier(), target.architecture))
 
         if ' ' in self.__directory:
-            print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t handle spaces well, so if you have problems, consider moving the project or using a symlink.')
+            print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t '
+                  'handle spaces well, so if you have problems, consider moving the project or using a symlink.')
 
         self.source.clean()
 
         configuration = self.project_configuration(target)
+        env_overrides = self.__parse_env_overrides(configuration['environment'] if 'environment' in configuration else None)
 
-        post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
-        with cd(self.source_directory()):
-            if isinstance(post_clean_commands, list):
-                for command in post_clean_commands:
-                    self.needy.command(command)
-            else:
-                self.needy.command(post_clean_commands)
+        with OverrideEnvironment(env_overrides):
+            post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
+            with cd(self.source_directory()):
+                if isinstance(post_clean_commands, list):
+                    for command in post_clean_commands:
+                        self.needy.command(command)
+                else:
+                    self.needy.command(post_clean_commands)
 
-        definition = ProjectDefinition(target, self.source_directory(), configuration)
-        project = self.project(definition)
+            definition = ProjectDefinition(target, self.source_directory(), configuration)
+            project = self.project(definition)
 
-        if not project:
-            raise RuntimeError('unknown project type')
+            if not project:
+                raise RuntimeError('unknown project type')
 
-        build_directory = self.build_directory(target)
+            build_directory = self.build_directory(target)
 
-        if os.path.exists(build_directory):
-            shutil.rmtree(build_directory)
-
-        os.makedirs(build_directory)
-
-        with cd(self.source_directory()):
-            try:
-                project.configure(build_directory)
-                project.pre_build(build_directory)
-                project.build(build_directory)
-                project.post_build(build_directory)
-            except:
+            if os.path.exists(build_directory):
                 shutil.rmtree(build_directory)
-                raise
 
-        with open(self.build_status_path(target), 'w') as status_file:
-            status = {
-                'configuration': binascii.hexlify(self.__configuration_hash(target))
-            }
-            json.dump(status, status_file)
+            os.makedirs(build_directory)
+
+            with cd(self.source_directory()):
+                try:
+                    project.configure(build_directory)
+                    project.pre_build(build_directory)
+                    project.build(build_directory)
+                    project.post_build(build_directory)
+                except:
+                    shutil.rmtree(build_directory)
+                    raise
+
+            with open(self.build_status_path(target), 'w') as status_file:
+                status = {
+                    'configuration': binascii.hexlify(self.__configuration_hash(target))
+                }
+                json.dump(status, status_file)
 
         return True
+
+    def __parse_env_overrides(self, overrides):
+        if overrides is None:
+            return dict()
+        for k, v in overrides.iteritems():
+            overrides[k] = v.format(current=os.environ[k] if k in os.environ else '')
+        return overrides
 
     def build_universal_binary(self, name, configuration):
         for platform, architectures in configuration.iteritems():
