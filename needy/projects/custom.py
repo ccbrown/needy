@@ -20,7 +20,7 @@ class CustomProject(project.Project):
         return ['configure-steps', 'build-steps']
 
     def configure(self, output_directory):
-        self.run_commands(self.configuration('configure-steps') or [], output_directory)
+        self.run_commands(self.configuration('configure-steps') or [])
 
     def build(self, output_directory):
-        self.run_commands(self.configuration('build-steps') or [], output_directory)
+        self.run_commands(self.configuration('build-steps') or [])
