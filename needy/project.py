@@ -82,14 +82,15 @@ class Project:
     def project_targets(self):
         return self.configuration('targets') or []
 
-    def evaluate(self, str_or_list, build_directory):
-        l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
-        return [str.format(build_directory=build_directory,
-                           platform=self.target().platform.identifier(),
-                           architecture=self.target().architecture) for str in l]
+    def set_configuration_variables(self, **kwargs):
+        self.__configuration_variables = kwargs
 
-    def run_commands(self, commands, build_directory):
-        for command in self.evaluate(commands, build_directory):
+    def evaluate(self, str_or_list):
+        l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
+        return [str.format(**self.__configuration_variables) for str in l]
+
+    def run_commands(self, commands):
+        for command in self.evaluate(commands):
             self.command(command)
 
     def environment_overrides(self):
@@ -114,13 +115,13 @@ class Project:
         return ret
 
     def pre_build(self, output_directory):
-        self.run_commands(self.configuration('pre-build'), output_directory)
+        self.run_commands(self.configuration('pre-build'))
 
     def configure(self, build_directory):
         pass
 
     def post_build(self, output_directory):
-        self.run_commands(self.configuration('post-build'), output_directory)
+        self.run_commands(self.configuration('post-build'))
         build_dirs = [os.path.join(output_directory, d) for d in ['include', 'lib']]
         self.__create_directories(build_dirs)
 

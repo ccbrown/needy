@@ -61,6 +61,20 @@ class Library:
         configuration = self.project_configuration(target)
         return 'build' not in configuration or configuration['build']
 
+    def configuration_variables(self, target):
+        return {
+            'build_directory': self.build_directory(target),
+            'platform': target.platform.identifier(),
+            'architecture': target.architecture,
+            'self_directory': self.needy.path()
+        }
+
+    def evaluate(self, str_or_list, target, **kwargs):
+        l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
+        variables = self.configuration_variables(target)
+        variables.update(kwargs)
+        return [str.format(**variables) for str in l]
+
     def build(self, target):
         if not self.should_build(target):
             return False
@@ -74,7 +88,7 @@ class Library:
         self.source.clean()
 
         configuration = self.project_configuration(target)
-        env_overrides = self.__parse_env_overrides(configuration['environment'] if 'environment' in configuration else None)
+        env_overrides = self.__parse_env_overrides(configuration['environment'] if 'environment' in configuration else None, target)
 
         with OverrideEnvironment(env_overrides):
             post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
@@ -87,6 +101,7 @@ class Library:
 
             definition = ProjectDefinition(target, self.source_directory(), configuration)
             project = self.project(definition)
+            project.set_configuration_variables(**self.configuration_variables(target))
 
             if not project:
                 raise RuntimeError('unknown project type')
@@ -116,11 +131,11 @@ class Library:
 
         return True
 
-    def __parse_env_overrides(self, overrides):
+    def __parse_env_overrides(self, overrides, target):
         if overrides is None:
             return dict()
         for k, v in overrides.iteritems():
-            overrides[k] = v.format(current=os.environ[k] if k in os.environ else '')
+            overrides[k] = self.evaluate(v, target, current=os.environ[k] if k in os.environ else '')[0]
         return overrides
 
     def build_universal_binary(self, name, configuration):

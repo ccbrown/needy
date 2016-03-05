@@ -37,7 +37,7 @@ class AutotoolsProject(project.Project):
         if not os.path.isfile(os.path.join(self.directory(), 'configure')):
             self.command('./autogen.sh')
 
-        configure_args = self.evaluate(self.configuration('configure-args') or [], output_directory)
+        configure_args = self.evaluate(self.configuration('configure-args') or [])
         has_host = any([arg.startswith('--host=') or arg.startswith('--host=') for arg in configure_args])
 
         configure_args.append('--prefix=%s' % output_directory)
