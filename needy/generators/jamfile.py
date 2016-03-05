@@ -36,7 +36,7 @@ path-constant BASE_DIR : {base_dir} ;
 path-constant NEEDS_FILE : {needs_file} ;
 
 feature.feature needyargs : : free ;
-toolset.flags $(__name__).satisfy-lib NEEDYARGS <needyargs> ;
+toolset.flags satisfy-lib NEEDYARGS <needyargs> ;
 
 rule needlib ( name : extra-sources * : requirements * : default-build * : usage-requirements * )
 {{
