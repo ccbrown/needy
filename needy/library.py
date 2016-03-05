@@ -134,9 +134,10 @@ class Library:
     def __parse_env_overrides(self, overrides, target):
         if overrides is None:
             return dict()
-        for k, v in overrides.iteritems():
-            overrides[k] = self.evaluate(v, target, current=os.environ[k] if k in os.environ else '')[0]
-        return overrides
+        ret = overrides.copy()
+        for k, v in ret.iteritems():
+            ret[k] = self.evaluate(v, target, current=os.environ[k] if k in os.environ else '')[0]
+        return ret
 
     def build_universal_binary(self, name, configuration):
         for platform, architectures in configuration.iteritems():
