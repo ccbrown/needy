@@ -1,5 +1,5 @@
 import os
-import subprocess
+import distutils
 
 from .. import project
 
@@ -21,13 +21,7 @@ class BoostBuildProject(project.Project):
         if os.path.isfile('b2'):
             return True
 
-        try:
-            needy.command_output(['b2', '-v'])
-            return True
-        except subprocess.CalledProcessError:
-            return False
-        except OSError:
-            return False
+        return distutils.spawn.find_executable('b2') is not None
 
     @staticmethod
     def configuration_keys():

@@ -98,14 +98,10 @@ class SourceProject(project.Project):
             os.makedirs(os.path.dirname(output))
 
         if extension == '.c':
-            self.__printed_call(shlex.split(self.target().platform.c_compiler(self.target().architecture)) + ['-c', input, '-o', output] + additional_flags)
+            self.command(shlex.split(self.target().platform.c_compiler(self.target().architecture)) + ['-c', input, '-o', output] + additional_flags)
         elif extension == '.cpp':
-            self.__printed_call(shlex.split(self.target().platform.cxx_compiler(self.target().architecture)) + ['-c', input, '-o', output] + additional_flags)
+            self.command(shlex.split(self.target().platform.cxx_compiler(self.target().architecture)) + ['-c', input, '-o', output] + additional_flags)
         else:
             return False
 
         return True
-
-    def __printed_call(self, call):
-        print(' '.join(pipes.quote(s) for s in call))
-        self.command(call)

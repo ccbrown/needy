@@ -1,5 +1,4 @@
 import os
-import subprocess
 
 from .. import project
 from ..cd import cd

@@ -1,8 +1,8 @@
 from ..platform import Platform
 
+import distutils
 import platform
 import os
-import subprocess
 
 
 class GenericPlatform(Platform):
@@ -14,13 +14,6 @@ class GenericPlatform(Platform):
     def is_host():
         return True
 
-    def __command_exists(self, command):
-        try:
-            subprocess.check_output([command, '--help'])
-            return True
-        except subprocess.CalledProcessError:
-            return False
-
     def default_architecture(self):
         return platform.machine()
 
@@ -28,7 +21,7 @@ class GenericPlatform(Platform):
         command = 'gcc'
         if 'CC' in os.environ:
             command = os.environ['CC']
-        elif self.__command_exists('clang'):
+        elif distutils.spawn.find_executable('clang'):
             command = 'clang'
         if platform.system() == 'Darwin':
             return '%s -arch %s' % (command, architecture)
@@ -38,7 +31,7 @@ class GenericPlatform(Platform):
         command = 'g++'
         if 'CXX' in os.environ:
             command = os.environ['CXX']
-        elif self.__command_exists('clang++'):
+        elif distutils.spawn.find_executable('clang++'):
             command = 'clang++'
         if platform.system() == 'Darwin':
             return '%s -arch %s' % (command, architecture)

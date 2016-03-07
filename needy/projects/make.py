@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 
 from .. import project
 
@@ -106,7 +107,7 @@ class MakeProject(project.Project):
         ]
 
         recon_args = ['make', 'install', '--recon'] + other_args + args
-        recon = self.command_output(recon_args)
+        recon = self.command_output(recon_args, logging.DEBUG)
 
         if recon.find(output_directory) < 0:
             raise RuntimeError('unable to figure out how to set installation prefix')
