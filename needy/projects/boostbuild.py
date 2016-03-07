@@ -46,5 +46,9 @@ class BoostBuildProject(project.Project):
         b2 = './b2' if os.path.isfile('b2') else 'b2'
         b2_args = self.evaluate(self.configuration('b2-args'))
         b2_args += self.get_build_concurrency_args()
+        if self.configuration('linkage') in ['static']:
+            b2_args += ['link=static']
+        elif self.configuration('linkage') in ['dynamic', 'shared']:
+            b2_args += ['link=shared']
         self.command([b2] + b2_args)
         self.command([b2, 'install', '--prefix=%s' % output_directory] + b2_args)
