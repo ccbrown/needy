@@ -2,6 +2,7 @@ import fnmatch
 import json
 import os
 import multiprocessing
+import re
 import sys
 
 from collections import OrderedDict
@@ -31,10 +32,11 @@ class Needy:
         self.__parameters = parameters
 
         self.__needs_directory = os.path.join(self.__path, 'needs')
+        self.__needs_file = self.find_needs_file(self.__path)
 
         directory = self.__path
         while directory:
-            if os.path.exists(os.path.join(directory, 'needs.json')):
+            if self.find_needs_file(directory):
                 self.__needs_directory = os.path.join(directory, 'needs')
             directory = os.path.dirname(directory)
             if directory == os.sep:
@@ -44,26 +46,61 @@ class Needy:
         return self.__path
 
     def needs_file(self):
-        return os.path.join(self.path(), 'needs.json')
+        return self.__needs_file
+
+    @staticmethod
+    def find_needs_file(directory):
+        ret = None
+        for name in ['needs.json', 'needs.yaml']:
+            path = os.path.join(directory, name)
+            if os.path.isfile(path):
+                if ret:
+                    raise RuntimeError('More than one needs file is present.')
+                ret = path
+        return ret
 
     def needs_configuration(self, target=None):
         configuration = ''
-        with open(os.path.join(self.path(), 'needs.json'), 'r') as needs_file:
+        with open(self.needs_file(), 'r') as needs_file:
             configuration = needs_file.read()
 
         try:
             from jinja2 import Environment, PackageLoader
             env = Environment()
+            env.filters['dirname'] = os.path.dirname
             template = env.from_string(configuration)
             configuration = template.render(
                 platform=target.platform.identifier() if target else None,
                 architecture=target.architecture if target else None,
-                host_platform=host_platform().identifier()
+                host_platform=host_platform().identifier(),
+                needs_file=self.needs_file()
             )
         except ImportError:
-            pass
+            pattern = re.compile('{%.*%}')
+            if pattern.search(configuration):
+                raise RuntimeError('The needs file appears to contain Jinja templating. Please install the jinja2 Python package.')
 
-        return json.loads(configuration, object_pairs_hook=OrderedDict)
+        name, extension = os.path.splitext(self.needs_file())
+
+        if extension == '.json':
+            return json.loads(configuration, object_pairs_hook=OrderedDict)
+
+        if extension == '.yaml':
+            try:
+                import yaml
+                class OrderedLoader(yaml.SafeLoader):
+                    pass
+                def construct_mapping(loader, node):
+                    loader.flatten_mapping(node)
+                    return OrderedDict(loader.construct_pairs(node))
+                OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
+                return yaml.load(configuration, OrderedLoader)
+            except ImportError:
+                raise RuntimeError('The needs are defined in a YAML file. Please install the pyyaml Python package.')
+
+            return None
+ 
+        raise NotImplementedError('file parsing not implemented')
 
     def needs_directory(self):
         return self.__needs_directory
@@ -89,7 +126,7 @@ class Needy:
         return Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
 
     def recursive(self, path):
-        return Needy(path, self.parameters()) if os.path.isfile(os.path.join(path, 'needs.json')) else None
+        return Needy(path, self.parameters()) if self.find_needs_file(path) else None
 
     def libraries_to_build(self, target, filters=None):
         needs_configuration = self.needs_configuration(target)

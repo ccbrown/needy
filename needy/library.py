@@ -43,16 +43,6 @@ class Library:
         self.__target = target
         self.__configuration = configuration
         self.__directory = directory
-
-        if 'download' in self.__configuration:
-            self.source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(directory, 'download'))
-        elif 'repository' in self.__configuration:
-            self.source = GitRepository(self.__configuration['repository'], self.__configuration['commit'], self.source_directory())
-        elif 'directory' in self.__configuration:
-            self.source = Directory(self.__configuration['directory'] if os.path.isabs(self.__configuration['directory']) else os.path.join(needy.path(), self.__configuration['directory']), self.source_directory())
-        else:
-            raise ValueError('no source specified in configuration')
-
         self.needy = needy
 
     def configuration(self):
@@ -91,6 +81,15 @@ class Library:
         if ' ' in self.__directory:
             print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t '
                   'handle spaces well, so if you have problems, consider moving the project or using a symlink.')
+
+        if 'download' in self.__configuration:
+            self.source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(directory, 'download'))
+        elif 'repository' in self.__configuration:
+            self.source = GitRepository(self.__configuration['repository'], self.__configuration['commit'], self.source_directory())
+        elif 'directory' in self.__configuration:
+            self.source = Directory(self.__configuration['directory'] if os.path.isabs(self.__configuration['directory']) else os.path.join(needy.path(), self.__configuration['directory']), self.source_directory())
+        else:
+            raise ValueError('no source specified in configuration')
 
         self.source.clean()
 

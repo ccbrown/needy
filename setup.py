@@ -28,7 +28,7 @@ setup(
         ]
     },
     install_requires=[
-        'colorama'
+        'colorama', 'jinja2', 'pyyaml'
     ],
     license='MIT'
 )

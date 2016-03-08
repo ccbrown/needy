@@ -1,7 +1,6 @@
 from ..platform import Platform
 
 import hashlib
-import json
 import os
 
 
