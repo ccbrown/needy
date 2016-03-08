@@ -1,6 +1,6 @@
 from ..platform import Platform
 
-import distutils
+from distutils import spawn
 import platform
 import os
 
@@ -21,7 +21,7 @@ class GenericPlatform(Platform):
         command = 'gcc'
         if 'CC' in os.environ:
             command = os.environ['CC']
-        elif distutils.spawn.find_executable('clang'):
+        elif spawn.find_executable('clang'):
             command = 'clang'
         if platform.system() == 'Darwin':
             return '%s -arch %s' % (command, architecture)
@@ -31,7 +31,7 @@ class GenericPlatform(Platform):
         command = 'g++'
         if 'CXX' in os.environ:
             command = os.environ['CXX']
-        elif distutils.spawn.find_executable('clang++'):
+        elif spawn.find_executable('clang++'):
             command = 'clang++'
         if platform.system() == 'Darwin':
             return '%s -arch %s' % (command, architecture)

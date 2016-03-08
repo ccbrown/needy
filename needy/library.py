@@ -99,11 +99,8 @@ class Library:
         with OverrideEnvironment(env_overrides):
             post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
             with cd(self.source_directory()):
-                if isinstance(post_clean_commands, list):
-                    for cmd in post_clean_commands:
-                        command(cmd)
-                else:
-                    command(post_clean_commands)
+                for cmd in self.evaluate(post_clean_commands):
+                    command(cmd)
 
             definition = ProjectDefinition(self.target(), self.source_directory(), configuration)
             project = self.project(definition)

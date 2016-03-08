@@ -130,7 +130,7 @@ class Needy:
 
     def libraries_to_build(self, target, filters=None):
         needs_configuration = self.needs_configuration(target)
-    
+
         if 'libraries' not in needs_configuration:
             return []
 
@@ -282,7 +282,7 @@ class Needy:
             configuration = self.universal_binary_configuration(universal_binary)
 
             libraries = dict()
-            
+
             for platform, architectures in configuration.iteritems():
                 for architecture in architectures:
                     target = Target(self.platform(platform), architecture)
