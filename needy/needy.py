@@ -76,8 +76,7 @@ class Needy:
                 needs_file=self.needs_file()
             )
         except ImportError:
-            pattern = re.compile('{%.*%}')
-            if pattern.search(configuration):
+            if re.compile('{%.*%}').search(configuration) or re.compile('{{.*}}').search(configuration) or re.compile('{#.*#}').search(configuration):
                 raise RuntimeError('The needs file appears to contain Jinja templating. Please install the jinja2 Python package.')
 
         name, extension = os.path.splitext(self.needs_file())
