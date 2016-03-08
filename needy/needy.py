@@ -18,6 +18,7 @@ except ImportError:
 
 from .process import command_output
 from .library import Library
+from .universal_binary import UniversalBinary
 from .platform import available_platforms, host_platform
 from .generator import available_generators
 from .target import Target
@@ -28,9 +29,6 @@ class Needy:
     def __init__(self, path, parameters):
         self.__path = path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
         self.__parameters = parameters
-
-        with open(os.path.join(self.__path, 'needs.json'), 'r') as needs_file:
-            self.needs = json.load(needs_file, object_pairs_hook=OrderedDict)
 
         self.__needs_directory = os.path.join(self.__path, 'needs')
 
@@ -44,6 +42,25 @@ class Needy:
 
     def path(self):
         return self.__path
+
+    def needs_configuration(self, target=None):
+        configuration = ''
+        with open(os.path.join(self.path(), 'needs.json'), 'r') as needs_file:
+            configuration = needs_file.read()
+
+        try:
+            from jinja2 import Environment, PackageLoader
+            env = Environment()
+            template = env.from_string(configuration)
+            configuration = template.render(
+                platform=target.platform.identifier() if target else None,
+                architecture=target.architecture if target else None,
+                host_platform=host_platform().identifier()
+            )
+        except ImportError:
+            pass
+
+        return json.loads(configuration, object_pairs_hook=OrderedDict)
 
     def needs_directory(self):
         return self.__needs_directory
@@ -71,13 +88,15 @@ class Needy:
     def recursive(self, path):
         return Needy(path, self.parameters()) if os.path.isfile(os.path.join(path, 'needs.json')) else None
 
-    def libraries_to_build(self, filters=None):
-        if 'libraries' not in self.needs:
+    def libraries_to_build(self, target, filters=None):
+        needs_configuration = self.needs_configuration(target)
+    
+        if 'libraries' not in needs_configuration:
             return []
 
         names = []
 
-        for name, library_configuration in self.needs['libraries'].iteritems():
+        for name, library_configuration in needs_configuration['libraries'].iteritems():
             if filters:
                 match = False
                 for filter in filters:
@@ -94,7 +113,7 @@ class Needy:
         while len(names):
             name = names.pop()
             directory = os.path.join(self.__needs_directory, name)
-            library = Library(self.needs['libraries'][name], directory, self)
+            library = Library(target, needs_configuration['libraries'][name], directory, self)
             libraries[name] = library
             if 'dependencies' not in library.configuration():
                 graph[name] = set()
@@ -130,51 +149,86 @@ class Needy:
 
         return ret
 
-    def include_paths(self, target):
+    def universal_binary_configuration(self, universal_binary):
+        needs_configuration = self.needs_configuration()
+
+        if 'universal-binaries' not in needs_configuration:
+            raise ValueError('no universal binaries defined')
+
+        if universal_binary not in needs_configuration['universal-binaries']:
+            raise ValueError('unknown universal binary ({})'.format(universal_binary))
+
+        return needs_configuration['universal-binaries'][universal_binary]
+
+    def libraries(self, target_or_universal_binary, filters=None):
+        libraries = dict()
+        targets = []
+
+        if isinstance(target_or_universal_binary, Target):
+            targets = [target_or_universal_binary]
+        else:
+            configuration = self.universal_binary_configuration(target_or_universal_binary)
+            for platform, architectures in configuration.iteritems():
+                for architecture in architectures:
+                    targets.append(Target(self.platform(platform), architecture))
+
+        for target in targets:
+            for name, library in self.libraries_to_build(target, filters):
+                if name not in libraries:
+                    libraries[name] = list()
+                libraries[name].append(library)
+
+        return libraries
+
+    def include_paths(self, target_or_universal_binary, filters=None):
         ret = []
-        for n, l in self.libraries_to_build():
-            if not l.should_build(target):
-                continue
-            if os.path.isdir(l.include_path(target)):
-                ret.append(l.include_path(target))
-            needy = self.recursive(l.source_directory())
+        for name, libraries in self.libraries(target_or_universal_binary, filters).iteritems():
+            if isinstance(target_or_universal_binary, Target):
+                ret.append(library.include_path())
+            else:
+                ub = UniversalBinary(target_or_universal_binary, libraries, self)
+                ret.append(ub.include_path())
+            needy = self.recursive(libraries[0].source_directory())
             if needy:
                 ret.extend(needy.include_paths(target))
         return ret
 
-    def library_paths(self, target_or_universal_binary):
+    def library_paths(self, target_or_universal_binary, filters=None):
         ret = []
-        for n, l in self.libraries_to_build():
+        for name, libraries in self.libraries(target_or_universal_binary, filters).iteritems():
             if isinstance(target_or_universal_binary, Target):
-                if not l.should_build(target_or_universal_binary):
-                    continue
-                if os.path.isdir(l.library_path(target_or_universal_binary)):
-                    ret.append(l.library_path(target_or_universal_binary))
+                ret.append(library.library_path())
             else:
-                ret.append(l.library_path(target_or_universal_binary))
-            needy = self.recursive(l.source_directory())
+                ub = UniversalBinary(target_or_universal_binary, libraries, self)
+                ret.append(ub.library_path())
+            needy = self.recursive(libraries[0].source_directory())
             if needy:
-                ret.extend(needy.library_paths(target_or_universal_binary))
+                ret.extend(needy.library_paths(target))
         return ret
 
     def build_directory(self, library, target_or_universal_binary):
         directory = os.path.join(self.__needs_directory, library)
-        l = Library(self.needs['libraries'][library], directory, self)
-        return l.build_directory(target_or_universal_binary)
+        l = Library(None, None, directory, self)
+        if isinstance(target_or_universal_binary, Target):
+            return l.build_directory(target_or_universal_binary)
+        b = UniversalBinary(target_or_universal_binary, [l], self)
+        return b.build_directory()
 
     def satisfy_target(self, target, filters=None):
-        if 'libraries' not in self.needs:
+        needs_configuration = self.needs_configuration(target)
+
+        if 'libraries' not in needs_configuration:
             return
 
         print('Satisfying needs in %s' % self.path())
 
         try:
-            for name, library in self.libraries_to_build(filters):
-                if library.has_up_to_date_build(target):
+            for name, library in self.libraries_to_build(target, filters):
+                if library.has_up_to_date_build():
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
                     self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
-                    library.build(target)
+                    library.build()
                     self.__print_status(Fore.GREEN, 'SUCCESS', name)
         except Exception as e:
             self.__print_status(Fore.RED, 'ERROR')
@@ -184,24 +238,31 @@ class Needy:
     def satisfy_universal_binary(self, universal_binary, filters=None):
         try:
             print('Satisfying universal binary %s in %s' % (universal_binary, self.path()))
+            configuration = self.universal_binary_configuration(universal_binary)
 
-            if 'universal-binaries' not in self.needs:
-                raise ValueError('no universal binaries defined')
+            libraries = dict()
+            
+            for platform, architectures in configuration.iteritems():
+                for architecture in architectures:
+                    target = Target(self.platform(platform), architecture)
+                    for name, library in self.libraries_to_build(target, filters):
+                        if name not in libraries:
+                            libraries[name] = list()
+                        libraries[name].append(library)
+                        if library.has_up_to_date_build():
+                            self.__print_status(Fore.GREEN, 'UP-TO-DATE', '{} for {} {}'.format(name, target.platform.identifier(), target.architecture))
+                        else:
+                            self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
+                            library.build()
+                            self.__print_status(Fore.GREEN, 'SUCCESS', name)
 
-            if universal_binary not in self.needs['universal-binaries']:
-                raise ValueError('unknown universal binary ({})'.format(universal_binary))
-
-            if 'libraries' not in self.needs:
-                return
-
-            configuration = self.needs['universal-binaries'][universal_binary]
-
-            for name, library in self.libraries_to_build(filters):
-                if library.has_up_to_date_universal_binary(universal_binary, configuration):
+            for name, libs in libraries.iteritems():
+                binary = UniversalBinary(universal_binary, libs, self)
+                if binary.is_up_to_date():
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
                     self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
-                    library.build_universal_binary(universal_binary, configuration)
+                    binary.build()
                     self.__print_status(Fore.GREEN, 'SUCCESS', name)
         except Exception as e:
             self.__print_status(Fore.RED, 'ERROR')

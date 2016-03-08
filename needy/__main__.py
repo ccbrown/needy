@@ -68,13 +68,19 @@ def cflags(args=[]):
         description='Gets compiler flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.add_argument(
+        'library',
+        default=None,
+        nargs='*',
+        help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
+    parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
     needy = Needy('.', parameters)
-    target = needy.target(parameters.target)
 
-    print(' '.join([('-I%s' % path) for path in needy.include_paths(target)]), end='')
+    print(' '.join([('-I%s' % path) for path in needy.include_paths(
+        parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library)]), end='')
     return 0
 
 
@@ -84,6 +90,11 @@ def ldflags(args=[]):
         description='Gets linker flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    parser.add_argument(
+        'library',
+        default=None,
+        nargs='*',
+        help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
@@ -91,7 +102,7 @@ def ldflags(args=[]):
     needy = Needy('.', parameters)
 
     print(' '.join([('-L%s' % path) for path in needy.library_paths(
-        parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))]), end='')
+        parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library)]), end='')
     return 0
 
 
