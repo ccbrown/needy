@@ -211,9 +211,10 @@ class Needy:
 
     def build_directory(self, library, target_or_universal_binary):
         directory = os.path.join(self.__needs_directory, library)
-        l = Library(None, None, directory, self)
         if isinstance(target_or_universal_binary, Target):
-            return l.build_directory(target_or_universal_binary)
+            l = Library(target_or_universal_binary, None, directory, self)
+            return l.build_directory()
+        l = Library(None, None, directory, self)
         b = UniversalBinary(target_or_universal_binary, [l], self)
         return b.build_directory()
 

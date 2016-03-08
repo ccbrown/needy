@@ -1,4 +1,5 @@
 from ..generator import Generator
+from ..target import Target
 
 import os
 import sys
@@ -19,11 +20,11 @@ class JamfileGenerator(Generator):
             'osx': '-t osx',
         }
 
-        if 'universal-binaries' in needy.needs:
-            for universal_binary in needy.needs['universal-binaries']:
-                configuration = needy.needs['universal-binaries'][universal_binary]
+        needs_configuration = needy.needs_configuration()
+        if 'universal-binaries' in needs_configuration:
+            for name, configuration in needs_configuration['universal-binaries'].iteritems():
                 for platform, architectures in configuration.iteritems():
-                    target_args[platform] = '-u ' + universal_binary
+                    target_args[platform] = '-u ' + name
 
         contents = """import feature ;
 import modules ;
@@ -86,15 +87,29 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     satisfy_args=needy.parameters().satisfy_args,
     **target_args)
 
-        for library in needy.libraries_to_build():
-            contents += """
-needlib {0} ;
-needlib {0} : : <target-os>iphone <architecture>arm ;
-needlib {0} : : <target-os>iphone <architecture>x86 ;
-needlib {0} : : <target-os>android ;
-needlib {0} : : <target-os>appletv <architecture>arm ;
-needlib {0} : : <target-os>appletv <architecture>x86 ;
-""".format(library[0])
+        contents += "\n"
+        for library in needy.libraries_to_build(Target(needy.platform('host'))):
+            contents += "needlib {0} ;\n".format(library[0])
+
+        contents += "\n"
+        for library in needy.libraries_to_build(Target(needy.platform('ios'))):
+            contents += "needlib {0} : : <target-os>iphone <architecture>arm ;\n".format(library[0])
+
+        contents += "\n"
+        for library in needy.libraries_to_build(Target(needy.platform('iossimulator'))):
+            contents += "needlib {0} : : <target-os>iphone <architecture>x86 ;\n".format(library[0])
+
+        contents += "\n"
+        for library in needy.libraries_to_build(Target(needy.platform('android'))):
+            contents += "needlib {0} : : <target-os>android ;\n".format(library[0])
+
+        contents += "\n"
+        for library in needy.libraries_to_build(Target(needy.platform('tvos'))):
+            contents += "needlib {0} : : <target-os>appletv <architecture>arm ;\n".format(library[0])
+
+        contents += "\n"
+        for library in needy.libraries_to_build(Target(needy.platform('tvossimulator'))):
+            contents += "needlib {0} : : <target-os>appletv <architecture>x86 ;\n".format(library[0])
 
         with open(path, 'w') as jamfile:
             jamfile.write(contents)

@@ -1,7 +1,7 @@
 class Target:
-    def __init__(self, platform, architecture):
+    def __init__(self, platform, architecture=None):
         self.platform = platform
         self.architecture = architecture
 
         if architecture is None:
-            raise ValueError('an architecture must be specified')
+            self.archicture = platform.default_architecture()

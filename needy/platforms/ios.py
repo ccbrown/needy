@@ -1,5 +1,7 @@
 from .xcode import XcodePlatform
 
+import platform
+
 
 class iOSPlatform(XcodePlatform):
     def __init__(self, parameters):
