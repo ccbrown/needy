@@ -83,7 +83,7 @@ class Library:
                   'handle spaces well, so if you have problems, consider moving the project or using a symlink.')
 
         if 'download' in self.__configuration:
-            self.source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(directory, 'download'))
+            self.source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(self.directory(), 'download'))
         elif 'repository' in self.__configuration:
             self.source = GitRepository(self.__configuration['repository'], self.__configuration['commit'], self.source_directory())
         elif 'directory' in self.__configuration:
