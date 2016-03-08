@@ -82,7 +82,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
 """.format(
     needy=os.path.abspath(sys.argv[0]),
     base_dir=needy.path(),
-    needs_file=os.path.join(needy.path(), 'needs.json'),
+    needs_file=needy.needs_file(),
     satisfy_args=needy.parameters().satisfy_args,
     **target_args)
 

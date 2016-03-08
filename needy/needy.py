@@ -43,6 +43,9 @@ class Needy:
     def path(self):
         return self.__path
 
+    def needs_file(self):
+        return os.path.join(self.path(), 'needs.json')
+
     def needs_configuration(self, target=None):
         configuration = ''
         with open(os.path.join(self.path(), 'needs.json'), 'r') as needs_file:
