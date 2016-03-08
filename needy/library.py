@@ -63,7 +63,7 @@ class Library:
             'build_directory': self.build_directory(),
             'platform': self.target().platform.identifier(),
             'architecture': self.target().architecture,
-            'self_directory': self.needy.path()
+            'needs_file_directory': self.needy.path()
         }
 
     def evaluate(self, str_or_list, **kwargs):
