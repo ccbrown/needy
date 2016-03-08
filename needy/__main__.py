@@ -4,6 +4,7 @@ import argparse
 import fcntl
 import os
 import sys
+import logging
 
 from .needy import Needy
 from .platform import available_platforms
@@ -39,10 +40,17 @@ def satisfy(args=[]):
         '-f', '--force-build',
         action='store_true',
         help='force a build even when the target is up-to-date')
+    parser.add_argument(
+        '-d', '--verbosity-level',
+        default=logging.INFO,
+        help='specify a verbosity level. higher numbers indicate higher verbosity levels.')
 
     for platform in available_platforms().values():
         platform.add_arguments(parser)
     parameters = parser.parse_args(args)
+
+    logging.basicConfig(format=('%(message)s'),
+                        level=parameters.verbosity_level)
 
     needy = Needy('.', parameters)
 
@@ -175,6 +183,7 @@ Use '%s <command> --help' to get help for a specific command.
                 parser.print_help()
             return 1
     finally:
+        logging.shutdown()
         os.close(lock_fd)
 
     print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))

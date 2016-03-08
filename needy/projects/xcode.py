@@ -1,9 +1,11 @@
 import os
 import subprocess
 import shutil
+import logging
 
 from .. import project
 from ..cd import cd
+from ..process import command_output
 
 from source import SourceProject
 
@@ -26,7 +28,7 @@ class XcodeProject(project.Project):
 
         try:
             with cd(definition.directory):
-                needy.command_output(['xcodebuild', '-list'] + xcodebuild_args)
+                command_output(['xcodebuild', '-list'] + xcodebuild_args, logging.DEBUG)
         except subprocess.CalledProcessError:
             return False
         except OSError:

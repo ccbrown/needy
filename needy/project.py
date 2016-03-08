@@ -1,5 +1,9 @@
 import os
 import sys
+import logging
+
+from .process import command
+from .process import command_output
 
 
 def evaluate_conditionals(configuration, target):
@@ -11,7 +15,7 @@ def evaluate_conditionals(configuration, target):
         copy = configuration.copy()
         copy.pop('conditionals')
         should_continue = False
-    
+
         for key, cases in configuration['conditionals'].iteritems():
             values = []
             if key == 'platform':
@@ -23,13 +27,13 @@ def evaluate_conditionals(configuration, target):
                 values.append(target.architecture)
             else:
                 raise ValueError('unknown conditional key')
-    
+
             for case, config in cases.iteritems():
                 if case in values or (case[0] == '!' and case[1:] not in values) or case == '*':
                     should_continue = True
                     copy.update(config)
                     break
-    
+
         configuration = copy
 
     return configuration
@@ -130,10 +134,10 @@ class Project:
             if not os.path.exists(d):
                 os.makedirs(d)
 
-    def command(self, cmd, environment_overrides={}):
+    def command(self, cmd, verbosity=logging.INFO, environment_overrides={}):
         env = environment_overrides.copy()
         env.update(self.environment_overrides())
-        self.needy.command(cmd, environment_overrides=env)
+        command(cmd, environment_overrides=env)
 
-    def command_output(self, arguments, environment_overrides={}):
-        return self.needy.command_output(arguments, environment_overrides=environment_overrides)
+    def command_output(self, arguments, verbosity=logging.INFO, environment_overrides={}):
+        return command_output(arguments, environment_overrides=environment_overrides)

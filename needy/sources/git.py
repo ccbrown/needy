@@ -1,8 +1,9 @@
 import os
-import subprocess
+import logging
 
 from ..source import Source
 from ..cd import cd
+from ..process import command
 
 
 class GitRepository(Source):
@@ -17,17 +18,17 @@ class GitRepository(Source):
             self.__fetch()
 
         with cd(self.directory):
-            subprocess.check_call(['git', 'clean', '-xfd'])
-            subprocess.check_call(['git', 'fetch'])
-            subprocess.check_call(['git', 'reset', '--hard', self.commit])
-            subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
+            command(['git', 'clean', '-xfd'], logging.DEBUG)
+            command(['git', 'fetch'], logging.DEBUG)
+            command(['git', 'reset', '--hard', self.commit], logging.DEBUG)
+            command(['git', 'submodule', 'update', '--init', '--recursive'], logging.DEBUG)
 
     def __fetch(self):
         if not os.path.exists(os.path.dirname(self.directory)):
             os.makedirs(os.path.dirname(self.directory))
 
         with cd(os.path.dirname(self.directory)):
-            subprocess.check_call(['git', 'clone', self.repository, os.path.basename(self.directory)])
-        
+            command(['git', 'clone', self.repository, os.path.basename(self.directory)], logging.DEBUG)
+
         with cd(self.directory):
-            subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'])
+            command(['git', 'submodule', 'update', '--init', '--recursive'], logging.DEBUG)

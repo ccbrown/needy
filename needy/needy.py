@@ -1,7 +1,6 @@
 import fnmatch
 import json
 import os
-import subprocess
 import multiprocessing
 import sys
 
@@ -9,12 +8,15 @@ from collections import OrderedDict
 
 try:
     from colorama import Fore
+    from colorama import Style
 except ImportError:
     class EmptyStringAttributes:
         def __getattr__(self, name):
             return ''
     Fore = EmptyStringAttributes()
+    Style = EmptyStringAttributes()
 
+from .process import command_output
 from .library import Library
 from .platform import available_platforms, host_platform
 from .generator import available_generators
@@ -65,24 +67,6 @@ class Needy:
         parts = identifier.split(':')
         platform = self.platform(parts[0])
         return Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
-
-    def command(self, cmd, environment_overrides={}):
-        environment_overrides['PWD'] = current_directory()
-        env = os.environ.copy()
-        env.update(environment_overrides)
-        if isinstance(cmd, list):
-            subprocess.check_call(cmd, env=env)
-        else:
-            subprocess.check_call(cmd, env=env, shell=True)
-
-    def command_output(self, cmd, environment_overrides={}):
-        environment_overrides['PWD'] = current_directory()
-        env = os.environ.copy()
-        env.update(environment_overrides)
-        with open(os.devnull, 'w') as devnull:
-            if isinstance(cmd, list):
-                return subprocess.check_output(cmd, env=env, stderr=devnull)
-            return subprocess.check_output(cmd, env=env, stderr=devnull, shell=True)
 
     def recursive(self, path):
         return Needy(path, self.parameters()) if os.path.isfile(os.path.join(path, 'needs.json')) else None
@@ -187,13 +171,13 @@ class Needy:
         try:
             for name, library in self.libraries_to_build(filters):
                 if library.has_up_to_date_build(target):
-                    print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
+                    self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
-                    print(Fore.CYAN + '[OUT-OF-DATE]' + Fore.RESET + ' %s' % name)
+                    self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
                     library.build(target)
-                    print(Fore.GREEN + '[SUCCESS]' + Fore.RESET + ' %s' % name)
+                    self.__print_status(Fore.GREEN, 'SUCCESS', name)
         except Exception as e:
-            print(Fore.RED + '[ERROR]' + Fore.RESET)
+            self.__print_status(Fore.RED, 'ERROR')
             print(e)
             raise
 
@@ -214,22 +198,25 @@ class Needy:
 
             for name, library in self.libraries_to_build(filters):
                 if library.has_up_to_date_universal_binary(universal_binary, configuration):
-                    print(Fore.GREEN + '[UP-TO-DATE]' + Fore.RESET + ' %s' % name)
+                    self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
-                    print(Fore.CYAN + '[OUT-OF-DATE]' + Fore.RESET + ' %s' % name)
+                    self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
                     library.build_universal_binary(universal_binary, configuration)
-                    print(Fore.GREEN + '[SUCCESS]' + Fore.RESET + ' %s' % name)
+                    self.__print_status(Fore.GREEN, 'SUCCESS', name)
         except Exception as e:
-            print(Fore.RED + '[ERROR]' + Fore.RESET)
+            self.__print_status(Fore.RED, 'ERROR')
             print(e)
             raise
+
+    def __print_status(self, color, status, name=None):
+        print(color + Style.BRIGHT + '[' + status + ']' + Style.RESET_ALL + Fore.RESET + (' %s' % name if name else ''))
 
     def create_universal_binary(self, inputs, output):
         name, extension = os.path.splitext(output)
         if extension not in ['.a', '.so', '.dylib']:
             return False
 
-        subprocess.check_call(['lipo', '-create'] + inputs + ['-output', output])
+        command_output(['lipo', '-create'] + inputs + ['-output', output])
         return True
 
     def generate(self, files):

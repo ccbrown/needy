@@ -1,5 +1,6 @@
 from .xcode import XcodePlatform
 
+
 class iOSPlatform(XcodePlatform):
     def __init__(self, parameters):
         XcodePlatform.__init__(self, parameters)
@@ -35,6 +36,7 @@ class iOSPlatform(XcodePlatform):
 
     def default_architecture(self):
         return 'arm64'
+
 
 class iOSSimulatorPlatform(iOSPlatform):
     @staticmethod

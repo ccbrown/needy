@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import shutil
+import logging
 
 from operator import itemgetter
 
@@ -24,6 +25,8 @@ from .sources.git import GitRepository
 from .cd import cd
 from .override_environment import OverrideEnvironment
 from .target import Target
+
+from .process import command
 
 from .projects.androidmk import AndroidMkProject
 from .projects.autotools import AutotoolsProject
@@ -94,10 +97,10 @@ class Library:
             post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
             with cd(self.source_directory()):
                 if isinstance(post_clean_commands, list):
-                    for command in post_clean_commands:
-                        self.needy.command(command)
+                    for cmd in post_clean_commands:
+                        command(cmd)
                 else:
-                    self.needy.command(post_clean_commands)
+                    command(post_clean_commands)
 
             definition = ProjectDefinition(target, self.source_directory(), configuration)
             project = self.project(definition)
@@ -193,7 +196,7 @@ class Library:
                         shutil.copy(source_path, output_path)
                 elif extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % path)
-                    self.needy.command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
+                    command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
                 elif extension in ['.h', '.hpp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for target, header in builds:
