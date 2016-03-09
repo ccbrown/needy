@@ -4,6 +4,8 @@ import json
 import os
 import shutil
 
+from .process import command
+
 
 class UniversalBinary:
     def __init__(self, name, libraries, needy):
@@ -88,7 +90,7 @@ class UniversalBinary:
                         shutil.copy(source_path, output_path)
                 elif extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % path)
-                    self.needy.command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
+                    command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
                 elif extension in ['.h', '.hpp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for target, header in builds:

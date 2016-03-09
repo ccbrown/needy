@@ -312,14 +312,6 @@ class Needy:
     def __print_status(self, color, status, name=None):
         print(color + Style.BRIGHT + '[' + status + ']' + Style.RESET_ALL + Fore.RESET + (' %s' % name if name else ''))
 
-    def create_universal_binary(self, inputs, output):
-        name, extension = os.path.splitext(output)
-        if extension not in ['.a', '.so', '.dylib']:
-            return False
-
-        command_output(['lipo', '-create'] + inputs + ['-output', output])
-        return True
-
     def generate(self, files):
         if not os.path.exists(self.needs_directory()):
             os.makedirs(self.needs_directory())
