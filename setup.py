@@ -4,12 +4,13 @@ import os
 
 from setuptools import setup
 
+
 def read_file(path):
     with open(os.path.join(os.path.dirname(__file__), path)) as fp:
         return fp.read()
 
 setup(
-    name='needy', 
+    name='needy',
     version='0.0',
     description='Dependency management utility.',
     long_description=read_file('README.md'),
