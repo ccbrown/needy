@@ -98,7 +98,7 @@ class Needy:
                 raise RuntimeError('The needs are defined in a YAML file. Please install the pyyaml Python package.')
 
             return None
- 
+
         raise NotImplementedError('file parsing not implemented')
 
     def needs_directory(self):
@@ -223,7 +223,8 @@ class Needy:
         ret = []
         for name, libraries in self.libraries(target_or_universal_binary, filters).iteritems():
             if isinstance(target_or_universal_binary, Target):
-                ret.append(library.include_path())
+                for library in libraries:
+                    ret.append(library.include_path())
             else:
                 ub = UniversalBinary(target_or_universal_binary, libraries, self)
                 ret.append(ub.include_path())
@@ -236,7 +237,8 @@ class Needy:
         ret = []
         for name, libraries in self.libraries(target_or_universal_binary, filters).iteritems():
             if isinstance(target_or_universal_binary, Target):
-                ret.append(library.library_path())
+                for library in libraries:
+                    ret.append(library.library_path())
             else:
                 ub = UniversalBinary(target_or_universal_binary, libraries, self)
                 ret.append(ub.library_path())
