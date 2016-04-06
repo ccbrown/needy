@@ -184,7 +184,11 @@ Use '%s <command> --help' to get help for a specific command.
 
     lock_fd = os.open('.needy_lock', os.O_RDWR | os.O_CREAT)
     try:
-        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            print('Waiting for other needy instances to terminate...')
+            fcntl.flock(lock_fd, fcntl.LOCK_EX)
         if parameters.command in commands:
             return commands[parameters.command](parameters.args)
         elif parameters.command == 'help':
