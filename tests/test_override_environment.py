@@ -8,10 +8,26 @@ class OverrideEnvironmentTest(unittest.TestCase):
 
     def test_basic_usage(self):
         previous_env = os.environ.copy()
-        overrides = {'PATH': 'foobar'}
+        overrides = {
+            'PATH': 'foobar'
+        }
 
         with OverrideEnvironment(overrides):
             for var in os.environ:
                 self.assertEqual(os.environ[var], 'foobar' if var == 'PATH' else previous_env[var])
+
+        self.assertEqual(os.environ, previous_env)
+
+    def test_add_new_values(self):
+        previous_env = os.environ.copy()
+        overrides = {
+            'FOOBAR': 'foo'
+        }
+
+        self.assertTrue('FOOBAR' not in os.environ)
+
+        with OverrideEnvironment(overrides):
+            for var in os.environ:
+                self.assertEqual(os.environ[var], 'foo' if var == 'FOOBAR' else previous_env[var])
 
         self.assertEqual(os.environ, previous_env)
