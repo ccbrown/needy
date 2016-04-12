@@ -2,11 +2,13 @@ from ..generator import Generator
 from ..platform import available_platforms
 from ..target import Target
 
+import hashlib
 import os
 import sys
 
 
 class JamfileGenerator(Generator):
+
     @staticmethod
     def identifier():
         return 'jamfile'
@@ -37,8 +39,8 @@ path-constant NEEDY : {needy} ;
 path-constant BASE_DIR : {base_dir} ;
 path-constant NEEDS_FILE : {needs_file} ;
 
-feature.feature needyargs : : free ;
-toolset.flags satisfy-lib NEEDYARGS <needyargs> ;
+feature.feature {needy_args_feature} : : free ;
+toolset.flags satisfy-lib NEEDYARGS <{needy_args_feature}> ;
 
 rule needlib ( name : extra-sources * : requirements * : default-build * : usage-requirements * )
 {{
@@ -65,7 +67,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
     local includedir = "$(builddir)/include" ;
 
-    make lib$(name).touch : $(NEEDS_FILE) : @satisfy-lib : $(requirements) <needyargs>$(args) ;
+    make lib$(name).touch : $(NEEDS_FILE) : @satisfy-lib : $(requirements) <{needy_args_feature}>$(args) ;
     actions satisfy-lib
     {{
         cd $(BASE_DIR) && $(NEEDY) satisfy $(NEEDYARGS) && cd - && touch $(<)
@@ -81,12 +83,12 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
           $(usage-requirements)
     ;
 }}
-""".format(
-        needy=os.path.abspath(sys.argv[0]),
-        base_dir=needy.path(),
-        needs_file=needy.needs_file(),
-        satisfy_args=needy.parameters().satisfy_args,
-        **target_args)
+""".format(needy=os.path.abspath(sys.argv[0]),
+           base_dir=needy.path(),
+           needs_file=needy.needs_file(),
+           satisfy_args=needy.parameters().satisfy_args,
+           needy_args_feature='needyargs_'+hashlib.sha1(needy.path()).hexdigest(),
+           **target_args)
 
         contents += "\n"
         for library in needy.libraries_to_build(Target(needy.platform('host'))):
