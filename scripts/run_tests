@@ -1,9 +1,0 @@
-#!/bin/bash
-
-root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-needy_root="$root/.."
-
-(
-    cd "$needy_root"
-    python -m unittest discover --start-directory tests --verbose
-)

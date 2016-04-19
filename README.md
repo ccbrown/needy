@@ -1,4 +1,4 @@
-Needy
+Needy [![Build Status](https://travis-ci.org/ccbrown/needy.svg?branch=master)](https://travis-ci.org/ccbrown/needy)
 ==
 
 Needy is tool that aims to make C++ library dependencies as magical as possible. Dependencies are declared in a file called "needs.json", usually by simply adding a download URL and checksum. Then Needy will download and build those dependencies for you, for iOS, TvOS, Android, your host system, or anything possible.
