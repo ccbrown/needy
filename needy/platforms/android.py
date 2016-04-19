@@ -122,3 +122,6 @@ class AndroidPlatform(Platform):
         if not ndk_home:
             raise RuntimeError('unable to locate ndk')
         return ndk_home
+
+    def default_architecture(self):
+        return 'armv7'

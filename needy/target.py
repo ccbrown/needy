@@ -4,4 +4,4 @@ class Target:
         self.architecture = architecture
 
         if architecture is None:
-            self.archicture = platform.default_architecture()
+            self.architecture = platform.default_architecture()

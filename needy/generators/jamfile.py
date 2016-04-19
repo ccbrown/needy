@@ -52,7 +52,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
             target = "$(name) {iossimulator}" ;
         }}
     }} else if <target-os>android in $(requirements) {{
-        target = "$(name) -t android:armv7" ;
+        target = "$(name) -t android" ;
     }} else if <target-os>appletv in $(requirements) {{
         if <architecture>arm in $(requirements) {{
             target = "$(name) {tvos}" ;
