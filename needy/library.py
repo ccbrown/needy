@@ -138,7 +138,7 @@ class Library:
         if overrides is None:
             return dict()
         ret = overrides.copy()
-        for k, v in ret.iteritems():
+        for k, v in ret.items():
             ret[k] = self.evaluate(v, current=os.environ[k] if k in os.environ else '')[0]
         return ret
 

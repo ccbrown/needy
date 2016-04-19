@@ -16,7 +16,7 @@ def evaluate_conditionals(configuration, target):
         copy.pop('conditionals')
         should_continue = False
 
-        for key, cases in configuration['conditionals'].iteritems():
+        for key, cases in configuration['conditionals'].items():
             values = []
             if key == 'platform':
                 values.append(target.platform.identifier())
@@ -28,7 +28,7 @@ def evaluate_conditionals(configuration, target):
             else:
                 raise ValueError('unknown conditional key')
 
-            for case, config in cases.iteritems():
+            for case, config in cases.items():
                 if case in values or (case[0] == '!' and case[1:] not in values) or case == '*':
                     should_continue = True
                     copy.update(config)

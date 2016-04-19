@@ -25,8 +25,8 @@ class JamfileGenerator(Generator):
 
         needs_configuration = needy.needs_configuration()
         if 'universal-binaries' in needs_configuration:
-            for name, configuration in needs_configuration['universal-binaries'].iteritems():
-                for platform, architectures in configuration.iteritems():
+            for name, configuration in needs_configuration['universal-binaries'].items():
+                for platform, architectures in configuration.items():
                     target_args[platform] = '-u ' + name
 
         contents = """import feature ;

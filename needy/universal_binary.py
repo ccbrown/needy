@@ -69,7 +69,7 @@ class UniversalBinary:
         os.makedirs(directory)
 
         try:
-            for path, builds in universal_paths.iteritems():
+            for path, builds in universal_paths.items():
                 if len(builds) != len(self.libraries()):
                     continue
 

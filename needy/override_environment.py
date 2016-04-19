@@ -14,11 +14,11 @@ class OverrideEnvironment:
                 self.__added_vals += [k]
 
     def __enter__(self):
-        for k, v in self.__new_vals.iteritems():
+        for k, v in self.__new_vals.items():
             os.environ[k] = v
 
     def __exit__(self, etype, value, traceback):
-        for k, v in self.__old_vals.iteritems():
+        for k, v in self.__old_vals.items():
             if k in os.environ:
                 os.environ[k] = v
         for k in self.__added_vals:

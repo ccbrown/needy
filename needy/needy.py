@@ -137,7 +137,7 @@ class Needy:
 
         names = []
 
-        for name, library_configuration in needs_configuration['libraries'].iteritems():
+        for name, library_configuration in needs_configuration['libraries'].items():
             if filters:
                 match = False
                 for filter in filters:
@@ -168,7 +168,7 @@ class Needy:
 
         s = []
 
-        for name, dependencies in graph.iteritems():
+        for name, dependencies in graph.items():
             if len(dependencies) == 0:
                 s.append(name)
 
@@ -177,14 +177,14 @@ class Needy:
         while len(s):
             name = s.pop()
             ret.append((name, libraries[name]))
-            for n, deps in graph.iteritems():
+            for n, deps in graph.items():
                 if name not in deps:
                     continue
                 deps.remove(name)
                 if len(deps) == 0:
                     s.append(n)
 
-        for name, deps in graph.iteritems():
+        for name, deps in graph.items():
             if len(deps):
                 raise ValueError('circular dependency detected')
 
@@ -209,7 +209,7 @@ class Needy:
             targets = [target_or_universal_binary]
         else:
             configuration = self.universal_binary_configuration(target_or_universal_binary)
-            for platform, architectures in configuration.iteritems():
+            for platform, architectures in configuration.items():
                 for architecture in architectures:
                     targets.append(Target(self.platform(platform), architecture))
 
@@ -223,7 +223,7 @@ class Needy:
 
     def include_paths(self, target_or_universal_binary, filters=None):
         ret = []
-        for name, libraries in self.libraries(target_or_universal_binary, filters).iteritems():
+        for name, libraries in self.libraries(target_or_universal_binary, filters).items():
             if isinstance(target_or_universal_binary, Target):
                 for library in libraries:
                     ret.append(library.include_path())
@@ -237,7 +237,7 @@ class Needy:
 
     def library_paths(self, target_or_universal_binary, filters=None):
         ret = []
-        for name, libraries in self.libraries(target_or_universal_binary, filters).iteritems():
+        for name, libraries in self.libraries(target_or_universal_binary, filters).items():
             if isinstance(target_or_universal_binary, Target):
                 for library in libraries:
                     ret.append(library.library_path())
@@ -286,7 +286,7 @@ class Needy:
 
             libraries = dict()
 
-            for platform, architectures in configuration.iteritems():
+            for platform, architectures in configuration.items():
                 for architecture in architectures:
                     target = Target(self.platform(platform), architecture)
                     for name, library in self.libraries_to_build(target, filters):
@@ -300,7 +300,7 @@ class Needy:
                             library.build()
                             self.__print_status(Fore.GREEN, 'SUCCESS', name)
 
-            for name, libs in libraries.iteritems():
+            for name, libs in libraries.items():
                 binary = UniversalBinary(universal_binary, libs, self)
                 if binary.is_up_to_date():
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
