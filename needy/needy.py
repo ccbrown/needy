@@ -74,7 +74,8 @@ class Needy:
                 architecture=target.architecture if target else None,
                 host_platform=host_platform().identifier(),
                 needs_file=self.needs_file(),
-                needs_directory=self.needs_directory()
+                needs_directory=self.needs_directory(),
+                build_directory=lambda library: self.build_directory(library, target) if target else None
             )
         except ImportError:
             if re.compile('{%.*%}').search(configuration) or re.compile('{{.*}}').search(configuration) or re.compile('{#.*#}').search(configuration):
