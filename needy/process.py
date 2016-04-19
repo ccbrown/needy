@@ -17,8 +17,7 @@ def __log_check_output(cmd, verbosity, **kwargs):
     shell = not isinstance(cmd, list)
     with open(os.devnull, 'w') as devnull:
         logging.log(verbosity, __format_command(cmd))
-        cmd_output = subprocess.check_output(cmd, stderr=devnull, shell=shell, **kwargs)
-        return cmd_output
+        return subprocess.check_output(cmd, stderr=devnull, shell=shell, **kwargs).decode()
 
 
 def __log_check_call(cmd, verbosity, **kwargs):
