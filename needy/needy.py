@@ -73,7 +73,8 @@ class Needy:
                 platform=target.platform.identifier() if target else None,
                 architecture=target.architecture if target else None,
                 host_platform=host_platform().identifier(),
-                needs_file=self.needs_file()
+                needs_file=self.needs_file(),
+                needs_directory=self.needs_directory()
             )
         except ImportError:
             if re.compile('{%.*%}').search(configuration) or re.compile('{{.*}}').search(configuration) or re.compile('{#.*#}').search(configuration):
