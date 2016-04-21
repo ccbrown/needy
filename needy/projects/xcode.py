@@ -7,7 +7,7 @@ from .. import project
 from ..cd import cd
 from ..process import command_output
 
-from source import SourceProject
+from .source import SourceProject
 
 
 class XcodeProject(project.Project):

@@ -27,7 +27,7 @@ from .cd import current_directory
 
 
 class Needy:
-    def __init__(self, path, parameters):
+    def __init__(self, path, parameters = {}):
         self.__path = path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
         self.__parameters = parameters
 
