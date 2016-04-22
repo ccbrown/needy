@@ -96,6 +96,7 @@ class Library:
         configuration = self.project_configuration()
         env_overrides = self.__parse_env_overrides(configuration['environment'] if 'environment' in configuration else None)
 
+        self.__log_env_overrides(env_overrides)
         with OverrideEnvironment(env_overrides):
             post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
             with cd(self.source_directory()):
@@ -142,16 +143,19 @@ class Library:
             ret[k] = self.evaluate(v, current=os.environ[k] if k in os.environ else '')[0]
         return ret
 
+    def __log_env_overrides(self, env_overrides, verbosity=logging.DEBUG):
+        if env_overrides is not None and len(env_overrides) > 0:
+            logging.log(verbosity, 'Overriding environment with new variables:')
+            for k, v in env_overrides.iteritems():
+                logging.log(verbosity, '{}={}'.format(k, v))
+
     def has_up_to_date_build(self):
         if self.needy.parameters().force_build:
             return False
-
         if not self.should_build():
             return True
-
         if not os.path.isfile(self.build_status_path()):
             return False
-
         with open(self.build_status_path(), 'r') as status_file:
             status_text = status_file.read()
             if not status_text.strip():
@@ -159,7 +163,6 @@ class Library:
             status = json.loads(status_text)
             if 'configuration' not in status or binascii.unhexlify(status['configuration']) != self.configuration_hash():
                 return False
-
         return True
 
     def directory(self):
