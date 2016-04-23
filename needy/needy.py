@@ -4,6 +4,7 @@ import os
 import multiprocessing
 import re
 import sys
+import logging
 
 from collections import OrderedDict
 
@@ -31,16 +32,25 @@ class Needy:
         self.__path = path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
         self.__parameters = parameters
 
-        self.__needs_directory = os.path.join(self.__path, 'needs')
         self.__needs_file = self.find_needs_file(self.__path)
+        self.__needs_directory = Needy.resolve_needs_directory(self.__path)
 
-        directory = self.__path
+        if self.__needs_file is None:
+            raise RuntimeError('No needs file found in {}'.format(self.__path))
+
+        logging.debug('Using needs file {}'.format(self.__needs_file))
+        logging.debug('Using needs directory {}'.format(self.__needs_directory))
+
+    @staticmethod
+    def resolve_needs_directory(directory):
+        ret = None
         while directory:
-            if self.find_needs_file(directory):
-                self.__needs_directory = os.path.join(directory, 'needs')
+            if Needy.find_needs_file(directory):
+                ret = os.path.join(directory, 'needs')
             directory = os.path.dirname(directory)
             if directory == os.sep:
                 break
+        return ret
 
     def path(self):
         return self.__path
