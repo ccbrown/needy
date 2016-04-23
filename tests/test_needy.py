@@ -1,34 +1,30 @@
 import json
 import os
-import shutil
-import tempfile
-import unittest
+from pyfakefs import fake_filesystem_unittest
 
-import needy.needy
+from needy.needy import Needy
 
 
-class NeedyTestDirectory:
+class NeedyTest(fake_filesystem_unittest.TestCase):
+    def setUp(self):
+        self.setUpPyfakefs()
 
-    def __init__(self, yaml):
-        self.__yaml = yaml
+    def test_find_needs_file_with_json_only(self):
+        self.fs.CreateFile('needs.json')
+        self.assertEqual(Needy.find_needs_file('.'), './needs.json')
 
-    def __enter__(self):
-        self.__path = tempfile.mkdtemp()
-        with open(os.path.join(self.__path, 'needs.json'), 'w') as f:
-            f.write(self.__yaml)
-        return self
+    def test_find_needs_file_with_yaml_only(self):
+        self.fs.CreateFile('needs.yaml')
+        self.assertEqual(Needy.find_needs_file('.'), './needs.yaml')
 
-    def __exit__(self, etype, value, traceback):
-        shutil.rmtree(self.__path)
-
-    def path(self):
-        return self.__path
-
-
-class NeedyTest(unittest.TestCase):
+    def test_find_needs_file_with_multiple(self):
+        self.fs.CreateFile('needs.json')
+        self.fs.CreateFile('needs.yaml')
+        with self.assertRaises(RuntimeError):
+            Needy.find_needs_file('.')
 
     def test_libraries_to_build(self):
-        needs_file = json.dumps({
+        self.fs.CreateFile('needs.json', contents=json.dumps({
             'libraries': {
                 'excluded': {},
                 'dependant': {
@@ -36,10 +32,9 @@ class NeedyTest(unittest.TestCase):
                 },
                 'dependency': {}
             }
-        })
-        with NeedyTestDirectory(needs_file) as directory:
-            n = needy.needy.Needy(directory.path())
-            libraries = n.libraries_to_build(n.target('host'), ['dependant'])
-            self.assertEqual(len(libraries), 2)
-            self.assertEqual(libraries[0][0], 'dependency')
-            self.assertEqual(libraries[1][0], 'dependant')
+        }))
+        needy = Needy()
+        libraries = needy.libraries_to_build(needy.target('host'), ['dependant'])
+        self.assertEqual(len(libraries), 2)
+        self.assertEqual(libraries[0][0], 'dependency')
+        self.assertEqual(libraries[1][0], 'dependant')

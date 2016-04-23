@@ -28,7 +28,7 @@ from .cd import current_directory
 
 
 class Needy:
-    def __init__(self, path, parameters = {}):
+    def __init__(self, path='.', parameters={}):
         self.__path = path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
         self.__parameters = parameters
 
@@ -99,11 +99,14 @@ class Needy:
         if extension == '.yaml':
             try:
                 import yaml
+
                 class OrderedLoader(yaml.SafeLoader):
                     pass
+
                 def construct_mapping(loader, node):
                     loader.flatten_mapping(node)
                     return OrderedDict(loader.construct_pairs(node))
+
                 OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
                 return yaml.load(configuration, OrderedLoader)
             except ImportError:
