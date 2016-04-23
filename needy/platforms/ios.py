@@ -4,7 +4,7 @@ import platform
 
 
 class iOSPlatform(XcodePlatform):
-    def __init__(self, parameters):
+    def __init__(self, parameters={}):
         XcodePlatform.__init__(self, parameters)
 
     @staticmethod

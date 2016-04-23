@@ -5,7 +5,7 @@ import os
 
 
 class AndroidPlatform(Platform):
-    def __init__(self, parameters):
+    def __init__(self, parameters={}):
         Platform.__init__(self, parameters)
         self.api_level = parameters.android_api_level if 'android_api_level' in parameters else None
         self.__toolchain = parameters.android_toolchain if 'android_toolchain' in parameters else None

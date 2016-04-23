@@ -40,7 +40,7 @@ def evaluate_conditionals(configuration, target):
 
 
 class ProjectDefinition:
-    def __init__(self, target, directory, configuration):
+    def __init__(self, target, directory, configuration={}):
         self.target = target
         self.directory = directory
         self.configuration = configuration
@@ -119,6 +119,8 @@ class Project:
         return ret
 
     def pre_build(self, output_directory):
+        build_dirs = [os.path.join(output_directory, d) for d in ['include', 'lib']]
+        self.__create_directories(build_dirs)
         self.run_commands(self.configuration('pre-build'))
 
     def configure(self, build_directory):
@@ -126,8 +128,6 @@ class Project:
 
     def post_build(self, output_directory):
         self.run_commands(self.configuration('post-build'))
-        build_dirs = [os.path.join(output_directory, d) for d in ['include', 'lib']]
-        self.__create_directories(build_dirs)
 
     def __create_directories(self, dirs):
         for d in dirs:

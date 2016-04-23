@@ -2,7 +2,7 @@ from ..platform import Platform
 
 
 class XcodePlatform(Platform):
-    def __init__(self, parameters):
+    def __init__(self, parameters={}):
         Platform.__init__(self, parameters)
         self.__minimum_version = self.minimum_version()
         if 'minimum_%s_version' % self.os_name() in parameters:

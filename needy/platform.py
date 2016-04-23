@@ -39,7 +39,7 @@ def host_platform():
 
 
 class Platform:
-    def __init__(self, parameters):
+    def __init__(self, parameters={}):
         pass
 
     @staticmethod

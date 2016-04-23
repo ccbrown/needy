@@ -1,5 +1,4 @@
 import json
-import os
 from pyfakefs import fake_filesystem_unittest
 
 from needy.needy import Needy
