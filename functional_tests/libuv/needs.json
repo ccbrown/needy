@@ -1,8 +1,0 @@
-{
-	"libraries": {
-		"libuv": {
-			"repository": "git@github.com:libuv/libuv.git",
-			"commit": "bb2632b339d86f69f7dd9aa7168e4b46bf4126a5"
-		}
-	}
-}

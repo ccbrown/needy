@@ -1,8 +1,0 @@
-{
-	"libraries": {
-		"libpng": {
-			"download": "ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.18.tar.gz",
-			"checksum": "685ce2ebbf4ad9a03992fb5f10c38df1"
-		}
-	}
-}
