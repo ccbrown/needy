@@ -20,6 +20,7 @@ a:hover {
 
 header > .container {
     padding: 20px;
+    overflow-y: hidden;
 }
 
 body > header header img {
@@ -34,6 +35,11 @@ body > header header a {
 
 body > header header a:hover {
     text-decoration: underline;
+}
+
+body > header li {
+    float: left;
+    width: 50%;
 }
 
 body > section {
@@ -75,7 +81,7 @@ pre code {
     color: #14acc1;
 }
 
-@media (min-width: 800px) {
+@media (min-width: 961px) {
     body > header {
         float: left;
         position: fixed;
@@ -86,6 +92,11 @@ pre code {
         max-width: 300px;
         float: right;
         margin-right: 30px;
+    }
+
+    body > header li {
+        float: none;
+        width: 100%;
     }
 
     body > section {
