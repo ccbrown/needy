@@ -1,9 +1,86 @@
 @import url(https://fonts.googleapis.com/css?family=Noto+Sans:400,400italic,700italic,700);
 
 body {
-  background-color: #ffffff;
-  padding: 50px;
+  background-color: #486a69;
+  padding: 0;
+  margin: 0;
   font: 14px/1.5 "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: #202020;
+  color: #ffffff;
   font-weight: 400;
+}
+
+a {
+    color: #d8e3cf;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #ffffff;
+}
+
+header > .container {
+    padding: 20px;
+}
+
+body > section {
+    background-color: #ffffff;
+    color: #202020;
+}
+
+body > section a {
+    color: #557318;
+}
+
+body > section a:hover {
+    color: #869a5b;
+}
+
+main {
+    padding: 20px;
+}
+
+pre {
+    overflow-x: scroll;
+    padding: 10px;
+}
+
+code {
+    padding: 0 4px;
+    background-color: #eeeeee;
+}
+
+pre code {
+    background-color: #f8f8f8;
+}
+
+.green {
+    color: green;
+}
+
+.cyan {
+    color: #14acc1;
+}
+
+@media (min-width: 800px) {
+    header {
+        float: left;
+        position: fixed;
+        width: 30%;
+    }
+
+    header > .container {
+        max-width: 300px;
+        float: right;
+        margin-right: 30px;
+    }
+
+    body > section {
+        float: right;
+        display: block;
+        width: 70%;
+    }
+
+    main {
+        max-width: 700px;
+    }
 }
