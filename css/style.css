@@ -1,7 +1,7 @@
 @import url(https://fonts.googleapis.com/css?family=Noto+Sans:400,400italic,700italic,700);
 
 body {
-  background-color: #486a69;
+  background-color: #3b5251;
   padding: 0;
   margin: 0;
   font: 14px/1.5 "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -20,6 +20,20 @@ a:hover {
 
 header > .container {
     padding: 20px;
+}
+
+body > header header img {
+    height: 1em;
+    margin-right: 8px;
+}
+
+body > header header a {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+body > header header a:hover {
+    text-decoration: underline;
 }
 
 body > section {
@@ -62,13 +76,13 @@ pre code {
 }
 
 @media (min-width: 800px) {
-    header {
+    body > header {
         float: left;
         position: fixed;
         width: 30%;
     }
 
-    header > .container {
+    body > header > .container {
         max-width: 300px;
         float: right;
         margin-right: 30px;
