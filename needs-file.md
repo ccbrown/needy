@@ -5,7 +5,7 @@ title: Needs File
 {{ page.title }}
 ==
 
-The needs file is the thing that defines what your needs are. It can be defined as either a JSON or YAML file. YAML is generally preferred as it's less prone to stray comma errors and is much easier to use with <a href="{{ 'jinja-templating' | prepend: site.github.url }}">Jinja templating</a>, but it does require the [pyyaml](http://pyyaml.org/wiki/PyYAML) Python module to be installed. JSON works with no additional Python modules installed, so may be preferable if you have simple needs and don't want to require users to install anything.
+The needs file is the thing that defines what your needs are. It can be defined as either a JSON or YAML file. YAML is generally preferred as it's less prone to stray comma errors and is much easier to use with <a href="{{ '/jinja-templating' | prepend: site.github.url }}">Jinja templating</a>, but it does require the [pyyaml](http://pyyaml.org/wiki/PyYAML) Python module to be installed. JSON works with no additional Python modules installed, so may be preferable if you have simple needs and don't want to require users to install anything.
 
 The examples here will use YAML, but both JSON and YAML use all of the same configuration parameters.
 

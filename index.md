@@ -71,7 +71,7 @@ libraries:
                 - cp smaz.h {build_directory}/include/smaz.h
 ```
 
-See the <a href="{{ 'needs-file' | prepend: site.github.url }}">needs file documentation</a> for more info.
+See the <a href="{{ '/needs-file' | prepend: site.github.url }}">needs file documentation</a> for more info.
 
 Universal Binaries
 --
@@ -114,4 +114,4 @@ libraries:
 ```
 {% endraw %}
 
-See the <a href="{{ 'jinja-templating' | prepend: site.github.url }}">Jinja templating documentation</a> for more info.
+See the <a href="{{ '/jinja-templating' | prepend: site.github.url }}">Jinja templating documentation</a> for more info.
