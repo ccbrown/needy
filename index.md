@@ -113,3 +113,5 @@ libraries:
             {% endif %}
 ```
 {% endraw %}
+
+See the <a href="{{ 'jinja-templating' | prepend: site.github.url }}">Jinja templating documentation</a> for more info.
