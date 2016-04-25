@@ -20,6 +20,8 @@ libraries:
 
 This should go into a file named *needs.yaml*. In this example, we're starting off by declaring a dependency on Catch, a unit testing framework. If you invoke `needy satisfy` from the directory with this file, Needy will download and build [Catch](https://github.com/philsquared/Catch).
 
+You can find example configurations for more libraries in the functional tests (look in *tests/functional*).
+
 Using the Output
 --
 
@@ -96,10 +98,12 @@ Projects that are header-only or built from source use the following parameters:
 Projects that are built with Make use the following parameters:
 
 * `make-prefix-arg` - The name of the argument that the makefile uses to determine the output directory (e.g. 'INSTALL_PREFIX').
+* `make-targets` - A list of make targets to build.
 
 Projects that are built using Autotools use the following parameters:
 
 * `configure-args` - Additional arguments to be passed to the configure script.
+* `make-targets` - A list of make targets to build.
 
 Projects that are built using Boost.Build use the following parameters:
 
