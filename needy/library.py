@@ -129,7 +129,7 @@ class Library:
 
             with open(self.build_status_path(), 'w') as status_file:
                 status = {
-                    'configuration': binascii.hexlify(self.configuration_hash())
+                    'configuration': binascii.hexlify(self.configuration_hash()).decode()
                 }
                 json.dump(status, status_file)
 
@@ -192,7 +192,7 @@ class Library:
                     return candidate(definition, self.needy)
             raise RuntimeError('unknown project type')
 
-        scores = [(len(definition.configuration.viewkeys() & c.configuration_keys()), c) for c in candidates]
+        scores = [(len(set(definition.configuration.keys()) & set(c.configuration_keys())), c) for c in candidates]
         candidates = [candidate for score, candidate in sorted(scores, key=itemgetter(0), reverse=True)]
 
         with cd(definition.directory):
@@ -207,9 +207,9 @@ class Library:
 
         top = self.__configuration.copy()
         top.pop('project', None)
-        hash.update(json.dumps(top, sort_keys=True))
+        hash.update(json.dumps(top, sort_keys=True).encode())
 
-        hash.update(json.dumps(self.project_configuration(), sort_keys=True))
+        hash.update(json.dumps(self.project_configuration(), sort_keys=True).encode())
 
         platform_configuration_hash = self.target().platform.configuration_hash(self.target().architecture)
         if platform_configuration_hash:

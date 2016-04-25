@@ -83,9 +83,6 @@ class Project:
             concurrency = min(concurrency, self.configuration('max-concurrency'))
         return concurrency
 
-    def project_targets(self):
-        return self.configuration('targets') or []
-
     def set_configuration_variables(self, **kwargs):
         self.__configuration_variables = kwargs
 

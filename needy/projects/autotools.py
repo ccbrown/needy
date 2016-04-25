@@ -33,7 +33,7 @@ class AutotoolsProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return ['configure-args']
+        return ['configure-args', 'make-targets']
 
     def configure(self, output_directory):
         if not os.path.isfile(os.path.join(self.directory(), 'configure')):
@@ -118,8 +118,11 @@ class AutotoolsProject(project.Project):
         if len(binary_paths) > 0:
             make_args.append('PATH=%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
 
-        self.command(['make'] + self.project_targets() + make_args)
+        self.command(['make'] + self.__make_targets() + make_args)
         self.command(['make', 'install'] + make_args)
+
+    def __make_targets(self):
+        return self.evaluate(self.configuration('make-targets') or [])
 
     def __available_configure_host(self, candidates):
         with open(os.path.join(self.directory(), 'configure'), 'r') as file:
