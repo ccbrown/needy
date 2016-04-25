@@ -3,6 +3,7 @@ import os
 import shlex
 import shutil
 
+from distutils import dir_util
 from .. import project
 
 
@@ -38,7 +39,7 @@ class SourceProject(project.Project):
         header_directory = SourceProject.header_directory(directory, configuration)
 
         if header_directory != source_directory:
-            shutil.copytree(header_directory, destination)
+            dir_util.copy_tree(header_directory, destination)
         else:
             def non_headers(directory, files):
                 return [f for f in files if os.path.isfile(os.path.join(directory, f)) and os.path.splitext(f)[1] not in ['.h', '.hh', '.hpp']]
