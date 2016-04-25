@@ -76,5 +76,5 @@ class XcodeProject(project.Project):
         if not os.listdir(extras_build_dir):
             os.rmdir(extras_build_dir)
 
-        if not os.path.exists(include_directory):
+        if not os.listdir(include_directory):
             SourceProject.copy_headers(self.directory(), self.configuration(), include_directory)
