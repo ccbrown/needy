@@ -1,7 +1,7 @@
 import json
 import os
 
-from .functionaltest import TestCase
+from .functional_test import TestCase
 
 
 class CerealTest(TestCase):
