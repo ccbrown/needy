@@ -35,6 +35,6 @@ class AndroidMkProject(project.Project):
             'APP_ABI=%s' % abi
         ]
 
-        self.command(['ndk-build'] + ndk_build_args)
+        self.command([os.path.join(self.target().platform.ndk_home(), 'ndk-build')] + ndk_build_args)
         shutil.move(os.path.join(output_directory, 'lib-temp', abi), os.path.join(output_directory, 'lib'))
         shutil.rmtree(os.path.join(output_directory, 'lib-temp'))
