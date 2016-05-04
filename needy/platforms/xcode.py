@@ -30,7 +30,7 @@ class XcodePlatform(Platform):
         return ' '.join(args)
 
     def c_compiler(self, architecture):
-        return 'xcrun -sdk %s clang %s' % (self.sdk(), self.__common_compiler_args(architecture))
+        return 'xcrun -sdk {} clang {}'.format(self.sdk(), self.__common_compiler_args(architecture))
 
     def cxx_compiler(self, architecture):
-        return 'xcrun -sdk %s clang++ %s' % (self.sdk(), self.__common_compiler_args(architecture))
+        return 'xcrun -sdk {} clang++ {}'.format(self.sdk(), self.__common_compiler_args(architecture))
