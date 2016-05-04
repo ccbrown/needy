@@ -39,6 +39,14 @@ class XcodeProject(project.Project):
     def configuration_keys():
         return ['xcode-project']
 
+    def environment_overrides(self):
+        # CC and CXX will likely be correct when invoked by xcode directly
+        ret = project.Project.environment_overrides(self)
+        for var in ['CC', 'CXX']:
+            if var in ret:
+                del ret[var]
+        return ret
+
     def build(self, output_directory):
         xcodebuild_args = ['-parallelizeTargets', 'ONLY_ACTIVE_ARCH=YES', 'USE_HEADER_SYMLINKS=YES']
 
