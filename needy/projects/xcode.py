@@ -37,7 +37,7 @@ class XcodeProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return ['xcode-project']
+        return project.Project.configuration_keys() | {'xcode-project'}
 
     def environment_overrides(self):
         # CC and CXX will likely be correct when invoked by xcode directly

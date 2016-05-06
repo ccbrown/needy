@@ -12,7 +12,7 @@ class CMakeProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return ['cmake-options']
+        return project.Project.configuration_keys() | {'cmake-options'}
 
     @staticmethod
     def is_valid_project(definition, needy):

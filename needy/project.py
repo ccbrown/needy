@@ -61,8 +61,8 @@ class Project:
 
     @staticmethod
     def configuration_keys():
-        """ should return a list of configuration keys that this project uses """
-        return []
+        """ should return a set of configuration keys that this project uses """
+        return {'pre-build', 'post-build', 'max-concurrency'}
 
     def target(self):
         return self.__definition.target
@@ -83,12 +83,12 @@ class Project:
             concurrency = min(concurrency, self.configuration('max-concurrency'))
         return concurrency
 
-    def set_configuration_variables(self, **kwargs):
-        self.__configuration_variables = kwargs
+    def set_string_format_variables(self, **kwargs):
+        self.__string_format_variables = kwargs
 
     def evaluate(self, str_or_list):
         l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
-        return [str.format(**self.__configuration_variables) for str in l]
+        return [str.format(**self.__string_format_variables) for str in l]
 
     def run_commands(self, commands):
         for command in self.evaluate(commands):

@@ -16,6 +16,7 @@ except ImportError:
 
 from ..source import Source
 
+
 class Download(Source):
     def __init__(self, url, checksum, destination, cache_directory):
         Source.__init__(self)

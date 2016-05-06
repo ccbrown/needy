@@ -51,7 +51,7 @@ class SourceProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return ['source-directory', 'header-directory']
+        return project.Project.configuration_keys() | {'source-directory', 'header-directory'}
 
     def build(self, output_directory):
         # check for needs

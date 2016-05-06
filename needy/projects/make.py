@@ -40,7 +40,7 @@ class MakeProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return ['make-prefix-arg', 'make-targets']
+        return project.Project.configuration_keys() | {'make-prefix-arg', 'make-targets'}
 
     def configure(self, output_directory):
         excluded_targets = []

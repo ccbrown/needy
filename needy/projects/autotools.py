@@ -33,7 +33,7 @@ class AutotoolsProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return ['configure-args', 'make-targets']
+        return project.Project.configuration_keys() | {'configure-args', 'make-targets'}
 
     def configure(self, output_directory):
         if not os.path.isfile(os.path.join(self.directory(), 'configure')):

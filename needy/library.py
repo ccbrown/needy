@@ -58,7 +58,7 @@ class Library:
         configuration = self.project_configuration()
         return 'build' not in configuration or configuration['build']
 
-    def configuration_variables(self):
+    def string_format_variables(self):
         return {
             'build_directory': self.build_directory(),
             'platform': self.target().platform.identifier(),
@@ -66,9 +66,14 @@ class Library:
             'needs_file_directory': self.needy.path()
         }
 
+    @staticmethod
+    def additional_project_configuration_keys():
+        """ the configuration keys that we handle here instead of in Project classes (usually because we need them before determining the project type) """
+        return {'post-clean', 'environment', 'type'}
+
     def evaluate(self, str_or_list, **kwargs):
         l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
-        variables = self.configuration_variables()
+        variables = self.string_format_variables()
         variables.update(kwargs)
         return [str.format(**variables) for str in l]
 
@@ -105,7 +110,12 @@ class Library:
 
             definition = ProjectDefinition(self.target(), self.source_directory(), configuration)
             project = self.project(definition)
-            project.set_configuration_variables(**self.configuration_variables())
+
+            unrecognized_configuration_keys = set(configuration.keys()) - project.configuration_keys() - self.additional_project_configuration_keys()
+            if len(unrecognized_configuration_keys):
+                raise RuntimeError('unrecognized project configuration keys: {}'.format(', '.join(unrecognized_configuration_keys)))
+
+            project.set_string_format_variables(**self.string_format_variables())
 
             if not project:
                 raise RuntimeError('unknown project type')

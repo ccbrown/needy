@@ -25,7 +25,7 @@ class BoostBuildProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return ['b2-args']
+        return project.Project.configuration_keys() | {'b2-args'}
 
     def get_build_concurrency_args(self):
         concurrency = self.build_concurrency()
