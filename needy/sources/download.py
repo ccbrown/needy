@@ -7,6 +7,7 @@ import hashlib
 import shutil
 import sys
 import tarfile
+import time
 import zipfile
 
 try:
@@ -48,7 +49,15 @@ class Download(Source):
         if not os.path.isfile(self.local_download_path):
             print('Downloading from %s' % self.url)
             download = urllib2.urlopen(self.url, timeout=5)
-            size = int(download.headers['content-length'])
+            attempts = 1
+            while download.code != 200 and attempts < 5:
+                time.sleep(attempts)
+                print('Download failed. Retrying...')
+                download = urllib2.urlopen(self.url, timeout=5)
+                attempts = attempts + 1
+            if download.code != 200:
+                raise IOError('unable to download library')
+            size = int(download.info()['content-length'])
             progress = 0
             if sys.stdout.isatty():
                 print('{:.1%}'.format(float(progress) / size), end='')
