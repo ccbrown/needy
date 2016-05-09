@@ -69,7 +69,7 @@ class Library:
     @staticmethod
     def additional_project_configuration_keys():
         """ the configuration keys that we handle here instead of in Project classes (usually because we need them before determining the project type) """
-        return {'post-clean', 'environment', 'type'}
+        return {'post-clean', 'environment', 'type', 'build'}
 
     def evaluate(self, str_or_list, **kwargs):
         l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
