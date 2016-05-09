@@ -54,10 +54,6 @@ class Library:
     def project_configuration(self):
         return evaluate_conditionals(self.__configuration['project'] if 'project' in self.__configuration else dict(), self.target())
 
-    def should_build(self):
-        configuration = self.project_configuration()
-        return 'build' not in configuration or configuration['build']
-
     def string_format_variables(self):
         return {
             'build_directory': self.build_directory(),
@@ -69,7 +65,7 @@ class Library:
     @staticmethod
     def additional_project_configuration_keys():
         """ the configuration keys that we handle here instead of in Project classes (usually because we need them before determining the project type) """
-        return {'post-clean', 'environment', 'type', 'build'}
+        return {'post-clean', 'environment', 'type'}
 
     def evaluate(self, str_or_list, **kwargs):
         l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
@@ -78,9 +74,6 @@ class Library:
         return [str.format(**variables) for str in l]
 
     def build(self):
-        if not self.should_build():
-            return False
-
         print('Building for %s %s' % (self.target().platform.identifier(), self.target().architecture))
 
         if ' ' in self.__directory:
@@ -160,11 +153,7 @@ class Library:
                 logging.log(verbosity, '{}={}'.format(k, v))
 
     def has_up_to_date_build(self):
-        if self.needy.parameters().force_build:
-            return False
-        if not self.should_build():
-            return True
-        if not os.path.isfile(self.build_status_path()):
+        if self.needy.parameters().force_build or not os.path.isfile(self.build_status_path()):
             return False
         with open(self.build_status_path(), 'r') as status_file:
             status_text = status_file.read()
