@@ -48,14 +48,22 @@ class Download(Source):
 
         if not os.path.isfile(self.local_download_path):
             print('Downloading from %s' % self.url)
-            download = urllib2.urlopen(self.url, timeout=5)
-            attempts = 1
-            while download.code != 200 and attempts < 5:
-                time.sleep(attempts)
-                print('Download failed. Retrying...')
-                download = urllib2.urlopen(self.url, timeout=5)
+            download = None
+            attempts = 0
+            download_successful = False
+            while not download_successful and attempts < 5:
+                try:
+                    download = urllib2.urlopen(self.url, timeout=5)
+                except urllib2.URLError as e:
+                    print(e)
+                except socket.timeout as e:
+                    print(e)
                 attempts = attempts + 1
-            if download.code != 200:
+                download_successful = download and download.code == 200 and 'content-length' in download.info()
+                if not download_successful:
+                    print('Download failed. Retrying...')
+                time.sleep(attempts)
+            if not download_successful:
                 raise IOError('unable to download library')
             size = int(download.info()['content-length'])
             progress = 0
