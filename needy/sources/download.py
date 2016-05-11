@@ -4,6 +4,7 @@ import io
 import os
 import binascii
 import hashlib
+import socket
 import shutil
 import sys
 import tarfile
