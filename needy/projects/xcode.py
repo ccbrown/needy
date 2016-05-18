@@ -37,7 +37,7 @@ class XcodeProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return project.Project.configuration_keys() | {'xcode-project'}
+        return project.Project.configuration_keys() | {'xcode-project', 'xcode-scheme', 'xcode-target'}
 
     def environment_overrides(self):
         # CC and CXX will likely be correct when invoked by xcode directly
@@ -52,6 +52,10 @@ class XcodeProject(project.Project):
 
         if self.configuration('xcode-project'):
             xcodebuild_args.extend(['-project', self.configuration('xcode-project')])
+        if self.configuration('xcode-scheme'):
+            xcodebuild_args.extend(['-scheme', self.configuration('xcode-scheme')])
+        if self.configuration('xcode-target'):
+            xcodebuild_args.extend(['-target', self.configuration('xcode-target')])
 
         xcodebuild_args.extend(['-sdk', self.target().platform.sdk()])
 
