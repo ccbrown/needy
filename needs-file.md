@@ -116,6 +116,8 @@ Projects that are built using CMake use the following parameters:
 Projects that are built using Xcode use the following parameters:
 
 * `xcode-project` - The Xcode project to use.
+* `xcode-scheme` - The Xcode scheme to use.
+* `xcode-target` - The Xcode target to use.
 
 Projects that are built using custom steps defined by the needs file use the following parameters:
 
