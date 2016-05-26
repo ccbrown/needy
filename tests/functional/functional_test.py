@@ -22,9 +22,16 @@ class TestCase(unittest.TestCase):
         return self.__path
 
     def satisfy(self):
+        return self.execute(['satisfy'])
+
+    def execute(self, command):
         with cd(self.path()):
-            return main(['needy', 'satisfy'])
+            return main(['needy'] + command)
 
     def build_directory(self, library):
         needy = Needy(self.path())
         return needy.build_directory(library, Target(host_platform()()))
+
+    def needs_directory(self):
+        needy = Needy(self.path())
+        return needy.needs_directory()

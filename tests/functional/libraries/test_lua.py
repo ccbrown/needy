@@ -1,7 +1,7 @@
 import json
 import os
 
-from .functional_test import TestCase
+from ..functional_test import TestCase
 
 
 class LuaTest(TestCase):

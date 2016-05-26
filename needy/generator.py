@@ -6,7 +6,8 @@ except ImportError:
 
 def available_generators():
     from .generators.jamfile import JamfileGenerator
-    return [JamfileGenerator]
+    from .generators.xcconfig import XCConfigGenerator
+    return [JamfileGenerator, XCConfigGenerator]
 
 
 class Generator:
