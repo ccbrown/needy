@@ -1,5 +1,6 @@
 import os
 import distutils
+import sys
 
 from .. import project
 
@@ -35,15 +36,20 @@ class BoostBuildProject(project.Project):
         b2_args = self.evaluate(self.configuration('b2-args'))
         b2_args.extend(self.get_build_concurrency_args())
 
-        b2_args.append('architecture={}'.format('arm' if 'arm' in architecture else 'x86'))
-        b2_args.append('address-model={}'.format('64' if '64' in architecture else '32'))
+        b2_args.append('architecture={}'.format('arm' if 'arm' in self.target().architecture else 'x86'))
+        b2_args.append('address-model={}'.format('64' if '64' in self.target().architecture else '32'))
+
+        if self.target().platform in ['ios', 'iossimulator', 'tvos', 'tvossimulator']:
+            b2_args.append('target-os=iphone')
+        elif self.target().platform == 'android':
+            b2_args.append('target-os=android')
 
         if self.configuration('linkage') in ['static']:
             b2_args.append('link=static')
         elif self.configuration('linkage') in ['dynamic', 'shared']:
             b2_args.append('link=shared')
 
-        toolset = 'darwin' if sys.platform == 'darwin' else 'gcc'
+        toolset = 'clang' if distutils.spawn.find_executable('clang') is not None else 'gcc'
         b2_args.append('toolset={}-needy'.format(toolset))
 
         project_config = "import os ;\nusing {} : needy : [ os.environ CC ] ;\n".format(toolset)

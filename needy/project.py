@@ -97,23 +97,32 @@ class Project:
     def environment_overrides(self):
         ret = {}
 
-        c_compiler = self.target().platform.c_compiler(self.target().architecture)
-        if c_compiler:
-            ret['CC'] = c_compiler
+        if self.target().platform.c_compiler(self.target().architecture):
+            ret['CC'] = 'needy-cc'
 
-        cxx_compiler = self.target().platform.cxx_compiler(self.target().architecture)
-        if cxx_compiler:
-            ret['CXX'] = cxx_compiler
+        if self.target().platform.cxx_compiler(self.target().architecture):
+            ret['CXX'] = 'needy-cxx'
 
         libraries = self.target().platform.libraries(self.target().architecture)
         if len(libraries) > 0:
-            ret['LDFLAGS'] = ' '.join(libraries)
+            ret['LDFLAGS'] = ' '.join(libraries + ([os.environ['LDFLAGS']] if 'LDFLAGS' in os.environ else []))
 
-        binary_paths = self.target().platform.binary_paths(self.target().architecture)
+        binary_paths = [os.path.join(self.directory(), 'needy-wrappers')] + self.target().platform.binary_paths(self.target().architecture)
         if len(binary_paths) > 0:
             ret['PATH'] = ('%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
 
         return ret
+
+    def setup(self):
+        # create wrappers for cc / cxx since some systems (e.g. boost's bootstrap) expect these to be single tokens
+
+        c_compiler = self.target().platform.c_compiler(self.target().architecture)
+        if c_compiler:
+            self.__create_wrapper('needy-cc', c_compiler)
+
+        cxx_compiler = self.target().platform.cxx_compiler(self.target().architecture)
+        if cxx_compiler:
+            self.__create_wrapper('needy-cxx', cxx_compiler)
 
     def pre_build(self, output_directory):
         build_dirs = [os.path.join(output_directory, d) for d in ['include', 'lib']]
@@ -130,6 +139,15 @@ class Project:
         for d in dirs:
             if not os.path.exists(d):
                 os.makedirs(d)
+
+    def __create_wrapper(self, name, command):
+        if not os.path.exists('needy-wrappers'):
+            os.makedirs('needy-wrappers')
+
+        path = 'needy-wrappers/{}'.format(name)
+        with open(path, 'w') as f:
+            f.write("#!/bin/sh\n{} \"$@\"".format(command))
+        os.chmod(path, 0o755)
 
     def command(self, cmd, verbosity=logging.INFO, environment_overrides={}):
         env = environment_overrides.copy()
