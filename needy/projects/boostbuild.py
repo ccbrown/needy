@@ -20,7 +20,7 @@ class BoostBuildProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return project.Project.configuration_keys() | {'b2-args', 'linkage'}
+        return project.Project.configuration_keys() | {'b2-args'}
 
     def get_build_concurrency_args(self):
         concurrency = self.build_concurrency()
@@ -43,11 +43,6 @@ class BoostBuildProject(project.Project):
             b2_args.append('target-os=iphone')
         elif self.target().platform == 'android':
             b2_args.append('target-os=android')
-
-        if self.configuration('linkage') in ['static']:
-            b2_args.append('link=static')
-        elif self.configuration('linkage') in ['dynamic', 'shared']:
-            b2_args.append('link=shared')
 
         toolset = 'clang' if distutils.spawn.find_executable('clang') is not None else 'gcc'
         b2_args.append('toolset={}-needy'.format(toolset))

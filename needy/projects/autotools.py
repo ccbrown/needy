@@ -33,7 +33,7 @@ class AutotoolsProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return project.Project.configuration_keys() | {'configure-args', 'make-targets', 'linkage'}
+        return project.Project.configuration_keys() | {'configure-args', 'make-targets'}
 
     def configure(self, output_directory):
         if not os.path.isfile(os.path.join(self.directory(), 'configure')):
@@ -44,12 +44,7 @@ class AutotoolsProject(project.Project):
 
         configure_args.append('--prefix=%s' % output_directory)
 
-        linkage = self.configuration('linkage')
-
         if self.target().platform.identifier() in ['ios', 'tvos']:
-            if not linkage:
-                linkage = 'static'
-
             if not has_host:
                 candidates = [
                     '%s-apple-darwin' % self.target().architecture, 'arm*-apple-darwin',
@@ -98,16 +93,6 @@ class AutotoolsProject(project.Project):
                 configure_args.append('--host=%s' % configure_host)
 
             configure_args.append('--with-sysroot=%s' % sysroot)
-
-        if linkage:
-            if linkage == 'static':
-                configure_args.append('--disable-shared')
-                configure_args.append('--enable-static')
-            elif linkage == 'dynamic':
-                configure_args.append('--disable-static')
-                configure_args.append('--enable-shared')
-            else:
-                raise ValueError('unknown linkage')
 
         self.command(['./configure'] + configure_args)
 

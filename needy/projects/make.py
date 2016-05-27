@@ -40,7 +40,7 @@ class MakeProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return project.Project.configuration_keys() | {'make-prefix-arg', 'make-targets', 'linkage'}
+        return project.Project.configuration_keys() | {'make-prefix-arg', 'make-targets'}
 
     def configure(self, output_directory):
         excluded_targets = []
@@ -88,13 +88,6 @@ class MakeProject(project.Project):
         self.command(['make'] + self.__make_targets() + make_args)
         make_args.extend(self.__make_prefix_args(make_args, output_directory))
         self.command(['make', 'install'] + make_args)
-
-        lib_dir = os.path.join(output_directory, 'lib')
-        linkage = self.configuration('linkage')
-        if linkage == 'static':
-            dylibs = [f for f in os.listdir(lib_dir) if f.endswith('.so') or f.endswith('.dylib')]
-            for dylib in dylibs:
-                os.remove(os.path.join(lib_dir, dylib))
 
     def __make_targets(self):
         return self.evaluate(self.configuration('make-targets') or [])
