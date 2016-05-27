@@ -16,7 +16,7 @@ class BoostBuildProject(project.Project):
         if not os.path.isfile('Jamroot'):
             return False
 
-        return os.path.isfile('b2') or distutils.spawn.find_executable('b2') is not None
+        return (os.path.isfile('b2') or os.path.isfile('bootstrap.sh')) or distutils.spawn.find_executable('b2') is not None
 
     @staticmethod
     def configuration_keys():
