@@ -107,6 +107,8 @@ class Project:
         if len(libraries) > 0:
             ret['LDFLAGS'] = ' '.join(libraries + ([os.environ['LDFLAGS']] if 'LDFLAGS' in os.environ else []))
 
+        ret['HOST_PATH'] = os.environ['PATH']
+
         binary_paths = [os.path.join(self.directory(), 'needy-wrappers')] + self.target().platform.binary_paths(self.target().architecture)
         if len(binary_paths) > 0:
             ret['PATH'] = ('%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
