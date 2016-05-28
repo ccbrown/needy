@@ -91,7 +91,7 @@ class UniversalBinary:
                 elif extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % path)
                     command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
-                elif extension in ['.h', '.hpp']:
+                elif extension in ['.h', '.hpp', '.ipp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for target, header in builds:
                         macro = target.platform.detection_macro(target.architecture)
@@ -122,7 +122,7 @@ class UniversalBinary:
 
     def configuration_hash(self):
         hash = hashlib.sha256()
-        
+
         for library in self.libraries():
             hash.update(library.configuration_hash())
 
