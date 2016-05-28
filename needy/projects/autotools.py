@@ -98,11 +98,6 @@ class AutotoolsProject(project.Project):
 
     def build(self, output_directory):
         make_args = get_make_jobs_args(self)
-
-        binary_paths = self.target().platform.binary_paths(self.target().architecture)
-        if len(binary_paths) > 0:
-            make_args.append('PATH=%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
-
         self.command(['make'] + self.__make_targets() + make_args)
         self.command(['make', 'install'] + make_args)
 
