@@ -33,10 +33,13 @@ class BoostBuildProject(project.Project):
         return []
 
     def configure(self, build_directory):
+        bootstrap_args = self.evaluate(self.configuration('bootstrap-args'))
         if not os.path.isfile('bootstrap.sh'):
+            if len(bootstrap_args) > 0:
+                raise RuntimeError('bootstrap-args was given, but no bootstrap script is present')
             return
 
-        self.command(['./bootstrap.sh'] + self.evaluate(self.configuration('bootstrap-args')), use_target_overrides=False)
+        self.command(['./bootstrap.sh'] + bootstrap_args, use_target_overrides=False)
 
     def build(self, output_directory):
         b2 = './b2' if os.path.isfile('b2') else 'b2'

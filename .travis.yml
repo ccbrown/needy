@@ -4,5 +4,7 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
-script: nosetests
+script:
+  - nosetests
+  - cd examples/hello-boost && make
 install: "pip install -r requirements-dev.txt"
