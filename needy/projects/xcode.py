@@ -6,6 +6,7 @@ import logging
 from .. import project
 from ..cd import cd
 from ..process import command_output
+from ..platforms.xcode import XcodePlatform
 
 from .source import SourceProject
 
@@ -18,7 +19,7 @@ class XcodeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        if definition.target.platform.identifier() not in ['osx', 'ios', 'iossimulator', 'tvos', 'tvossimulator']:
+        if not isinstance(definition.target.platform, XcodePlatform):
             return False
 
         xcodebuild_args = []
@@ -39,9 +40,9 @@ class XcodeProject(project.Project):
     def configuration_keys():
         return project.Project.configuration_keys() | {'xcode-project', 'xcode-scheme', 'xcode-target'}
 
-    def environment_overrides(self):
+    def target_environment_overrides(self):
         # CC and CXX will likely be correct when invoked by xcode directly
-        ret = project.Project.environment_overrides(self)
+        ret = project.Project.target_environment_overrides(self)
         for var in ['CC', 'CXX']:
             if var in ret:
                 del ret[var]

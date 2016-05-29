@@ -1,3 +1,4 @@
+import distutils
 import os
 
 from .. import project
@@ -17,6 +18,10 @@ class CMakeProject(project.Project):
     @staticmethod
     def is_valid_project(definition, needy):
         return definition.target.platform.is_host() and os.path.isfile('CMakeLists.txt')
+
+    @staticmethod
+    def missing_prerequisites(definition, needy):
+        return ['cmake'] if distutils.spawn.find_executable('cmake') is None else []
 
     def configure(self, output_directory):
         cmake_directory = os.path.join(self.directory(), 'cmake')

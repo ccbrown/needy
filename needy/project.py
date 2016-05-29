@@ -60,6 +60,10 @@ class Project:
         raise NotImplementedError('Subclasses of Project must override is_valid_project')
 
     @staticmethod
+    def missing_prerequisites(definition, needy):
+        return []
+
+    @staticmethod
     def configuration_keys():
         """ should return a set of configuration keys that this project uses """
         return {'pre-build', 'post-build', 'max-concurrency'}
@@ -94,21 +98,26 @@ class Project:
         for command in self.evaluate(commands):
             self.command(command)
 
-    def environment_overrides(self):
+    def target_environment_overrides(self):
         ret = {}
 
+        if 'CC' in os.environ:
+            ret['HOST_CC'] = os.environ['CC']
         if self.target().platform.c_compiler(self.target().architecture):
             ret['CC'] = 'needy-cc'
 
+        if 'CXX' in os.environ:
+            ret['HOST_CXX'] = os.environ['CXX']
         if self.target().platform.cxx_compiler(self.target().architecture):
             ret['CXX'] = 'needy-cxx'
 
+        if 'LDFLAGS' in os.environ:
+            ret['HOST_LDFLAGS'] = os.environ['LDFLAGS']
         libraries = self.target().platform.libraries(self.target().architecture)
         if len(libraries) > 0:
             ret['LDFLAGS'] = ' '.join(libraries + ([os.environ['LDFLAGS']] if 'LDFLAGS' in os.environ else []))
 
         ret['HOST_PATH'] = os.environ['PATH']
-
         binary_paths = [os.path.join(self.directory(), 'needy-wrappers')] + self.target().platform.binary_paths(self.target().architecture)
         if len(binary_paths) > 0:
             ret['PATH'] = ('%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
@@ -151,9 +160,10 @@ class Project:
             f.write("#!/bin/sh\n{} \"$@\"".format(command))
         os.chmod(path, 0o755)
 
-    def command(self, cmd, verbosity=logging.INFO, environment_overrides={}):
+    def command(self, cmd, verbosity=logging.INFO, environment_overrides={}, use_target_overrides=True):
         env = environment_overrides.copy()
-        env.update(self.environment_overrides())
+        if use_target_overrides:
+            env.update(self.target_environment_overrides())
         command(cmd, environment_overrides=env)
 
     def command_output(self, arguments, verbosity=logging.INFO, environment_overrides={}):

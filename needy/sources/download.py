@@ -119,7 +119,7 @@ class Download(Source):
     def __tarfile_unpack(self):
         with open(self.local_download_path, 'rb') as file:
             tar = tarfile.open(fileobj=file, mode='r|*')
-            tar.extractall(self.destination)
+            tar.extractall(self.destination.encode(sys.getfilesystemencoding()))
             del tar
 
     def __zipfile_unpack(self):

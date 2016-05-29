@@ -1,3 +1,4 @@
+import distutils
 import os
 import subprocess
 import logging
@@ -30,6 +31,10 @@ class AutotoolsProject(project.Project):
             if os.path.isfile('autogen.sh') and os.path.isfile('configure.ac') and os.path.isfile('Makefile.am'):
                 return True
         return False
+
+    @staticmethod
+    def missing_prerequisites(definition, needy):
+        return ['make'] if distutils.spawn.find_executable('make') is None else []
 
     @staticmethod
     def configuration_keys():

@@ -1,3 +1,4 @@
+import distutils
 import os
 import re
 import logging
@@ -27,6 +28,10 @@ class MakeProject(project.Project):
     @staticmethod
     def is_valid_project(definition, needy):
         return MakeProject.get_makefile_path(definition.directory) is not None
+
+    @staticmethod
+    def missing_prerequisites(definition, needy):
+        return ['make'] if distutils.spawn.find_executable('make') is None else []
 
     @staticmethod
     def get_makefile_path(directory='.'):

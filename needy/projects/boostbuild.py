@@ -13,14 +13,15 @@ class BoostBuildProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        if not os.path.isfile('Jamroot'):
-            return False
+        return os.path.isfile('Jamroot')
 
-        return (os.path.isfile('b2') or os.path.isfile('bootstrap.sh')) or distutils.spawn.find_executable('b2') is not None
+    @staticmethod
+    def missing_prerequisites(definition, needy):
+        return ['b2'] if not os.path.isfile('bootstrap.sh') and distutils.spawn.find_executable('b2') is None else []
 
     @staticmethod
     def configuration_keys():
-        return project.Project.configuration_keys() | {'b2-args'}
+        return project.Project.configuration_keys() | {'b2-args', 'bootstrap-args'}
 
     def get_build_concurrency_args(self):
         concurrency = self.build_concurrency()
@@ -30,6 +31,12 @@ class BoostBuildProject(project.Project):
         elif concurrency == 0:
             return ['-j']
         return []
+
+    def configure(self, build_directory):
+        if not os.path.isfile('bootstrap.sh'):
+            return
+
+        self.command(['./bootstrap.sh'] + self.evaluate(self.configuration('bootstrap-args')), use_target_overrides=False)
 
     def build(self, output_directory):
         b2 = './b2' if os.path.isfile('b2') else 'b2'

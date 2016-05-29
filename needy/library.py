@@ -189,6 +189,9 @@ class Library:
         if 'type' in definition.configuration:
             for candidate in candidates:
                 if candidate.identifier() == definition.configuration['type']:
+                    missing_prerequisites = candidate.missing_prerequisites(definition, self.needy)
+                    if len(missing_prerequisites) > 0:
+                        raise RuntimeError('missing prerequisites for explicit project type: {}'.format(', '.join(missing_prerequisites)))
                     return candidate(definition, self.needy)
             raise RuntimeError('unknown project type')
 
@@ -197,8 +200,13 @@ class Library:
 
         with cd(definition.directory):
             for candidate in candidates:
-                if candidate.is_valid_project(definition, self.needy):
-                    return candidate(definition, self.needy)
+                if not candidate.is_valid_project(definition, self.needy):
+                    continue
+                missing_prerequisites = candidate.missing_prerequisites(definition, self.needy)
+                if len(missing_prerequisites) > 0:
+                    print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' Detected {} project, but the following prerequisites are missing: {}'.format(candidate.identifier(), ', '.join(missing_prerequisites)))
+                    continue
+                return candidate(definition, self.needy)
 
         raise RuntimeError('unknown project type')
 

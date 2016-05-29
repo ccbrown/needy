@@ -14,4 +14,4 @@ libraries:
 
 You can then use a simple command invocation (`needy satisfy`) to download and build [Catch](https://github.com/philsquared/Catch) for your target platforms. Once integrated with your build system, adding, updating, or modifying dependencies in any way becomes a trivial matter.
 
-Needy is extremely capable, so be sure to check out [the documentation](https://ccbrown.github.com/needy) to see some more things you can do.
+Needy is extremely capable, so be sure to check out the examples directory or [the documentation](https://ccbrown.github.com/needy) to see some more things you can do.
