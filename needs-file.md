@@ -107,6 +107,7 @@ Projects that are built using Autotools use the following parameters:
 
 Projects that are built using Boost.Build use the following parameters:
 
+* `bootstrap-args` - Additional arguments to be given to the Boost.Build bootstrap script.
 * `b2-args` - Additional arguments to be given to Boost.Build.
 
 Projects that are built using CMake use the following parameters:
