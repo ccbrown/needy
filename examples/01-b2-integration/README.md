@@ -14,7 +14,7 @@ The needs file defines our dependency on cppformat:
 {
     "libraries": {
         "cppformat": {
-            "repository": "git@github.com:fmtlib/fmt.git",
+            "repository": "https://github.com/fmtlib/fmt.git",
             "commit": "8650c57ccd6146971d1ee8a68ca8d8f881cfafef"
         }
     }

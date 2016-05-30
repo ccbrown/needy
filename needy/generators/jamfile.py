@@ -67,7 +67,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
     local sourcedir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) sourcedir $(name)" ] ;
     local includedir = "$(builddir)/include" ;
-    local files = [ SPLIT_BY_CHARACTERS [ SHELL "find $(sourcedir) -type f -not -path '*/\\.*'" ] : "\\n" ] ;
+    local files = [ SPLIT_BY_CHARACTERS [ SHELL "find $(sourcedir) -type f -not -path '*/\\.*' 2> /dev/null" ] : "\\n" ] ;
 
     make lib$(name).touch : $(NEEDS_FILE) $(files) : @satisfy-lib : $(requirements) <{needy_args_feature}>$(args) ;
     actions satisfy-lib
@@ -89,7 +89,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
            base_dir=needy.path(),
            needs_file=needy.needs_file(),
            satisfy_args=needy.parameters().satisfy_args,
-           needy_args_feature='needyargs_'+hashlib.sha1(needy.path()).hexdigest(),
+           needy_args_feature='needyargs_'+hashlib.sha1(needy.path() if isinstance(needy.path(), bytes) else needy.path().encode('utf-8')).hexdigest(),
            **target_args)
 
         contents += "\n"
