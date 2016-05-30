@@ -26,12 +26,19 @@ Building and Running
 
 This project has a two-phase build.
 
-First, run `./configure`. This is a one-line shell script that simply invokes `needy generate jamfile`.
+First, run `./configure`. This is a one-line shell script that simply invokes `needy generate jamfile`, which places a Jamfile in our needs directory.
 
-Once you've done that, simply run `b2`. This is another one-liner that defines our executable.
+Once you've done that, simply run `b2`. This builds the executable defined in the Jamroot file, which is another one-liner:
 
-The result is an executable named "b2-integration":
+```
+exe b2-ingegration : b2-integration.cpp ./needs//cppformat : <linkflags>-lfmt ;
+```
+
+Using the generated Jamfile ensures that our dependencies are built and adds the proper paths to our build, so all that's left for us to do is link via "-lfmt".
+
+The result of the `b2` command is an executable named "b2-integration":
 
 ```
 cbrown@MacBook-Pro-3:~/Development/needy/examples/b2-integration% ./bin/darwin-4.2.1/debug/b2-ingegration
-It worked!```
+It worked!
+```
