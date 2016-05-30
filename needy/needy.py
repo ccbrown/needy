@@ -28,8 +28,8 @@ from .cd import current_directory
 
 
 class Needy:
-    def __init__(self, path='.', parameters={}):
-        self.__path = path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
+    def __init__(self, path='.', parameters={}, local_configuration=None):
+        self.__path = self.__normalize_path(path)
         self.__parameters = parameters
 
         self.__needs_file = self.find_needs_file(self.__path)
@@ -43,6 +43,7 @@ class Needy:
 
     @staticmethod
     def resolve_needs_directory(directory):
+        directory = Needy.__normalize_path(directory)
         ret = None
         while directory:
             if Needy.find_needs_file(directory):
@@ -60,6 +61,7 @@ class Needy:
 
     @staticmethod
     def find_needs_file(directory):
+        directory = Needy.__normalize_path(directory)
         ret = None
         for name in ['needs.json', 'needs.yaml']:
             path = os.path.join(directory, name)
@@ -325,6 +327,10 @@ class Needy:
             self.__print_status(Fore.RED, 'ERROR')
             print(e)
             raise
+
+    @staticmethod
+    def __normalize_path(path):
+        return path if os.path.isabs(path) else os.path.normpath(os.path.join(current_directory(), path))
 
     def __print_status(self, color, status, name=None):
         print(color + Style.BRIGHT + '[' + status + ']' + Style.RESET_ALL + Fore.RESET + (' %s' % name if name else ''))

@@ -1,12 +1,13 @@
 from __future__ import print_function
 
 import argparse
-import fcntl
+import json
 import os
 import sys
 import logging
 
 from .needy import Needy
+from .local_configuration import LocalConfiguration
 from .platform import available_platforms
 from .generator import available_generators
 
@@ -52,12 +53,12 @@ def satisfy(args=[]):
     logging.basicConfig(format=('%(message)s'),
                         level=parameters.verbosity_level)
 
-    needy = Needy('.', parameters)
-
-    if parameters.universal_binary:
-        needy.satisfy_universal_binary(parameters.universal_binary, parameters.library)
-    else:
-        needy.satisfy_target(needy.target(parameters.target), parameters.library)
+    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
+        needy = Needy('.', parameters, local_configuration=local_configuration)
+        if parameters.universal_binary:
+            needy.satisfy_universal_binary(parameters.universal_binary, parameters.library)
+        else:
+            needy.satisfy_target(needy.target(parameters.target), parameters.library)
 
     return 0
 
@@ -77,10 +78,11 @@ def cflags(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
-    needy = Needy('.', parameters)
+    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
+        needy = Needy('.', parameters, local_configuration=local_configuration)
+        print(' '.join([('-I%s' % path) for path in needy.include_paths(
+            parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library)]), end='')
 
-    print(' '.join([('-I%s' % path) for path in needy.include_paths(
-        parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library)]), end='')
     return 0
 
 
@@ -99,10 +101,11 @@ def ldflags(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
-    needy = Needy('.', parameters)
+    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
+        needy = Needy('.', parameters, local_configuration=local_configuration)
+        print(' '.join([('-L%s' % path) for path in needy.library_paths(
+            parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library)]), end='')
 
-    print(' '.join([('-L%s' % path) for path in needy.library_paths(
-        parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library)]), end='')
     return 0
 
 
@@ -118,10 +121,11 @@ def builddir(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary')
     parameters = parser.parse_args(args)
 
-    needy = Needy('.', parameters)
+    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
+        needy = Needy('.', parameters, local_configuration=local_configuration)
+        print(needy.build_directory(parameters.library,
+                                    parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target)), end='')
 
-    print(needy.build_directory(parameters.library,
-                                parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target)), end='')
     return 0
 
 
@@ -144,8 +148,9 @@ def generate(args=[]):
         help='arguments to use when satisfying needs')
     parameters = parser.parse_args(args)
 
-    needy = Needy('.', parameters)
-    needy.generate(parameters.file)
+    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
+        needy = Needy('.', parameters, local_configuration=local_configuration)
+        needy.generate(parameters.file)
 
     return 0
 
@@ -182,13 +187,7 @@ Use '%s <command> --help' to get help for a specific command.
         'generate': generate,
     }
 
-    lock_fd = os.open('.needy_lock', os.O_RDWR | os.O_CREAT)
     try:
-        try:
-            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except IOError:
-            print('Waiting for other needy instances to terminate...')
-            fcntl.flock(lock_fd, fcntl.LOCK_EX)
         if parameters.command in commands:
             return commands[parameters.command](parameters.args)
         elif parameters.command == 'help':
@@ -199,7 +198,6 @@ Use '%s <command> --help' to get help for a specific command.
             return 1
     finally:
         logging.shutdown()
-        os.close(lock_fd)
 
     print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))
     return 1
