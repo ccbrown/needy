@@ -30,9 +30,32 @@ class LocalConfiguration:
             print('Waiting for other needy instances to terminate...')
             fcntl.flock(self.__fd, fcntl.LOCK_EX)
 
+        with open(self.__path, 'rt') as f:
+            contents = f.read()
+            if contents:
+                self.__configuration = json.loads(contents)
+
         return self
 
     def __exit__(self, etype, value, traceback):
         with open(self.__path, 'wt') as f:
             json.dump(self.__configuration, f)
         os.close(self.__fd)
+
+    def development_mode(self, library_name):
+        return self.__library_configuration(library_name, 'development_mode', False)
+
+    def set_development_mode(self, library_name, enable=True):
+        self.__set_library_configuration(library_name, 'development_mode', enable)
+
+    def __library_configuration(self, library_name, key, default=None):
+        if 'libraries' not in self.__configuration or library_name not in self.__configuration['libraries']:
+            return default
+        return self.__configuration['libraries'][library_name][key]
+
+    def __set_library_configuration(self, library_name, key, value):
+        if 'libraries' not in self.__configuration:
+            self.__configuration['libraries'] = {}
+        if library_name not in self.__configuration['libraries']:
+            self.__configuration['libraries'][library_name] = {}
+        self.__configuration['libraries'][library_name][key] = value

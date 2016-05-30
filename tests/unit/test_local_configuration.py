@@ -19,6 +19,20 @@ class LocalConfigurationTest(unittest.TestCase):
         finally:
             file.close()
 
+    def test_development_mode_persistence(self):
+        file = tempfile.NamedTemporaryFile(delete=True)
+        try:
+            with LocalConfiguration(file.name) as config:
+                self.assertFalse(config.development_mode('test'))
+                config.set_development_mode('test', True)
+                self.assertTrue(config.development_mode('test'))
+            with LocalConfiguration(file.name) as config:
+                self.assertTrue(config.development_mode('test'))
+                config.set_development_mode('test', False)
+                self.assertFalse(config.development_mode('test'))
+        finally:
+            file.close()
+
     @staticmethod
     def try_access_from_another_process(path):
         def run(path):

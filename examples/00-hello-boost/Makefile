@@ -1,6 +1,6 @@
 NEEDY = $(realpath $(shell dirname $(lastword $(MAKEFILE_LIST)))/../../scripts/needy)
 
-.PHONY: all host iphone
+.PHONY: all host iphone clean
 
 all: host
 host: build/host/hello-boost
@@ -16,3 +16,6 @@ build/iphone/hello-boost: needs.json hello-boost.cpp
 	$(NEEDY) satisfy $(NEEDY_IPHONE_FLAGS)
 	mkdir -p $(shell dirname $@)
 	xcrun -sdk iphoneos clang++ -arch arm64 -stdlib=libstdc++ hello-boost.cpp -o $@ `$(NEEDY) cflags $(NEEDY_IPHONE_FLAGS)` `$(NEEDY) ldflags $(NEEDY_IPHONE_FLAGS)` -lboost_program_options
+
+clean:
+	rm -rf build

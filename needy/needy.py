@@ -35,6 +35,8 @@ class Needy:
         self.__needs_file = self.find_needs_file(self.__path)
         self.__needs_directory = Needy.resolve_needs_directory(self.__path)
 
+        self.__local_configuration = local_configuration
+
         if self.__needs_file is None:
             raise RuntimeError('No needs file found in {}'.format(self.__path))
 
@@ -70,6 +72,18 @@ class Needy:
                     raise RuntimeError('More than one needs file is present.')
                 ret = path
         return ret
+
+    def set_development_mode(self, library_name, enable=True):
+        if not os.path.isdir(os.path.join(self.__needs_directory, library_name)):
+            raise RuntimeError('Please build the library once before enabling development mode.')
+
+        was_already = self.__local_configuration.development_mode(library_name) == enable
+        self.__local_configuration.set_development_mode(library_name, enable)
+
+        if enable:
+            print('Development mode {}enabled for {}: {}'.format('already ' if was_already else '', library_name, self.source_directory(library_name)))
+        else:
+            print('Development mode {}disabled for {}. Please ensure that you have persisted any changes you wish to keep.'.format('already ' if was_already else '', library_name))
 
     def needs_configuration(self, target=None):
         configuration = ''
@@ -169,7 +183,8 @@ class Needy:
         while len(names):
             name = names.pop()
             directory = os.path.join(self.__needs_directory, name)
-            library = Library(target, needs_configuration['libraries'][name], directory, self)
+            development_mode = self.__local_configuration and self.__local_configuration.development_mode(name)
+            library = Library(target, needs_configuration['libraries'][name], directory, self, development_mode=development_mode)
             libraries[name] = library
             if 'dependencies' not in library.configuration():
                 graph[name] = set()
@@ -272,6 +287,9 @@ class Needy:
         l = Library(None, None, directory, self)
         b = UniversalBinary(target_or_universal_binary, [l], self)
         return b.build_directory()
+
+    def source_directory(self, library_name):
+        return os.path.join(self.__needs_directory, library_name, 'source')
 
     def satisfy_target(self, target, filters=None):
         needs_configuration = self.needs_configuration(target)

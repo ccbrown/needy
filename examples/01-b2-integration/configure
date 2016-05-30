@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+NEEDY=$(dirname "$0")/../../scripts/needy
+
+$NEEDY generate jamfile
+echo "Configuration complete. You may now build via b2."

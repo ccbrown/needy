@@ -39,11 +39,12 @@ from .projects.xcode import XcodeProject
 
 
 class Library:
-    def __init__(self, target, configuration, directory, needy):
+    def __init__(self, target, configuration, directory, needy, development_mode=False):
         self.__target = target
         self.__configuration = configuration
         self.__directory = directory
         self.needy = needy
+        self.__development_mode = development_mode
 
     def configuration(self):
         return self.__configuration
@@ -73,6 +74,18 @@ class Library:
         variables.update(kwargs)
         return [str.format(**variables) for str in l]
 
+    def clean_source(self):
+        if 'download' in self.__configuration:
+            source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(self.directory(), 'download'))
+        elif 'repository' in self.__configuration:
+            source = GitRepository(self.__configuration['repository'], self.__configuration['commit'], self.source_directory())
+        elif 'directory' in self.__configuration:
+            source = Directory(self.__configuration['directory'] if os.path.isabs(self.__configuration['directory']) else os.path.join(needy.path(), self.__configuration['directory']), self.source_directory())
+        else:
+            raise ValueError('no source specified in configuration')
+
+        source.clean()
+
     def build(self):
         print('Building for %s %s' % (self.target().platform.identifier(), self.target().architecture))
 
@@ -80,16 +93,8 @@ class Library:
             print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t '
                   'handle spaces well, so if you have problems, consider moving the project or using a symlink.')
 
-        if 'download' in self.__configuration:
-            self.source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(self.directory(), 'download'))
-        elif 'repository' in self.__configuration:
-            self.source = GitRepository(self.__configuration['repository'], self.__configuration['commit'], self.source_directory())
-        elif 'directory' in self.__configuration:
-            self.source = Directory(self.__configuration['directory'] if os.path.isabs(self.__configuration['directory']) else os.path.join(needy.path(), self.__configuration['directory']), self.source_directory())
-        else:
-            raise ValueError('no source specified in configuration')
-
-        self.source.clean()
+        if not self.__development_mode:
+            self.clean_source()
 
         configuration = self.project_configuration()
         env_overrides = self.__parse_env_overrides(configuration['environment'] if 'environment' in configuration else None)
@@ -154,7 +159,7 @@ class Library:
                 logging.log(verbosity, '{}={}'.format(k, v))
 
     def has_up_to_date_build(self):
-        if self.needy.parameters().force_build or not os.path.isfile(self.build_status_path()):
+        if self.needy.parameters().force_build or not os.path.isfile(self.build_status_path()) or self.__development_mode:
             return False
         with open(self.build_status_path(), 'r') as status_file:
             status_text = status_file.read()

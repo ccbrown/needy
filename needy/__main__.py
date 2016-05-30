@@ -129,6 +129,22 @@ def builddir(args=[]):
     return 0
 
 
+def sourcedir(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s sourcedir' % os.path.basename(sys.argv[0]),
+        description='Gets the source directory for a need.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('library', help='the library to get the directory for')
+    parameters = parser.parse_args(args)
+
+    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
+        needy = Needy('.', parameters, local_configuration=local_configuration)
+        print(needy.source_directory(parameters.library), end='')
+
+    return 0
+
+
 def generate(args=[]):
     parser = argparse.ArgumentParser(
         prog='%s generate' % os.path.basename(sys.argv[0]),
@@ -155,6 +171,29 @@ def generate(args=[]):
     return 0
 
 
+def development_mode(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s dev-mode' % os.path.basename(sys.argv[0]),
+        description='Enables development mode for a library.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        'library',
+        help='the library to enable dev mode for')
+    parser.add_argument(
+        '--disable',
+        default=False,
+        action='store_true',
+        help='disables dev mode for the library')
+    parameters = parser.parse_args(args)
+
+    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
+        needy = Needy('.', parameters, local_configuration=local_configuration)
+        needy.set_development_mode(parameters.library, not parameters.disable)
+
+    return 0
+
+
 def main(args=sys.argv):
     try:
         import colorama
@@ -170,7 +209,9 @@ def main(args=sys.argv):
   cflags      emits the compiler flags required to use the satisfied needs
   ldflags     emits the linker flags required to use the satisfied needs
   builddir    emits the build directory for a need
+  sourcedir   emits the source directory for a need
   generate    generates useful files
+  dev-mode    enables development mode for a library
 
 Use '%s <command> --help' to get help for a specific command.
 """ % os.path.basename(sys.argv[0])
@@ -184,7 +225,9 @@ Use '%s <command> --help' to get help for a specific command.
         'cflags': cflags,
         'ldflags': ldflags,
         'builddir': builddir,
+        'sourcedir': sourcedir,
         'generate': generate,
+        'dev-mode': development_mode,
     }
 
     try:

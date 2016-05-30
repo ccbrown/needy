@@ -1,0 +1,1 @@
+exe b2-ingegration : b2-integration.cpp ./needs//cppformat : <linkflags>-lfmt ;
