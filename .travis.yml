@@ -9,6 +9,8 @@ script:
   - pushd examples/00-hello-boost && make && popd
   - pushd examples/01-b2-integration && ./configure && b2 && popd
 before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y cmake
   - wget https://github.com/boostorg/build/releases/download/2014.10/boost-build-2014-10.tar.bz2 -O boost-build-2014-10.tar.bz2
   - tar -xvf boost-build-2014-10.tar.bz2
   - pushd boost-build/ && ./bootstrap.sh && sudo ./b2 install && popd
