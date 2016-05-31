@@ -46,13 +46,37 @@ class Needy:
     @staticmethod
     def resolve_needs_directory(directory):
         directory = Needy.__normalize_path(directory)
+
         ret = None
+        parent_needs = None
         while directory:
             if Needy.find_needs_file(directory):
-                ret = os.path.join(directory, 'needs')
+                if ret is None:
+                    ret = os.path.join(directory, 'needs')
+                else:
+                    parent_needs = os.path.join(directory, 'needs')
+                    break
             directory = os.path.dirname(directory)
             if directory == os.sep:
                 break
+
+        if ret is None:
+            return None
+
+        if parent_needs:
+            real_needs_directory = os.path.dirname(ret)
+            while real_needs_directory != '/':
+                split = os.path.split(real_needs_directory)
+                if split[0] == parent_needs:
+                    real_needs_directory = os.path.join(real_needs_directory, 'needs')
+                    break
+                real_needs_directory = split[0]
+            if real_needs_directory != '/':
+                if not os.path.isdir(real_needs_directory):
+                    os.makedirs(real_needs_directory)
+                if not os.path.exists(ret):
+                    os.symlink(real_needs_directory, ret)
+
         return ret
 
     def path(self):

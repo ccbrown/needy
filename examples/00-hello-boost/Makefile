@@ -19,3 +19,4 @@ build/iphone/hello-boost: needs.json hello-boost.cpp
 
 clean:
 	rm -rf build
+	rm -rf needs
