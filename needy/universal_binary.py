@@ -3,6 +3,8 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
+import tempfile
 
 from .process import command
 
@@ -90,7 +92,17 @@ class UniversalBinary:
                         shutil.copy(source_path, output_path)
                 elif extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % path)
-                    command(['lipo', '-create'] + [lib for target, lib in builds] + ['-output', output_path])
+                    inputs = []
+                    for target, lib in builds:
+                        f = tempfile.NamedTemporaryFile(delete=True)
+                        try:
+                            command(['lipo', '-extract', target.architecture, lib, '-output', f.name])
+                        except subprocess.CalledProcessError:
+                            command(['cp', lib, f.name])
+                        inputs.append(f)
+                    command(['lipo', '-create'] + [input.name for input in inputs] + ['-output', output_path])
+                    for input in inputs:
+                        input.close()
                 elif extension in ['.h', '.hpp', '.ipp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for target, header in builds:

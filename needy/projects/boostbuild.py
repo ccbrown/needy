@@ -54,7 +54,7 @@ class BoostBuildProject(project.Project):
         elif self.target().platform == 'android':
             b2_args.append('target-os=android')
 
-        toolset = 'clang' if distutils.spawn.find_executable('clang') is not None else 'gcc'
+        toolset = 'darwin' if sys.platform == 'darwin' else ('clang' if distutils.spawn.find_executable('clang') is not None else 'gcc')
         b2_args.append('toolset={}-needy'.format(toolset))
 
         project_config = ''
