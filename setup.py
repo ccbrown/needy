@@ -27,6 +27,9 @@ setup(
     entry_points={
         'console_scripts': [
             'needy = needy.__main__:main'
+        ],
+        'setuptools.installation': [
+            'eggsecutable = needy.__main__:main',
         ]
     },
     install_requires=[
