@@ -9,7 +9,13 @@ Needy is tool that aims to make C++ library dependencies as magical as possible.
 
 To run without installing, you can use `scripts/needy`. To install, you can run `sudo setup.py install`. After installing, you can invoke needy via simply `needy`. To uninstall, you can use `sudo pip uninstall needy`.
 
-It's in pretty early stages though, so expect incomplete features. It also isn't yet versioned and is constantly breaking backwards compatibility, so if you use it, it's recommended that you include it with your distribution. You can do so via submodule or via Python egg, which you can package up via `./setup.py bdist_egg`. 
+It's in pretty early stages though, so expect incomplete features. It also isn't yet versioned and is constantly breaking backwards compatibility, so if you use it, it's recommended that you include it with your distribution. You can do so via submodule or via Python egg, which you can package up via `./setup.py bdist_egg`. You can even execute the egg directly:
+
+```
+./setup.py bdist_egg
+chmod +x ./dist/needy-0.0-py2.7.egg
+./dist/needy-0.0-py2.7.egg help
+```
 
 Support
 --
