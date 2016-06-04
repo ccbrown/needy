@@ -2,6 +2,7 @@ import os
 import distutils
 import sys
 
+from ..platforms.xcode import XcodePlatform
 from .. import project
 
 
@@ -61,7 +62,11 @@ class BoostBuildProject(project.Project):
         elif self.target().platform == 'android':
             b2_args.append('target-os=android')
 
-        toolset = 'darwin' if sys.platform == 'darwin' else ('clang' if distutils.spawn.find_executable('clang') is not None else 'gcc')
+        toolset = 'gcc'
+        if sys.platform == 'darwin' and isinstance(self.target().platform, XcodePlatform):
+            toolset = 'darwin'
+        elif distutils.spawn.find_executable('clang') is not None:
+            toolset = 'clang'
         b2_args.append('toolset={}-needy'.format(toolset))
 
         project_config = ''
