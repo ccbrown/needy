@@ -17,7 +17,11 @@ class CMakeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        return definition.target.platform.is_host() and os.path.isfile('CMakeLists.txt')
+        if not os.path.isfile('CMakeLists.txt'):
+            return False, 'no CMakeLists.txt found in project root'
+        if not definition.target.platform.is_host():
+            return False, 'cross-compilation of CMake projects not yet supported'
+        return True, 'CMakeLists.txt found and no cross-compilation requested'
 
     @staticmethod
     def missing_prerequisites(definition, needy):

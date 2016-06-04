@@ -17,20 +17,26 @@ class SourceProject(project.Project):
     def source_directory(directory, configuration):
         if 'source-directory' in configuration:
             return configuration['source-directory']
-        elif os.path.exists(os.path.join(directory, 'src')):
-            return os.path.join(directory, 'src')
-        elif os.path.exists(os.path.join(directory, 'source')):
-            return os.path.join(directory, 'source')
+        for name in SourceProject.__default_source_directory_names():
+            if os.path.exists(os.path.join(directory, name)):
+                return os.path.join(directory, name)
         return None
+
+    @staticmethod
+    def __default_header_directory_names():
+        return ['include', 'headers']
+
+    @staticmethod
+    def __default_source_directory_names():
+        return ['src', 'source']
 
     @staticmethod
     def header_directory(directory, configuration):
         if 'header-directory' in configuration:
             return configuration['header-directory']
-        elif os.path.exists(os.path.join(directory, 'include')):
-            return os.path.join(directory, 'include')
-        elif os.path.exists(os.path.join(directory, 'headers')):
-            return os.path.join(directory, 'headers')
+        for name in SourceProject.__default_header_directory_names():
+            if os.path.exists(os.path.join(directory, name)):
+                return os.path.join(directory, name)
         return SourceProject.source_directory(directory, configuration)
 
     @staticmethod
@@ -47,7 +53,11 @@ class SourceProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        return SourceProject.header_directory(definition.directory, definition.configuration)
+        header_dir = SourceProject.header_directory(definition.directory, definition.configuration)
+        if header_dir is None:
+            search_paths = SourceProject.__default_header_directory_names() + SourceProject.__default_source_directory_names()
+            return False, 'no header path found in {} and none specified'.format(search_paths)
+        return True, 'headers found in {}'.format(header_dir)
 
     @staticmethod
     def configuration_keys():
