@@ -86,6 +86,7 @@ The project configuration describes how the library is built.
 
 * `type` - The type of project. When omitted, Needy will do its best to determine this based on the project source and the parameters you specify. If you want to force a specific type of project, you can use one of the following values: 'androidmk', 'autotools', 'boostbuild', 'cmake', 'custom', 'make', 'source', 'xcode'.
 * `environment` - A dictionary of environment variable overrides. In addition to the formatting parameters listed below, receives a `current` parameter with the current value of the environment variable.
+* `root` - The directory to build.
 * `post-clean` - A list of commands to execute after cleaning the project directory.
 * `pre-build` - A list of commands to execute before building.
 * `post-build` - A list of commands to execute after building.
