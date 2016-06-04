@@ -13,7 +13,14 @@ class BoostBuildProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        return os.path.isfile('Jamroot')
+        for name in BoostBuildProject.__valid_jamroot_filenames():
+            if os.path.isfile(name):
+                return True, 'Jamroot file {} found'.format(name)
+        return False, 'no Jamroot file matching {} found'.format(BoostBuildProject.__valid_jamroot_filenames())
+
+    @staticmethod
+    def __valid_jamroot_filenames():
+        return ['Jamroot', 'Jamroot.jam']
 
     @staticmethod
     def missing_prerequisites(definition, needy):

@@ -207,15 +207,23 @@ class Library:
         scores = [(len(set(definition.configuration.keys()) & set(c.configuration_keys())), c) for c in candidates]
         candidates = [candidate for score, candidate in sorted(scores, key=itemgetter(0), reverse=True)]
 
+        logging.debug('project candidates ordered by number of valid configuration keys: {}'.format(', '.join([c.identifier() for c in candidates])))
+        logging.debug('evaluating candidates in {}'.format(definition.directory))
         with cd(definition.directory):
             for candidate in candidates:
-                if not candidate.is_valid_project(definition, self.needy):
-                    continue
+                valid, reasons = candidate.is_valid_project(definition, self.needy)
                 missing_prerequisites = candidate.missing_prerequisites(definition, self.needy)
-                if len(missing_prerequisites) > 0:
-                    print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' Detected {} project, but the following prerequisites are missing: {}'.format(candidate.identifier(), ', '.join(missing_prerequisites)))
-                    continue
-                return candidate(definition, self.needy)
+                logging.debug('project type determined {} be {}'.format('to' if valid else 'not to', candidate.identifier()))
+                if isinstance(reasons, list):
+                    for r in reasons:
+                        logging.debug('  - {}'.format(r))
+                else:
+                    logging.debug('  - {}'.format(reasons))
+                if valid:
+                    if len(missing_prerequisites) > 0:
+                        print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' Detected {} project, but the following prerequisites are missing: {}'.format(candidate.identifier(), ', '.join(missing_prerequisites)))
+                        continue
+                    return candidate(definition, self.needy)
 
         raise RuntimeError('unknown project type')
 

@@ -27,17 +27,22 @@ class MakeProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        return MakeProject.get_makefile_path(definition.directory) is not None
+        makefile = MakeProject.get_makefile_path(definition.directory)
+        if makefile is None:
+            return False, 'no Makefile found in project root matching {}'.format(MakeProject.__valid_makefile_names())
+        return True, '{} found in project root'.format(os.path.basename(makefile))
 
     @staticmethod
     def missing_prerequisites(definition, needy):
         return ['make'] if distutils.spawn.find_executable('make') is None else []
 
     @staticmethod
-    def get_makefile_path(directory='.'):
-        valid_makefile_names = ['Makefile', 'GNUmakefile']
+    def __valid_makefile_names():
+        return ['Makefile', 'GNUmakefile']
 
-        for makefile in valid_makefile_names:
+    @staticmethod
+    def get_makefile_path(directory='.'):
+        for makefile in MakeProject.__valid_makefile_names():
             path = os.path.join(directory, makefile)
             if os.path.isfile(path):
                 return path

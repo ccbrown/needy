@@ -13,10 +13,10 @@ class AndroidMkProject(project.Project):
     @staticmethod
     def is_valid_project(definition, needy):
         if definition.target.platform.identifier() not in ['android']:
-            return False
+            return False, 'platform identifier is not android'
         if not os.path.exists(os.path.join(definition.directory, 'Android.mk')):
-            return False
-        return True
+            return False, 'Android.mk not found'
+        return True, 'Android.mk found'
 
     def build(self, output_directory):
         if self.target().architecture == 'armv7':

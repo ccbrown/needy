@@ -12,7 +12,7 @@ class CustomProject(project.Project):
 
     @staticmethod
     def is_valid_project(definition, needy):
-        return True
+        return True, 'custom projects are always valid'
 
     @staticmethod
     def configuration_keys():

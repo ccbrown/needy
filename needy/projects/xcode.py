@@ -20,7 +20,7 @@ class XcodeProject(project.Project):
     @staticmethod
     def is_valid_project(definition, needy):
         if not isinstance(definition.target.platform, XcodePlatform):
-            return False
+            return False, 'target platform not an Xcode supported platform'
 
         xcodebuild_args = []
 
@@ -31,10 +31,10 @@ class XcodeProject(project.Project):
             with cd(definition.directory):
                 command_output(['xcodebuild', '-list'] + xcodebuild_args, logging.DEBUG)
         except subprocess.CalledProcessError:
-            return False
+            return False, 'non-zero return in xcodebuild -list indicating no xcode project located in project root'
         except OSError:
-            return False
-        return True
+            return False, 'xcodebuild could not be invoked'
+        return True, 'xcodebuild -list return zero indicating valid project'
 
     @staticmethod
     def configuration_keys():
