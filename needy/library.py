@@ -66,7 +66,7 @@ class Library:
     @staticmethod
     def additional_project_configuration_keys():
         """ the configuration keys that we handle here instead of in Project classes (usually because we need them before determining the project type) """
-        return {'post-clean', 'environment', 'type'}
+        return {'post-clean', 'environment', 'type', 'root'}
 
     def evaluate(self, str_or_list, **kwargs):
         l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
@@ -102,11 +102,11 @@ class Library:
         self.__log_env_overrides(env_overrides)
         with OverrideEnvironment(env_overrides):
             post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
-            with cd(self.source_directory()):
+            with cd(self.project_root()):
                 for cmd in self.evaluate(post_clean_commands):
                     command(cmd)
 
-            definition = ProjectDefinition(self.target(), self.source_directory(), configuration)
+            definition = ProjectDefinition(self.target(), self.project_root(), configuration)
             project = self.project(definition)
 
             unrecognized_configuration_keys = set(configuration.keys()) - project.configuration_keys() - self.additional_project_configuration_keys()
@@ -125,7 +125,7 @@ class Library:
 
             os.makedirs(build_directory)
 
-            with cd(self.source_directory()):
+            with cd(self.project_root()):
                 try:
                     project.setup()
                     project.configure(build_directory)
@@ -181,6 +181,10 @@ class Library:
 
     def source_directory(self):
         return os.path.join(self.__directory, 'source')
+
+    def project_root(self):
+        configuration = self.project_configuration()
+        return os.path.join(self.source_directory(), configuration['root']) if 'root' in configuration else self.source_directory()
 
     def include_path(self):
         return os.path.join(self.build_directory(), 'include')
