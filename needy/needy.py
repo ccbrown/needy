@@ -97,6 +97,9 @@ class Needy:
                 ret = path
         return ret
 
+    def development_mode(self, library_name):
+        return self.__local_configuration.development_mode(library_name)
+
     def set_development_mode(self, library_name, enable=True):
         if not os.path.isdir(os.path.join(self.__needs_directory, library_name)):
             raise RuntimeError('Please build the library once before enabling development mode.')

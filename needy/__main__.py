@@ -185,10 +185,17 @@ def development_mode(args=[]):
         default=False,
         action='store_true',
         help='disables dev mode for the library')
+    parser.add_argument(
+        '--query',
+        default=False,
+        action='store_true',
+        help='if given, will return 0 if dev-mode is enabled, or 1 otherwise')
     parameters = parser.parse_args(args)
 
     with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
         needy = Needy('.', parameters, local_configuration=local_configuration)
+        if parameters.query:
+            return 0 if needy.development_mode(parameters.library) else 1
         needy.set_development_mode(parameters.library, not parameters.disable)
 
     return 0
