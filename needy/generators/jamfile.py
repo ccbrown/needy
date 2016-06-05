@@ -67,7 +67,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
     local sourcedir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) sourcedir $(name)" ] ;
     local includedir = "$(builddir)/include" ;
-    local files = [ SPLIT_BY_CHARACTERS [ SHELL "$(NEEDY) dev-mode $(name) --query && find $(sourcedir) -type f -not -path '*/\\.*' 2> /dev/null" ] : "\\n" ] ;
+    local files = [ SPLIT_BY_CHARACTERS [ SHELL "cd $(BASE_DIR) && $(NEEDY) dev-mode $(name) --query && find $(sourcedir) -type f -not -path '*/\\.*' 2> /dev/null" ] : "\\n" ] ;
 
     make lib$(name).touch : $(NEEDS_FILE) $(files) : @satisfy-lib : $(requirements) <{needy_args_feature}>$(args) ;
     actions satisfy-lib
