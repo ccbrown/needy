@@ -6,4 +6,4 @@ import sys
 if __name__ == "__main__":
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     from needy.__main__ import main
-    main(sys.argv)
+    sys.exit(main(sys.argv))
