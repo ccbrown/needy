@@ -121,7 +121,7 @@ class Needy:
             from jinja2 import Environment, PackageLoader
             env = Environment()
             env.filters['dirname'] = os.path.dirname
-            if self.__parameters.define:
+            if hasattr(self.__parameters, 'define') and self.__parameters.define:
                 for defines in self.__parameters.define:
                     for define in defines:
                         parts = define.split('=', 1)
