@@ -42,16 +42,20 @@ def satisfy(args=[]):
         action='store_true',
         help='force a build even when the target is up-to-date')
     parser.add_argument(
-        '-d', '--verbosity-level',
-        default=logging.INFO,
-        help='specify a verbosity level. higher numbers indicate higher verbosity levels.')
+        '-v', '--verbose',
+        action='store_true',
+        help='produce more verbose logs')
+    parser.add_argument(
+        '-D', '--define',
+        nargs='*',
+        action='append',
+        help='specify a user-defined variable to be passed to the needs file renderer')
 
     for platform in available_platforms().values():
         platform.add_arguments(parser)
     parameters = parser.parse_args(args)
 
-    logging.basicConfig(format=('%(message)s'),
-                        level=parameters.verbosity_level)
+    logging.basicConfig(format=('%(message)s'), level=logging.DEBUG if parameters.verbose else logging.INFO)
 
     with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
         needy = Needy('.', parameters, local_configuration=local_configuration)

@@ -121,6 +121,12 @@ class Needy:
             from jinja2 import Environment, PackageLoader
             env = Environment()
             env.filters['dirname'] = os.path.dirname
+            if self.__parameters.define:
+                for defines in self.__parameters.define:
+                    for define in defines:
+                        parts = define.split('=', 1)
+                        value = parts[1] if len(parts) >= 2 else 1
+                        env.globals[parts[0]] = value
             template = env.from_string(configuration)
             configuration = template.render(
                 platform=target.platform.identifier() if target else None,
