@@ -31,7 +31,7 @@ class CMakeProject(project.Project):
         cmake_directory = os.path.join(self.directory(), 'cmake')
         if not os.path.exists(cmake_directory):
             os.makedirs(cmake_directory)
-        cmake_options = self.evaluate(self.configuration('cmake-options') or [])
+        cmake_options = self.configuration('cmake-options') or []
         cmake_option_strings = ['-D{}={}'.format(key, self.evaluate(self.__cmake_value(value))[0]) for key, value in cmake_options.items()] if cmake_options else []
         with cd(cmake_directory):
             self.command(['cmake', '-G', 'Unix Makefiles'] + cmake_option_strings + ['-DCMAKE_INSTALL_PREFIX=%s' % output_directory, self.directory()])
