@@ -56,7 +56,7 @@ universal-binaries:
             - arm64
 ```
 
-Then, you can it via `needy satisfy -u iphoneos`. Needy will build each library for each target individually, merge the binaries into fat binaries, and create a set of universal headers for you to use.
+Then, you can build it via `needy satisfy -u iphoneos`. Needy will build each library for each target individually, merge the binaries into fat binaries, and create a set of universal headers for you to use.
 
 The output is used in the same way as for individual architectures.
 
