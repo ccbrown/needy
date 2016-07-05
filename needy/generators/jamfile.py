@@ -42,7 +42,13 @@ path-constant NEEDS_FILE : {needs_file} ;
 feature.feature {needy_args_feature} : : free ;
 toolset.flags satisfy-lib NEEDYARGS <{needy_args_feature}> ;
 
-rule needlib ( name : extra-sources * : requirements * : default-build * : usage-requirements * )
+rule needlib-common ( name : libname )
+{{
+    local dev-mode-files = [ SPLIT_BY_CHARACTERS [ SHELL "cd $(BASE_DIR) && $(NEEDY) dev-mode $(libname) --query && find `$(NEEDY) sourcedir $(libname)` -type f -not -path '*/\.*' 2> /dev/null" ] : "\\n" ] ;
+    alias $(name) : $(dev-mode-files) ;
+}}
+
+rule needlib ( name : build-dir : extra-sources * : requirements * : default-build * : usage-requirements * )
 {{
     local target = $(name) ;
     if <target-os>iphone in $(requirements) {{
@@ -64,12 +70,9 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
     }}
 
     local args = $(target) {satisfy_args} ;
-    local builddir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) builddir $(target)" ] ;
-    local sourcedir = [ SHELL "cd $(BASE_DIR) && $(NEEDY) sourcedir $(name)" ] ;
-    local includedir = "$(builddir)/include" ;
-    local files = [ SPLIT_BY_CHARACTERS [ SHELL "cd $(BASE_DIR) && $(NEEDY) dev-mode $(name) --query && find $(sourcedir) -type f -not -path '*/\\.*' 2> /dev/null" ] : "\\n" ] ;
+    local includedir = "$(build-dir)/include" ;
 
-    make lib$(name).touch : $(NEEDS_FILE) $(files) : @satisfy-lib : $(requirements) <{needy_args_feature}>$(args) ;
+    make lib$(name).touch : $(NEEDS_FILE) $(name)-common : @satisfy-lib : $(requirements) <{needy_args_feature}>$(args) ;
     actions satisfy-lib
     {{
         cd $(BASE_DIR) && $(NEEDY) satisfy $(NEEDYARGS) && cd - && touch $(<)
@@ -81,7 +84,7 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
         : $(default-build)
         : <dependency>lib$(name).touch
           <include>$(includedir)
-          <linkflags>-L$(builddir)/lib
+          <linkflags>-L$(build-dir)/lib
           $(usage-requirements)
     ;
 }}
@@ -92,34 +95,34 @@ rule needlib ( name : extra-sources * : requirements * : default-build * : usage
            needy_args_feature='needyargs_'+hashlib.sha1(needy.path() if isinstance(needy.path(), bytes) else needy.path().encode('utf-8')).hexdigest(),
            **target_args)
 
-        contents += "\n"
-        for library in needy.libraries_to_build(Target(needy.platform('host'))):
-            contents += "needlib {0} ;\n".format(library[0])
+        libraries_with_common_targets = set()
+
+        contents += "\n" + self.__target_definitions(needy, Target(needy.platform('host')), libraries_with_common_targets)
 
         if 'ios' in available_platforms():
-            contents += "\n"
-            for library in needy.libraries_to_build(Target(needy.platform('ios'))):
-                contents += "needlib {0} : : <target-os>iphone <architecture>arm ;\n".format(library[0])
+            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('ios')), libraries_with_common_targets, '<target-os>iphone <architecture>arm')
 
         if 'iossimulator' in available_platforms():
-            contents += "\n"
-            for library in needy.libraries_to_build(Target(needy.platform('iossimulator'))):
-                contents += "needlib {0} : : <target-os>iphone <architecture>x86 ;\n".format(library[0])
+            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('iossimulator')), libraries_with_common_targets, '<target-os>iphone <architecture>x86')
 
         if 'android' in available_platforms():
-            contents += "\n"
-            for library in needy.libraries_to_build(Target(needy.platform('android'))):
-                contents += "needlib {0} : : <target-os>android ;\n".format(library[0])
+            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('android')), libraries_with_common_targets, '<target-os>android')
 
         if 'tvos' in available_platforms():
-            contents += "\n"
-            for library in needy.libraries_to_build(Target(needy.platform('tvos'))):
-                contents += "needlib {0} : : <target-os>appletv <architecture>arm ;\n".format(library[0])
+            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('tvos')), libraries_with_common_targets, '<target-os>appletv <architecture>arm')
 
         if 'tvossimulator' in available_platforms():
-            contents += "\n"
-            for library in needy.libraries_to_build(Target(needy.platform('tvossimulator'))):
-                contents += "needlib {0} : : <target-os>appletv <architecture>x86 ;\n".format(library[0])
+            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('tvossimulator')), libraries_with_common_targets, '<target-os>appletv <architecture>x86')
 
         with open(path, 'w') as jamfile:
             jamfile.write(contents)
+
+    @staticmethod
+    def __target_definitions(needy, needy_target, libraries_with_common_targets, requirements=''):
+        ret = ''
+        for name, library in needy.libraries_to_build(needy_target):
+            if name not in libraries_with_common_targets:
+                ret += "needlib-common {0}-common : {0} ;\n".format(name)
+                libraries_with_common_targets.add(name)
+            ret += "needlib {} : {} : : {} ;\n".format(name, library.build_directory(), requirements)
+        return ret
