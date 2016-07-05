@@ -36,6 +36,12 @@ Variables
 * `host_platform` - The identifier of the host platform.
 * `needs_file` - The path of the needs file.
 
+### User-Defined Variables
+
+You can also define your own variables via the command line:
+
+* `needy satisfy -Dmyvariable=something`
+
 Functions
 --
 
