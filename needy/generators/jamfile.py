@@ -17,22 +17,12 @@ class JamfileGenerator(Generator):
         path = os.path.join(needy.needs_directory(), 'Jamfile')
         targets = {
             'host': Target(needy.platform('host')),
+            'ios': Target(needy.platform('ios')) if 'ios' in available_platforms() else 'unavailable',
+            'iossimulator': Target(needy.platform('iossimulator')) if 'iossimulator' in available_platforms() else 'unavailable',
+            'android': Target(needy.platform('android')) if 'android' in available_platforms() else 'unavailable',
+            'tvos': Target(needy.platform('tvos')) if 'tvos' in available_platforms() else 'unavailable',
+            'tvossimulator': Target(needy.platform('tvossimulator')) if 'tvossimulator' in available_platforms() else 'unavailable',
         }
-
-        if 'ios' in available_platforms():
-            targets['ios'] = Target(needy.platform('ios'))
-
-        if 'iossimulator' in available_platforms():
-            targets['iossimulator'] = Target(needy.platform('iossimulator'))
-
-        if 'android' in available_platforms():
-            targets['android'] = Target(needy.platform('android'))
-
-        if 'tvos' in available_platforms():
-            targets['tvos'] = Target(needy.platform('tvos'))
-
-        if 'tvossimulator' in available_platforms():
-            targets['tvossimulator'] = Target(needy.platform('tvossimulator'))
 
         needs_configuration = needy.needs_configuration()
         if 'universal-binaries' in needs_configuration:
