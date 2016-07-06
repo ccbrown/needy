@@ -1,5 +1,5 @@
 from ..generator import Generator
-from ..platform import available_platforms
+from ..platform import available_platforms, host_platform
 from ..target import Target
 
 import hashlib
@@ -15,19 +15,25 @@ class JamfileGenerator(Generator):
 
     def generate(self, needy):
         path = os.path.join(needy.needs_directory(), 'Jamfile')
-        target_args = {
-            'ios': '-t ios',
-            'iossimulator': '-t iossimulator',
-            'tvos': '-t tvos',
-            'tvossimulator': '-t tvossimulator',
-            'osx': '-t osx',
+        targets = {
+            'android': Target(needy.platform('android')),
+            'ios': Target(needy.platform('ios')),
+            'iossimulator': Target(needy.platform('iossimulator')),
+            'tvos': Target(needy.platform('tvos')),
+            'tvossimulator': Target(needy.platform('tvossimulator')),
+            'host': Target(needy.platform('host')),
         }
 
         needs_configuration = needy.needs_configuration()
         if 'universal-binaries' in needs_configuration:
             for name, configuration in needs_configuration['universal-binaries'].items():
                 for platform, architectures in configuration.items():
-                    target_args[platform] = '-u ' + name
+                    targets[platform] = name
+
+        if host_platform().identifier() in targets:
+            targets['host'] = targets[host_platform().identifier()]
+
+        target_args = {key: ('-t {}' if isinstance(t, Target) else '-u {}').format(t) for key, t in targets.items()}
 
         contents = """import feature ;
 import modules ;
@@ -65,8 +71,8 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
         }} else {{
             target = "$(name) {tvossimulator}" ;
         }}
-    }} else if $(OS) = MACOSX {{
-        target = "$(name) {osx}" ;
+    }} else {{
+        target = "$(name) {host}" ;
     }}
 
     local args = $(target) {satisfy_args} ;
@@ -97,32 +103,32 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
 
         libraries_with_common_targets = set()
 
-        contents += "\n" + self.__target_definitions(needy, Target(needy.platform('host')), libraries_with_common_targets)
+        contents += "\n" + self.__target_definitions(needy, targets['host'], libraries_with_common_targets)
 
         if 'ios' in available_platforms():
-            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('ios')), libraries_with_common_targets, '<target-os>iphone <architecture>arm')
+            contents += "\n" + self.__target_definitions(needy, targets['ios'], libraries_with_common_targets, '<target-os>iphone <architecture>arm')
 
         if 'iossimulator' in available_platforms():
-            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('iossimulator')), libraries_with_common_targets, '<target-os>iphone <architecture>x86')
+            contents += "\n" + self.__target_definitions(needy, targets['iossimulator'], libraries_with_common_targets, '<target-os>iphone <architecture>x86')
 
         if 'android' in available_platforms():
-            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('android')), libraries_with_common_targets, '<target-os>android')
+            contents += "\n" + self.__target_definitions(needy, targets['android'], libraries_with_common_targets, '<target-os>android')
 
         if 'tvos' in available_platforms():
-            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('tvos')), libraries_with_common_targets, '<target-os>appletv <architecture>arm')
+            contents += "\n" + self.__target_definitions(needy, targets['tvos'], libraries_with_common_targets, '<target-os>appletv <architecture>arm')
 
         if 'tvossimulator' in available_platforms():
-            contents += "\n" + self.__target_definitions(needy, Target(needy.platform('tvossimulator')), libraries_with_common_targets, '<target-os>appletv <architecture>x86')
+            contents += "\n" + self.__target_definitions(needy, targets['tvossimulator'], libraries_with_common_targets, '<target-os>appletv <architecture>x86')
 
         with open(path, 'w') as jamfile:
             jamfile.write(contents)
 
     @staticmethod
-    def __target_definitions(needy, needy_target, libraries_with_common_targets, requirements=''):
+    def __target_definitions(needy, needy_target_or_universal_binary, libraries_with_common_targets, requirements=''):
         ret = ''
-        for name, library in needy.libraries_to_build(needy_target):
+        for name, library in needy.libraries(needy_target_or_universal_binary).items():
             if name not in libraries_with_common_targets:
                 ret += "needlib-common {0}-common : {0} ;\n".format(name)
                 libraries_with_common_targets.add(name)
-            ret += "needlib {} : {} : : {} ;\n".format(name, library.build_directory(), requirements)
+            ret += "needlib {} : {} : : {} ;\n".format(name, needy.build_directory(name, needy_target_or_universal_binary), requirements)
         return ret

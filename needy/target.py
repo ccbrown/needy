@@ -5,3 +5,6 @@ class Target:
 
         if architecture is None:
             self.architecture = platform.default_architecture()
+
+    def __str__(self):
+        return '{}:{}'.format(self.platform.identifier(), self.architecture)
