@@ -283,6 +283,8 @@ class Library:
                         includedir=${{prefix}}/include
 
                         Name: {name}
+                        Version: {version}
+                        Description: {name}
                         Libs: -L${{libdir}} {lflags}
                         Cflags: -I${{includedir}}
-                    """.format(prefix=prefix, name=name, lflags=' '.join([('-l'+lib_name) for lib_name in libs]))))
+                    """.format(prefix=prefix, name=name, version=0, lflags=' '.join([('-l'+lib_name) for lib_name in libs]))))
