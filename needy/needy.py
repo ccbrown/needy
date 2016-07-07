@@ -294,7 +294,7 @@ class Needy:
                 ret.append(ub.include_path())
             needy = self.recursive(libraries[0].source_directory())
             if needy:
-                ret.extend(needy.include_paths(target))
+                ret.extend(needy.include_paths(target_or_universal_binary))
         return ret
 
     def library_paths(self, target_or_universal_binary, filters=None):
@@ -308,7 +308,7 @@ class Needy:
                 ret.append(ub.library_path())
             needy = self.recursive(libraries[0].source_directory())
             if needy:
-                ret.extend(needy.library_paths(target))
+                ret.extend(needy.library_paths(target_or_universal_binary))
         return ret
 
     def pkg_config_path(self, target_or_universal_binary, filters=None):
