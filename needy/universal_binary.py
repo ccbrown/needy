@@ -103,7 +103,7 @@ class UniversalBinary:
                     command(['lipo', '-create'] + [input.name for input in inputs] + ['-output', output_path])
                     for input in inputs:
                         input.close()
-                elif extension in ['.h', '.hpp', '.ipp']:
+                elif extension in ['.h', '.hpp', '.ipp', '.c', '.cc', '.cpp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for target, header in builds:
                         macro = target.platform.detection_macro(target.architecture)
