@@ -205,6 +205,28 @@ def development_mode(args=[]):
     return 0
 
 
+def pkg_config_path(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s pkg-config-path' % os.path.basename(sys.argv[0]),
+        description='Gets the path required for using pkg-config.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        'library',
+        default=None,
+        nargs='*',
+        help='the library to satisfy. shell-style wildcards are allowed')
+    parser.add_argument('-t', '--target', default='host', help='gets path for this target (example: ios:armv7)')
+    parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
+    parameters = parser.parse_args(args)
+
+    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
+        needy = Needy('.', parameters, local_configuration=local_configuration)
+        print(needy.pkg_config_path(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library), end='')
+
+    return 0
+
+
 def main(args=sys.argv):
     try:
         import colorama
@@ -239,6 +261,7 @@ Use '%s <command> --help' to get help for a specific command.
         'sourcedir': sourcedir,
         'generate': generate,
         'dev-mode': development_mode,
+        'pkg-config-path': pkg_config_path,
     }
 
     try:

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+ROOT=$(dirname $(dirname "$0"))
+
+pushd $ROOT/examples/00-hello-boost && make && popd
+pushd $ROOT/examples/01-b2-integration && ./configure && b2 && popd

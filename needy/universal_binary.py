@@ -61,7 +61,7 @@ class UniversalBinary:
                     key = os.path.join(os.path.relpath(root, library.build_directory()), path)
                     if key not in universal_paths:
                         universal_paths[key] = []
-                    universal_paths[key].append((library.target(), os.path.join(root, path)))
+                    universal_paths[key].append((library, os.path.join(root, path)))
 
         directory = self.build_directory()
 
@@ -93,10 +93,10 @@ class UniversalBinary:
                 elif extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % path)
                     inputs = []
-                    for target, lib in builds:
+                    for library, lib in builds:
                         f = tempfile.NamedTemporaryFile(delete=True)
                         try:
-                            command(['lipo', '-extract', target.architecture, lib, '-output', f.name])
+                            command(['lipo', '-extract', library.target().architecture, lib, '-output', f.name])
                         except subprocess.CalledProcessError:
                             command(['cp', lib, f.name])
                         inputs.append(f)
@@ -105,8 +105,8 @@ class UniversalBinary:
                         input.close()
                 elif extension in ['.h', '.hpp', '.ipp', '.c', '.cc', '.cpp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
-                    for target, header in builds:
-                        macro = target.platform.detection_macro(target.architecture)
+                    for library, header in builds:
+                        macro = library.target().platform.detection_macro(library.target().architecture)
                         if not macro:
                             header_contents = ''
                             break
@@ -116,6 +116,21 @@ class UniversalBinary:
                         print('Creating universal header %s' % path)
                         with open(output_path, 'w') as f:
                             f.write(header_contents)
+                elif extension == '.pc' and 'pkgconfig' in path:
+                    universal_pc = None
+                    for library, pc in builds:
+                        with open(pc, 'r') as f:
+                            contents = f.read().decode()
+                            fixed = contents.replace(library.build_directory(), directory)
+                            if universal_pc is not None and fixed != universal_pc:
+                                print('Package config differs beyond prefix. Not creating %s' % path)
+                                universal_pc = None
+                                break
+                            universal_pc = fixed
+                    if universal_pc:
+                        print('Creating universal package config: %s' % path)
+                        with open(output_path, 'w') as f:
+                            f.write(universal_pc.encode())
         except:
             shutil.rmtree(directory)
             raise
