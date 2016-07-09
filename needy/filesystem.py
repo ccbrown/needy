@@ -1,6 +1,23 @@
 import os
 import fcntl
 import signal
+import tempfile
+import shutil
+import json
+
+from contextlib import contextmanager
+
+
+class TempDir:
+    def __enter__(self):
+        self.__path = tempfile.mkdtemp()
+        return self.__path
+
+    def __exit__(self, etype, value, traceback):
+        shutil.rmtree(self.__path)
+
+    def path(self):
+        return self.__path
 
 
 class SignalTimeout:
@@ -35,3 +52,30 @@ def lock_file(file_path, timeout=None):
     except IOError:
         pass
     return None
+
+
+def clean_file(file_path):
+    parent_dir = os.path.dirname(file_path)
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+    elif os.path.exists(file_path):
+        os.remove(file_path)
+
+
+def clean_directory(directory_path):
+    if os.path.exists(directory_path):
+        shutil.rmtree(directory_path)
+    os.makedirs(directory_path)
+
+
+@contextmanager
+def dict_file(path):
+    d = dict()
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            contents = f.read()
+            if contents:
+                d = json.loads(contents)
+    yield d
+    with open(path, 'w') as f:
+        json.dump(d, f)

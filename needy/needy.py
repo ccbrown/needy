@@ -25,6 +25,7 @@ from .platform import available_platforms, host_platform
 from .generator import available_generators
 from .target import Target
 from .cd import current_directory
+from .cache import Cache
 
 
 class Needy:
@@ -111,6 +112,9 @@ class Needy:
             print('Development mode {}enabled for {}: {}'.format('already ' if was_already else '', library_name, self.source_directory(library_name)))
         else:
             print('Development mode {}disabled for {}. Please ensure that you have persisted any changes you wish to keep.'.format('already ' if was_already else '', library_name))
+
+    def cache(self):
+        return self.__local_configuration.cache() if self.__local_configuration else None
 
     def needs_configuration(self, target=None):
         configuration = ''

@@ -40,19 +40,3 @@ class LibraryTest(fake_filesystem_unittest.TestCase):
             self.assertTrue('prefix=/' in contents)
             self.assertTrue('-la' in contents)
             self.assertTrue('-lb' in contents)
-
-    def test_clean_directory_creates_directory(self):
-        Library.clean_directory('/tmp/dirty-dir')
-
-        self.assertTrue(os.path.exists('/tmp/dirty-dir'))
-        self.assertFalse(os.listdir('/tmp/dirty-dir'))
-
-    def test_clean_directory_removes_contents(self):
-        self.fs.CreateFile('/tmp/dirty-dir/file1')
-        self.fs.CreateFile('/tmp/dirty-dir/file2')
-        self.fs.CreateDirectory('/tmp/dirty-dir/dir1')
-        self.fs.CreateFile('/tmp/dirty-dir/dir1/file3')
-        Library.clean_directory('/tmp/dirty-dir')
-
-        self.assertTrue(os.path.exists('/tmp/dirty-dir'))
-        self.assertFalse(os.listdir('/tmp/dirty-dir'))

@@ -8,6 +8,8 @@ import textwrap
 
 from operator import itemgetter
 
+from .cache import KeyLocked
+
 try:
     from colorama import Fore
 except ImportError:
@@ -26,6 +28,8 @@ from .sources.git import GitRepository
 from .cd import cd
 from .override_environment import OverrideEnvironment
 from .target import Target
+from .filesystem import clean_directory
+from .build_cache import BuildCache
 
 from .process import command
 
@@ -47,6 +51,7 @@ class Library:
         self.__configuration = configuration
         self.__directory = os.path.join(needy.needs_directory(), name)
         self.__development_mode = development_mode
+        self.__build_cache = BuildCache(self.needy.cache()) if self.needy.cache() else None
 
     def configuration(self):
         return self.__configuration
@@ -102,6 +107,13 @@ class Library:
             print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t '
                   'handle spaces well, so if you have problems, consider moving the project or using a symlink.')
 
+        if self.__build_cache and not self.needy.parameters().force_build and not self.__development_mode:
+            try:
+                self.__load_cached_artifacts()
+                return True
+            except:
+                pass
+
         if not self.__development_mode:
             self.clean_source()
 
@@ -126,8 +138,11 @@ class Library:
 
             project.set_string_format_variables(**self.string_format_variables())
 
+            clean_directory(self.build_directory())
+
             self.__actualize(project)
             self.__write_build_status()
+            self.__cache_artifacts()
 
         return True
 
@@ -140,7 +155,6 @@ class Library:
 
     def __actualize(self, project):
         build_directory = self.build_directory()
-        self.clean_directory(build_directory)
         with cd(self.project_root()):
             try:
                 project.setup()
@@ -154,18 +168,29 @@ class Library:
                 shutil.rmtree(build_directory)
                 raise
 
-    @staticmethod
-    def clean_directory(directory):
-        if os.path.exists(directory):
-            shutil.rmtree(directory)
-        os.makedirs(directory)
-
     def __write_build_status(self):
         with open(self.build_status_path(), 'w') as status_file:
             status = {
                 'configuration': binascii.hexlify(self.configuration_hash()).decode()
             }
             json.dump(status, status_file)
+
+    def __cache_artifacts(self):
+        if self.__build_cache:
+            try:
+                self.__build_cache.store_artifacts(self.build_directory(), self.__cache_key())
+            except:
+                pass
+
+    def __load_cached_artifacts(self):
+        '''intentionally propogates exceptions'''
+        if self.__build_cache:
+            self.__build_cache.load_artifacts(self.__cache_key(), self.build_directory())
+
+    def __cache_key(self):
+        configuration_hash = binascii.hexlify(self.configuration_hash()).decode()
+        path = os.path.relpath(self.build_directory(), self.needy.needs_directory())
+        return os.path.join(path, configuration_hash)
 
     def __parse_env_overrides(self, overrides):
         if overrides is None:
@@ -178,7 +203,7 @@ class Library:
     def __log_env_overrides(self, env_overrides, verbosity=logging.DEBUG):
         if env_overrides is not None and len(env_overrides) > 0:
             logging.log(verbosity, 'Overriding environment with new variables:')
-            for k, v in env_overrides.iteritems():
+            for k, v in env_overrides.items():
                 logging.log(verbosity, '{}={}'.format(k, v))
 
     def has_up_to_date_build(self):
