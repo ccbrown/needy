@@ -106,13 +106,11 @@ class Library:
 
         self.__log_env_overrides(env_overrides)
         with OverrideEnvironment(env_overrides):
-            post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
-            with cd(self.project_root()):
-                for cmd in self.evaluate(post_clean_commands):
-                    command(cmd)
+            self.__post_clean()
 
-            definition = ProjectDefinition(self.target(), self.project_root(), configuration)
-            project = self.project(definition)
+            project = self.project(ProjectDefinition(self.target(), self.project_root(), configuration))
+            if not project:
+                raise RuntimeError('unknown project type')
 
             unrecognized_configuration_keys = set(configuration.keys()) - project.configuration_keys() - self.additional_project_configuration_keys()
             if len(unrecognized_configuration_keys):
@@ -120,36 +118,46 @@ class Library:
 
             project.set_string_format_variables(**self.string_format_variables())
 
-            if not project:
-                raise RuntimeError('unknown project type')
-
-            build_directory = self.build_directory()
-
-            if os.path.exists(build_directory):
-                shutil.rmtree(build_directory)
-
-            os.makedirs(build_directory)
-
-            with cd(self.project_root()):
-                try:
-                    project.setup()
-                    project.configure(build_directory)
-                    project.pre_build(build_directory)
-                    project.build(build_directory)
-                    project.post_build(build_directory)
-                    if not os.path.exists(os.path.join(build_directory, 'lib', 'pkgconfig')):
-                        self.generate_pkgconfig(build_directory, self.name())
-                except:
-                    shutil.rmtree(build_directory)
-                    raise
-
-            with open(self.build_status_path(), 'w') as status_file:
-                status = {
-                    'configuration': binascii.hexlify(self.configuration_hash()).decode()
-                }
-                json.dump(status, status_file)
+            self.__actualize(project)
+            self.__write_build_status()
 
         return True
+
+    def __post_clean(self):
+        configuration = self.project_configuration()
+        post_clean_commands = configuration['post-clean'] if 'post-clean' in configuration else []
+        with cd(self.project_root()):
+            for cmd in self.evaluate(post_clean_commands):
+                command(cmd)
+
+    def __actualize(self, project):
+        build_directory = self.build_directory()
+        self.clean_directory(build_directory)
+        with cd(self.project_root()):
+            try:
+                project.setup()
+                project.configure(build_directory)
+                project.pre_build(build_directory)
+                project.build(build_directory)
+                project.post_build(build_directory)
+                if not os.path.exists(os.path.join(build_directory, 'lib', 'pkgconfig')):
+                    self.generate_pkgconfig(build_directory, self.name())
+            except:
+                shutil.rmtree(build_directory)
+                raise
+
+    @staticmethod
+    def clean_directory(directory):
+        if os.path.exists(directory):
+            shutil.rmtree(directory)
+        os.makedirs(directory)
+
+    def __write_build_status(self):
+        with open(self.build_status_path(), 'w') as status_file:
+            status = {
+                'configuration': binascii.hexlify(self.configuration_hash()).decode()
+            }
+            json.dump(status, status_file)
 
     def __parse_env_overrides(self, overrides):
         if overrides is None:
