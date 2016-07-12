@@ -134,7 +134,7 @@ class Needy:
                 host_platform=host_platform().identifier(),
                 needs_file=self.needs_file(),
                 needs_directory=self.needs_directory(),
-                build_directory=lambda library: self.build_directory(library, target) if target else None
+                build_directory=lambda library, target_override=None: self.build_directory(library, self.target(target_override) if target_override else target) if target else None
             )
         except ImportError:
             if re.compile('{%.*%}').search(configuration) or re.compile('{{.*}}').search(configuration) or re.compile('{#.*#}').search(configuration):
