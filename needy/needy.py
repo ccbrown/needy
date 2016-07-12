@@ -221,8 +221,7 @@ class Needy:
             if 'dependencies' not in library.configuration():
                 graph[name] = set()
                 continue
-            str_or_list = library.configuration()['dependencies']
-            dependencies = str_or_list if isinstance(str_or_list, list) else [str_or_list]
+            dependencies = library.dependencies()
             graph[name] = set(dependencies)
             for dependency in dependencies:
                 if dependency not in graph:

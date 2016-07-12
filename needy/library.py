@@ -60,6 +60,10 @@ class Library:
     def project_configuration(self):
         return evaluate_conditionals(self.__configuration['project'] if 'project' in self.__configuration else dict(), self.target())
 
+    def dependencies(self):
+        str_or_list = self.configuration().get('dependencies', [])
+        return str_or_list if isinstance(str_or_list, list) else [str_or_list]
+
     def string_format_variables(self):
         return {
             'build_directory': self.build_directory(),
@@ -103,8 +107,12 @@ class Library:
 
         configuration = self.project_configuration()
         env_overrides = self.__parse_env_overrides(configuration['environment'] if 'environment' in configuration else None)
-
         self.__log_env_overrides(env_overrides)
+
+        pkg_config_path = env_overrides['PKG_CONFIG_PATH'] if 'PKG_CONFIG_PATH' in env_overrides else os.environ.get('PKG_CONFIG_PATH', '')
+        dependency_config_path = self.needy.pkg_config_path(self.target(), self.dependencies())
+        env_overrides['PKG_CONFIG_PATH'] = (dependency_config_path + ':' + pkg_config_path) if pkg_config_path and dependency_config_path else dependency_config_path
+
         with OverrideEnvironment(env_overrides):
             self.__post_clean()
 
