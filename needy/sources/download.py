@@ -8,6 +8,7 @@ import socket
 import shutil
 import sys
 import tarfile
+import tempfile
 import time
 import zipfile
 
@@ -34,10 +35,6 @@ class Download(Source):
 
         self.__fetch()
 
-        print('Verifying checksum...')
-        self.__verify_checksum()
-        print('Checksum verified.')
-
         print('Unpacking to %s' % self.destination)
         self.__clean_destination_dir()
         self.__unpack()
@@ -48,60 +45,79 @@ class Download(Source):
             os.makedirs(self.cache_directory)
 
         if not os.path.isfile(self.local_download_path):
-            print('Downloading from %s' % self.url)
-            download = None
-            attempts = 0
-            download_successful = False
-            while not download_successful and attempts < 5:
-                try:
-                    download = urllib2.urlopen(self.url, timeout=5)
-                except urllib2.URLError as e:
-                    print(e)
-                except socket.timeout as e:
-                    print(e)
-                attempts = attempts + 1
-                download_successful = download and download.code == 200 and 'content-length' in download.info()
-                if not download_successful:
-                    print('Download failed. Retrying...')
-                time.sleep(attempts)
+            self.get(self.url, self.checksum, self.local_download_path)
+
+    @classmethod
+    def get(cls, url, checksum, destination):
+        print('Downloading from %s' % url)
+        download = None
+        attempts = 0
+        download_successful = False
+        while not download_successful and attempts < 5:
+            try:
+                download = urllib2.urlopen(url, timeout=5)
+            except urllib2.URLError as e:
+                print(e)
+            except socket.timeout as e:
+                print(e)
+            attempts = attempts + 1
+            download_successful = download and download.code == 200 and 'content-length' in download.info()
             if not download_successful:
-                raise IOError('unable to download library')
-            size = int(download.info()['content-length'])
-            progress = 0
-            if sys.stdout.isatty():
-                print('{:.1%}'.format(float(progress) / size), end='')
-                sys.stdout.flush()
-            with open(self.local_download_path, 'wb') as local_file:
-                chunk_size = 1024
-                while True:
-                    chunk = download.read(chunk_size)
-                    progress = progress + chunk_size
-                    if sys.stdout.isatty():
-                        print('\r{:.1%}'.format(float(progress) / size), end='')
-                        sys.stdout.flush()
-                    if not chunk:
-                        break
-                    local_file.write(chunk)
+                print('Download failed. Retrying...')
+            time.sleep(attempts)
+        if not download_successful:
+            raise IOError('unable to download library')
+        size = int(download.info()['content-length'])
+        progress = 0
+        if sys.stdout.isatty():
+            print('{:.1%}'.format(float(progress) / size), end='')
+            sys.stdout.flush()
+
+        local_file = tempfile.NamedTemporaryFile('wb', delete=False)
+        try:
+            chunk_size = 1024
+            while True:
+                chunk = download.read(chunk_size)
+                progress = progress + chunk_size
+                if sys.stdout.isatty():
+                    print('\r{:.1%}'.format(float(progress) / size), end='')
+                    sys.stdout.flush()
+                if not chunk:
+                    break
+                local_file.write(chunk)
+
+            local_file.close()
             if sys.stdout.isatty():
                 print('\r       \r', end='')
                 sys.stdout.flush()
-            del download
 
-    def __verify_checksum(self):
-        checksum = binascii.unhexlify(self.checksum)
+            print('Verifying checksum...')
+            if not cls.verify_checksum(local_file.name, checksum):
+                raise ValueError('incorrect checksum')
+            print('Checksum verified.')
 
-        with open(self.local_download_path, 'rb') as file:
+            shutil.move(local_file.name, destination)
+        except:
+            os.unlink(local_file.name)
+            raise
+
+        del download
+
+    @classmethod
+    def verify_checksum(cls, path, expected):
+        expected = binascii.unhexlify(expected)
+
+        with open(path, 'rb') as file:
             file_contents = file.read()
             hash = None
-            if len(checksum) == hashlib.md5().digest_size:
+            if len(expected) == hashlib.md5().digest_size:
                 hash = hashlib.md5()
-            elif len(checksum) == hashlib.sha1().digest_size:
+            elif len(expected) == hashlib.sha1().digest_size:
                 hash = hashlib.sha1()
             else:
                 raise ValueError('unknown checksum type')
             hash.update(file_contents)
-            if checksum != hash.digest():
-                raise ValueError('incorrect checksum')
+            return expected == hash.digest()
 
     def __clean_destination_dir(self):
         if os.path.exists(self.destination):
