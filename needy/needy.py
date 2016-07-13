@@ -191,6 +191,13 @@ class Needy:
     def recursive(self, path):
         return Needy(path, self.parameters()) if self.find_needs_file(path) else None
 
+    @classmethod
+    def test_filters(cls, name, filters):
+        for filter in filters:
+            if fnmatch.fnmatchcase(name, filter):
+                return True
+        return False
+
     def libraries_to_build(self, target, filters=None):
         needs_configuration = self.needs_configuration(target)
 
@@ -200,14 +207,8 @@ class Needy:
         names = []
 
         for name, library_configuration in needs_configuration['libraries'].items():
-            if filters:
-                match = False
-                for filter in filters:
-                    if fnmatch.fnmatchcase(name, filter):
-                        match = True
-                        break
-                if not match:
-                    continue
+            if filters and not self.test_filters(name, filters):
+                continue
             names.append(name)
 
         graph = {}
@@ -370,6 +371,8 @@ class Needy:
                             self.__print_status(Fore.GREEN, 'SUCCESS', name)
 
             for name, libs in libraries.items():
+                if filters and not self.test_filters(name, filters):
+                    continue
                 binary = UniversalBinary(universal_binary, libs, self)
                 if binary.is_up_to_date():
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
