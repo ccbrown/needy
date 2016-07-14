@@ -3,6 +3,8 @@ import json
 import os
 import sys
 
+from .filesystem import lock_file
+
 
 class LocalConfiguration:
     """ This is a context manager that obtains exclusive read and write access to the given file."""
@@ -21,14 +23,12 @@ class LocalConfiguration:
                 if not os.path.exists(directory):
                     raise e
 
-        self.__fd = os.open(self.__path, os.O_RDWR | os.O_CREAT)
-        try:
-            fcntl.flock(self.__fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except IOError:
+        self.__fd = lock_file(self.__path, timeout=0)
+        if self.__fd is None:
             if not self.__blocking:
                 return None
             print('Waiting for other needy instances to terminate...')
-            fcntl.flock(self.__fd, fcntl.LOCK_EX)
+            self.__fd = lock_file(self.__path)
 
         with open(self.__path, 'rt') as f:
             contents = f.read()
@@ -40,7 +40,8 @@ class LocalConfiguration:
     def __exit__(self, etype, value, traceback):
         with open(self.__path, 'wt') as f:
             json.dump(self.__configuration, f)
-        os.close(self.__fd)
+        if self.__fd:
+            os.close(self.__fd)
 
     def development_mode(self, library_name):
         return self.__library_configuration(library_name, 'development_mode', False)
