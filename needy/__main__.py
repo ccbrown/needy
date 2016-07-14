@@ -238,13 +238,14 @@ def main(args=sys.argv):
         description='Helps with dependencies.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""available commands:
-  satisfy     satisfies libraries / universal binary needs
-  cflags      emits the compiler flags required to use the satisfied needs
-  ldflags     emits the linker flags required to use the satisfied needs
-  builddir    emits the build directory for a need
-  sourcedir   emits the source directory for a need
-  generate    generates useful files
-  dev-mode    enables development mode for a library
+  satisfy          satisfies libraries / universal binary needs
+  cflags           emits the compiler flags required to use the satisfied needs
+  ldflags          emits the linker flags required to use the satisfied needs
+  builddir         emits the build directory for a need
+  sourcedir        emits the source directory for a need
+  pkg-config-path  emits the pkg-config path for a need
+  generate         generates useful files
+  dev-mode         enables development mode for a library
 
 Use '%s <command> --help' to get help for a specific command.
 """ % os.path.basename(sys.argv[0])
