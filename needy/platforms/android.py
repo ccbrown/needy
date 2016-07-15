@@ -2,6 +2,7 @@ from ..platform import Platform
 
 import hashlib
 import os
+import subprocess
 
 
 class AndroidPlatform(Platform):
