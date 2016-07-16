@@ -57,9 +57,9 @@ class BoostBuildProject(project.Project):
         b2_args.append('architecture={}'.format('arm' if 'arm' in self.target().architecture else 'x86'))
         b2_args.append('address-model={}'.format('64' if '64' in self.target().architecture else '32'))
 
-        if self.target().platform in ['ios', 'iossimulator', 'tvos', 'tvossimulator']:
+        if self.target().platform.identifier() in ['ios', 'iossimulator', 'tvos', 'tvossimulator']:
             b2_args.append('target-os=iphone')
-        elif self.target().platform == 'android':
+        elif self.target().platform.identifier() == 'android':
             b2_args.append('target-os=android')
 
         toolset = 'gcc'
@@ -78,5 +78,12 @@ class BoostBuildProject(project.Project):
             project_config = "import os ;\nusing {} : needy : [ os.environ CC ] ;\n".format(toolset) + project_config
             with open('project-config.jam', 'w') as f:
                 f.write(project_config)
+
+        if 'CFLAGS' in os.environ:
+            b2_args.append('cflags={}'.format(os.environ['CFLAGS']))
+        if 'CXXFLAGS' in os.environ:
+            b2_args.append('cxxflags={}'.format(os.environ['CXXFLAGS']))
+        if 'LDFLAGS' in os.environ:
+            b2_args.append('linkflags={}'.format(os.environ['LDFLAGS']))
 
         self.command([b2, 'install', '--prefix={}'.format(output_directory)] + b2_args)
