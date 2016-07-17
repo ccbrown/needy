@@ -6,10 +6,22 @@ import os
 import sys
 import logging
 
+from contextlib import contextmanager
+
 from .needy import Needy
 from .local_configuration import LocalConfiguration
 from .platform import available_platforms
 from .generator import available_generators
+from .caches.directory import Directory
+
+
+@contextmanager
+def __local_configuration():
+    needs_directory = Needy.resolve_needs_directory('.')
+    if needs_directory is None:
+        raise RuntimeError('No needs file found!')
+    with LocalConfiguration(os.path.join(needs_directory, 'config.json')) as local_configuration:
+        yield local_configuration
 
 
 def satisfy(args=[]):
@@ -57,8 +69,8 @@ def satisfy(args=[]):
 
     logging.basicConfig(format=('%(message)s'), level=logging.DEBUG if parameters.verbose else logging.INFO)
 
-    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
-        needy = Needy('.', parameters, local_configuration=local_configuration)
+    with __local_configuration() as config:
+        needy = Needy('.', parameters, local_configuration=config)
         if parameters.universal_binary:
             needy.satisfy_universal_binary(parameters.universal_binary, parameters.library)
         else:
@@ -82,8 +94,8 @@ def cflags(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
-    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
-        needy = Needy('.', parameters, local_configuration=local_configuration)
+    with __local_configuration() as config:
+        needy = Needy('.', parameters, local_configuration=config)
         print(' '.join([('-I%s' % path) for path in needy.include_paths(
             parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library)]), end='')
 
@@ -105,8 +117,8 @@ def ldflags(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
-    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
-        needy = Needy('.', parameters, local_configuration=local_configuration)
+    with __local_configuration() as config:
+        needy = Needy('.', parameters, local_configuration=config)
         print(' '.join([('-L%s' % path) for path in needy.library_paths(
             parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library)]), end='')
 
@@ -125,8 +137,8 @@ def builddir(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary')
     parameters = parser.parse_args(args)
 
-    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
-        needy = Needy('.', parameters, local_configuration=local_configuration)
+    with __local_configuration() as config:
+        needy = Needy('.', parameters, local_configuration=config)
         print(needy.build_directory(parameters.library,
                                     parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target)), end='')
 
@@ -142,8 +154,8 @@ def sourcedir(args=[]):
     parser.add_argument('library', help='the library to get the directory for')
     parameters = parser.parse_args(args)
 
-    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
-        needy = Needy('.', parameters, local_configuration=local_configuration)
+    with __local_configuration() as config:
+        needy = Needy('.', parameters, local_configuration=config)
         print(needy.source_directory(parameters.library), end='')
 
     return 0
@@ -168,9 +180,8 @@ def generate(args=[]):
         help='arguments to use when satisfying needs')
     parameters = parser.parse_args(args)
 
-    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
-        needy = Needy('.', parameters, local_configuration=local_configuration)
-        needy.generate(parameters.file)
+    with __local_configuration() as config:
+        Needy('.', parameters, local_configuration=config).generate(parameters.file)
 
     return 0
 
@@ -196,12 +207,88 @@ def development_mode(args=[]):
         help='if given, will return 0 if dev-mode is enabled, or 1 otherwise')
     parameters = parser.parse_args(args)
 
-    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
-        needy = Needy('.', parameters, local_configuration=local_configuration)
+    with __local_configuration() as config:
+        needy = Needy('.', parameters, local_configuration=config)
         if parameters.query:
             return 0 if needy.development_mode(parameters.library) else 1
         needy.set_development_mode(parameters.library, not parameters.disable)
 
+    return 0
+
+
+def cache(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s cache' % os.path.basename(sys.argv[0]),
+        description='Configures a cache for satisfied needs.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""available commands:
+  set    sets cache
+  unset  unsets the cache
+  query  emits a description of the current cache
+
+Use '%s cache <command> --help' to get help for a specific command.
+""" % os.path.basename(sys.argv[0])
+    )
+    parser.add_argument('command', help='see below')
+    parser.add_argument('args', nargs=argparse.REMAINDER)
+    parameters = parser.parse_args(args)
+
+    def set_cache(args=[]):
+        parser = argparse.ArgumentParser(
+            prog='%s cache set' % os.path.basename(sys.argv[0]),
+            description='set the cache.',
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+        parser.add_argument(
+            'args',
+            nargs=argparse.REMAINDER,
+            help='new cache parameters')
+        parameters = parser.parse_args(args)
+
+        with __local_configuration() as config:
+            config.set_cache(path=parameters.args[0])
+
+        return 0
+
+    def unset_cache(args=[]):
+        parser = argparse.ArgumentParser(
+            prog='%s cache unset' % os.path.basename(sys.argv[0]),
+            description='unsets the cache path.',
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+        parameters = parser.parse_args(args)
+
+        with __local_configuration() as config:
+            config.set_cache(None)
+
+        return 0
+
+    def query_cache(args=[]):
+        parser = argparse.ArgumentParser(
+            prog='%s cache query' % os.path.basename(sys.argv[0]),
+            description='query the cache path.',
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+        parameters = parser.parse_args(args)
+
+        with __local_configuration() as config:
+            cache = config.cache()
+            if cache and cache.description():
+                print(cache.description())
+
+        return 0
+
+    commands = {
+        'set': set_cache,
+        'unset': unset_cache,
+        'query': query_cache,
+    }
+
+    if parameters.command in commands:
+        return commands[parameters.command](parameters.args)
+    elif parameters.command == 'help':
+        if len(parameters.args) == 1 and parameters.args[0] in commands:
+            commands[parameters.args[0]](['--help'])
+        else:
+            parser.print_help()
+        return 1
     return 0
 
 
@@ -220,8 +307,8 @@ def pkg_config_path(args=[]):
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
 
-    with LocalConfiguration(os.path.join(Needy.resolve_needs_directory('.'), 'config.json')) as local_configuration:
-        needy = Needy('.', parameters, local_configuration=local_configuration)
+    with __local_configuration() as config:
+        needy = Needy('.', parameters, local_configuration=config)
         print(needy.pkg_config_path(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library), end='')
 
     return 0
@@ -246,6 +333,7 @@ def main(args=sys.argv):
   pkg-config-path  emits the pkg-config path for a need
   generate         generates useful files
   dev-mode         enables development mode for a library
+  cache            configures a cache for satisfied needs
 
 Use '%s <command> --help' to get help for a specific command.
 """ % os.path.basename(sys.argv[0])
@@ -260,9 +348,10 @@ Use '%s <command> --help' to get help for a specific command.
         'ldflags': ldflags,
         'builddir': builddir,
         'sourcedir': sourcedir,
+        'pkg-config-path': pkg_config_path,
         'generate': generate,
         'dev-mode': development_mode,
-        'pkg-config-path': pkg_config_path,
+        'cache': cache,
     }
 
     try:
