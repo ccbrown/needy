@@ -1,4 +1,5 @@
 from ..generator import Generator
+from ..library import Library
 from ..platform import available_platforms, host_platform
 from ..target import Target
 
@@ -78,7 +79,7 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
     local args = $(target) {satisfy_args} ;
     local includedir = "$(build-dir)/include" ;
 
-    make lib$(name).touch : $(NEEDS_FILE) $(name)-common : @satisfy-lib : $(requirements) <{needy_args_feature}>$(args) ;
+    make lib$(name)-{build_compatibility}.touch : $(NEEDS_FILE) $(name)-common : @satisfy-lib : $(requirements) <{needy_args_feature}>$(args) ;
     actions satisfy-lib
     {{
         cd $(BASE_DIR) && $(NEEDY) satisfy $(NEEDYARGS) && cd - && touch $(<)
@@ -88,7 +89,7 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
         : $(extra-sources)
         : $(requirements)
         : $(default-build)
-        : <dependency>lib$(name).touch
+        : <dependency>lib$(name)-{build_compatibility}.touch
           <include>$(includedir)
           <linkflags>-L$(build-dir)/lib
           $(usage-requirements)
@@ -99,6 +100,7 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
            needs_file=needy.needs_file(),
            satisfy_args=needy.parameters().satisfy_args,
            needy_args_feature='needyargs_'+hashlib.sha1(needy.path() if isinstance(needy.path(), bytes) else needy.path().encode('utf-8')).hexdigest(),
+           build_compatibility=Library.build_compatibility(),
            **target_args)
 
         libraries_with_common_targets = set()

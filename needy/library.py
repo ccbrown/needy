@@ -275,6 +275,10 @@ class Library:
 
         raise RuntimeError('unknown project type')
 
+    @classmethod
+    def build_compatibility(cls):
+        return 1
+
     def configuration_hash(self):
         hash = hashlib.sha256()
 
@@ -286,7 +290,7 @@ class Library:
         configuration['project'] = self.project_configuration()
 
         hash.update(json.dumps({
-            'build-compatibility': 1,
+            'build-compatibility': self.build_compatibility(),
             'configuration': configuration,
         }, sort_keys=True).encode())
 
