@@ -278,15 +278,17 @@ class Library:
     def configuration_hash(self):
         hash = hashlib.sha256()
 
-        top = self.__configuration.copy()
-        top.pop('project', None)
-        hash.update(json.dumps(top, sort_keys=True).encode())
-
-        hash.update(json.dumps(self.project_configuration(), sort_keys=True).encode())
-
         platform_configuration_hash = self.target().platform.configuration_hash(self.target().architecture)
         if platform_configuration_hash:
             hash.update(platform_configuration_hash)
+
+        configuration = self.__configuration.copy()
+        configuration['project'] = self.project_configuration()
+
+        hash.update(json.dumps({
+            'build-compatibility': 1,
+            'configuration': configuration,
+        }, sort_keys=True).encode())
 
         return hash.digest()
 
