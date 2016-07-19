@@ -128,14 +128,17 @@ class AndroidPlatform(Platform):
         return ' '.join(ret)
 
     def c_compiler(self, architecture):
-        prefix = self.binary_prefix(architecture)
-        compiler = 'clang' if os.path.exists(os.path.join(self.toolchain_path(architecture), prefix, 'bin', 'clang')) else 'gcc'
-        return '{}-{} {}'.format(prefix, compiler, self.__compiler_args(architecture))
+        return self.__compiler(architecture, ['clang', 'gcc'])
 
     def cxx_compiler(self, architecture):
+        return self.__compiler(architecture, ['clang++', 'g++'])
+
+    def __compiler(architecture, choices):
         prefix = self.binary_prefix(architecture)
-        compiler = 'clang++' if os.path.exists(os.path.join(self.toolchain_path(architecture), prefix, 'bin', 'clang++')) else 'g++'
-        return '{}-{} {}'.format(prefix, compiler, self.__compiler_args(architecture))
+        for compiler in ['{}-{}'.format(prefix, c) for c in choices]:
+            if os.path.exists(os.path.join(self.toolchain_path(architecture), 'bin', compiler)):
+                return '{} {}'.format(compiler, self.__compiler_args(architecture))
+        raise RuntimeError('Unable to locate a suitable compiler matching {} in {}'.format(choices, os.path.join(self.toolchain_path(architecture), 'bin')))
 
     def ndk_home(self):
         ndk_home = os.getenv('ANDROID_NDK_HOME', os.getenv('NDK_HOME'))
