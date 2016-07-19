@@ -117,7 +117,7 @@ class Project:
         if len(libraries) > 0:
             ret['LDFLAGS'] = ' '.join(libraries + ([os.environ['LDFLAGS']] if 'LDFLAGS' in os.environ else []))
 
-        ret['HOST_PATH'] = os.environ['PATH']
+        ret['HOST_PATH'] = os.environ.get('HOST_PATH', os.environ['PATH'])
         binary_paths = [os.path.join(self.directory(), 'needy-wrappers')] + self.target().platform.binary_paths(self.target().architecture)
         if len(binary_paths) > 0:
             ret['PATH'] = ('%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
@@ -126,14 +126,16 @@ class Project:
 
     def setup(self):
         # create wrappers for cc / cxx since some systems (e.g. boost's bootstrap) expect these to be single tokens
-
         c_compiler = self.target().platform.c_compiler(self.target().architecture)
         if c_compiler:
             self.__create_wrapper('needy-cc', c_compiler)
-
         cxx_compiler = self.target().platform.cxx_compiler(self.target().architecture)
         if cxx_compiler:
             self.__create_wrapper('needy-cxx', cxx_compiler)
+
+        # prefer to stick within the version of python we were invoked with
+        if sys.executable:
+            self.__create_wrapper('python', sys.executable)
 
     def pre_build(self, output_directory):
         build_dirs = [os.path.join(output_directory, d) for d in ['include', 'lib']]
