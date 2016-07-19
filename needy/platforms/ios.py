@@ -21,7 +21,7 @@ class iOSPlatform(XcodePlatform):
 
     @staticmethod
     def minimum_version():
-        return '6.0'
+        return '7.0'
 
     @staticmethod
     def add_arguments(parser):
