@@ -101,15 +101,17 @@ class Project:
     def target_environment_overrides(self):
         ret = {}
 
+        needy_wrappers = os.path.join(self.directory(), 'needy-wrappers')
+
         if 'CC' in os.environ:
             ret['HOST_CC'] = os.environ['CC']
         if self.target().platform.c_compiler(self.target().architecture):
-            ret['CC'] = 'needy-cc'
+            ret['CC'] = os.path.join(needy_wrappers, 'needy-cc')
 
         if 'CXX' in os.environ:
             ret['HOST_CXX'] = os.environ['CXX']
         if self.target().platform.cxx_compiler(self.target().architecture):
-            ret['CXX'] = 'needy-cxx'
+            ret['CXX'] = os.path.join(needy_wrappers, 'needy-cxx')
 
         if 'LDFLAGS' in os.environ:
             ret['HOST_LDFLAGS'] = os.environ['LDFLAGS']
@@ -118,7 +120,7 @@ class Project:
             ret['LDFLAGS'] = ' '.join(libraries + ([os.environ['LDFLAGS']] if 'LDFLAGS' in os.environ else []))
 
         ret['HOST_PATH'] = os.environ.get('HOST_PATH', os.environ['PATH'])
-        binary_paths = [os.path.join(self.directory(), 'needy-wrappers')] + self.target().platform.binary_paths(self.target().architecture)
+        binary_paths = [needy_wrappers] + self.target().platform.binary_paths(self.target().architecture)
         if len(binary_paths) > 0:
             ret['PATH'] = ('%s:%s' % (':'.join(binary_paths), os.environ['PATH']))
 
