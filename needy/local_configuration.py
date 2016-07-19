@@ -32,7 +32,6 @@ class LocalConfiguration:
             print('Waiting for other needy instances to terminate...')
             self.__fd = lock_file(self.__path)
 
-
         with open(self.__path, 'rt') as f:
             contents = f.read()
             if contents:
@@ -66,7 +65,7 @@ class LocalConfiguration:
                 'type': Directory.type(),
                 'configuration': Directory(path=path).to_dict(),
             }
-        else:
+        elif 'cache' in self.__configuration:
             del self.__configuration['cache']
 
     def __library_configuration(self, library_name, key, default=None):
