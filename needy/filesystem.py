@@ -16,9 +16,6 @@ class TempDir:
     def __exit__(self, etype, value, traceback):
         shutil.rmtree(self.__path)
 
-    def path(self):
-        return self.__path
-
 
 class SignalTimeout:
     def __init__(self, seconds):

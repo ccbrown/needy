@@ -16,14 +16,19 @@ class BuildCache:
         self.__lifetime = lifetime
         self.__gc_frequency = gc_frequency
 
-        with self.__load_cache_policies() as p:
-            if 'object_lifetime' not in p:
-                p['object_lifetime'] = self.__lifetime
-            if 'gc_frequency' not in p:
-                p['gc_frequency'] = self.__gc_frequency
+        self.__loaded_policies = False
 
-            self.__lifetime = p['object_lifetime']
-            self.__gc_frequency = p['gc_frequency']
+    def _load_policies(self):
+        if not self.__loaded_policies:
+            self.__loaded_policies = True
+            with self.__load_cache_policies() as p:
+                if 'object_lifetime' not in p:
+                    p['object_lifetime'] = self.__lifetime
+                if 'gc_frequency' not in p:
+                    p['gc_frequency'] = self.__gc_frequency
+
+                self.__lifetime = p['object_lifetime']
+                self.__gc_frequency = p['gc_frequency']
 
     @staticmethod
     def manifest_key():
@@ -32,6 +37,9 @@ class BuildCache:
     @staticmethod
     def policy_key():
         return '.policy'
+
+    def cache(self):
+        return self.__cache
 
     @contextmanager
     def __load_manifest(self):
@@ -55,11 +63,13 @@ class BuildCache:
 
     def manifest(self):
         '''Returns manifest at call time. Manifest may change between calls'''
+        self._load_policies()
         with self.__load_manifest() as m:
             return m
 
     def store_artifacts(self, directory, key):
         '''Store artifacts to key. Makes liberal use of exceptions for errors.'''
+        self._load_policies()
         logging.info('Storing build artifacts in cache')
         try:
             with self.__load_manifest() as m:
@@ -73,6 +83,7 @@ class BuildCache:
 
     def load_artifacts(self, key, directory):
         '''Loads artifacts from key. Makes liberal use of exceptions for errors.'''
+        self._load_policies()
         logging.info('Loading artifacts to build directory')
         try:
             with self.__load_manifest() as m:

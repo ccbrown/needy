@@ -1,4 +1,3 @@
-import tempfile
 import os
 import shutil
 import tarfile
@@ -52,27 +51,21 @@ class Cache:
         '''make directory at source retrievable with the key'''
         if not os.path.exists(source):
             raise SourceNotFound(source)
-        temp_dir = tempfile.mkdtemp()
-        temp_tar = os.path.join(temp_dir, 'temp')
-        try:
+        with TempDir() as temp_dir:
+            temp_tar = os.path.join(temp_dir, 'temp')
             tar = tarfile.open(temp_tar, 'w:gz')
             tar.add(source, arcname='.')
             tar.close()
             self.store_file(temp_tar, key, timeout)
-        finally:
-            shutil.rmtree(temp_dir)
 
     def load_directory(self, key, destination, timeout=0):
         '''restore directory at key to destination'''
-        temp_dir = tempfile.mkdtemp()
-        temp_tar = os.path.join(temp_dir, key)
-        try:
+        with TempDir() as temp_dir:
+            temp_tar = os.path.join(temp_dir, key)
             self.load_file(key, temp_tar, timeout)
             tar = tarfile.open(temp_tar, 'r:gz')
             tar.extractall(path=destination)
             tar.close()
-        finally:
-            shutil.rmtree(temp_dir)
 
     def store_file(self, source, key, timeout=0):
         '''make file at source retrievable with key.'''

@@ -3,6 +3,7 @@ import os
 from pyfakefs import fake_filesystem_unittest
 
 from needy.needy import Needy
+from needy.needy_configuration import NeedyConfiguration
 
 
 class NeedyTest(fake_filesystem_unittest.TestCase):
@@ -33,7 +34,7 @@ class NeedyTest(fake_filesystem_unittest.TestCase):
                 'dependency': {}
             }
         }))
-        needy = Needy()
+        needy = Needy(needy_configuration=NeedyConfiguration(None))
         libraries = needy.libraries_to_build(needy.target('host'), ['dependant'])
         self.assertEqual(len(libraries), 2)
         self.assertEqual(libraries[0][0], 'dependency')

@@ -44,14 +44,14 @@ from .projects.xcode import XcodeProject
 
 
 class Library:
-    def __init__(self, needy, name, target=None, configuration=None, development_mode=False):
+    def __init__(self, needy, name, target=None, configuration=None, development_mode=False, build_caches=[]):
         self.needy = needy
         self.__name = name
         self.__target = target
         self.__configuration = configuration
         self.__directory = os.path.join(needy.needs_directory(), name)
         self.__development_mode = development_mode
-        self.__build_cache = BuildCache(self.needy.cache()) if self.needy.cache() else None
+        self.__build_caches = build_caches
 
     def configuration(self):
         return self.__configuration
@@ -107,12 +107,9 @@ class Library:
             print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t '
                   'handle spaces well, so if you have problems, consider moving the project or using a symlink.')
 
-        if self.__build_cache and not self.needy.parameters().force_build and not self.is_in_development_mode():
-            try:
-                self.__load_cached_artifacts()
+        if not self.needy.parameters().force_build and not self.is_in_development_mode():
+            if self.__load_cached_artifacts():
                 return True
-            except:
-                pass
 
         if not self.is_in_development_mode():
             self.clean_source()
@@ -176,16 +173,21 @@ class Library:
             json.dump(status, status_file)
 
     def __cache_artifacts(self):
-        if self.__build_cache:
+        if self.__build_caches:
             try:
-                self.__build_cache.store_artifacts(self.build_directory(), self.__cache_key())
+                self.__build_caches[0].store_artifacts(self.build_directory(), self.__cache_key())
             except:
                 pass
 
     def __load_cached_artifacts(self):
-        '''intentionally propogates exceptions'''
-        if self.__build_cache:
-            self.__build_cache.load_artifacts(self.__cache_key(), self.build_directory())
+        '''Returns True if there is a cache and it was able to load artifacts'''
+        for c in self.__build_caches:
+            try:
+                c.load_artifacts(self.__cache_key(), self.build_directory())
+                return True
+            except:
+                pass
+        return False
 
     def __cache_key(self):
         configuration_hash = binascii.hexlify(self.configuration_hash()).decode()
