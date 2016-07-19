@@ -168,6 +168,10 @@ class Project:
         env = environment_overrides.copy()
         if use_target_overrides:
             env.update(self.target_environment_overrides())
+        else:
+            for var in ['PATH', 'CC', 'CXX', 'LDFLAGS']:
+                if 'HOST_'+var in os.environ:
+                    env[var] = os.environ['HOST_'+var]
         command(cmd, environment_overrides=env)
 
     def command_output(self, arguments, verbosity=logging.INFO, environment_overrides={}):
