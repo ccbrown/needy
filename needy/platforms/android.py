@@ -133,7 +133,7 @@ class AndroidPlatform(Platform):
     def cxx_compiler(self, architecture):
         return self.__compiler(architecture, ['clang++', 'g++'])
 
-    def __compiler(architecture, choices):
+    def __compiler(self, architecture, choices):
         prefix = self.binary_prefix(architecture)
         for compiler in ['{}-{}'.format(prefix, c) for c in choices]:
             if os.path.exists(os.path.join(self.toolchain_path(architecture), 'bin', compiler)):
