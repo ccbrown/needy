@@ -277,7 +277,7 @@ class Library:
 
     @classmethod
     def build_compatibility(cls):
-        return 2
+        return 3
 
     def configuration_hash(self):
         hash = hashlib.sha256()

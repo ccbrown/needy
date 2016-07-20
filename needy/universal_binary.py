@@ -110,8 +110,12 @@ class UniversalBinary:
                         if not macro:
                             header_contents = ''
                             break
-                        header_path = os.path.relpath(header, os.path.dirname(output_path))
-                        header_contents += '#if {}\n#include "{}"\n#endif\n'.format(macro, header_path)
+                        header_directory = os.path.join(os.path.dirname(output_path), 'needy_targets', library.target().platform.identifier(), library.target().architecture)
+                        if not os.path.exists(header_directory):
+                            os.makedirs(header_directory)
+                        header_path = os.path.join(header_directory, os.path.basename(header))
+                        shutil.copyfile(header, header_path)
+                        header_contents += '#if {}\n#include "{}"\n#endif\n'.format(macro, os.path.relpath(header_path, os.path.dirname(output_path)))
                     if header_contents:
                         print('Creating universal header %s' % path)
                         with open(output_path, 'w') as f:
