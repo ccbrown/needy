@@ -102,7 +102,7 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
 
     notfile install-$(name) : @install-lib : $(name) : $(requirements) <build_dir_{feature_suffix}>$(build-dir) ;
     actions install-lib {{
-        mkdir -p $(PREFIX) && cp -R $(BUILD_DIR)/* $(PREFIX)/
+        mkdir -p $(PREFIX) && cp -R $(BUILD_DIR)/* $(PREFIX)/ && rm -f $(PREFIX)/needy.status
     }}
     explicit install-$(name) ;
 }}
