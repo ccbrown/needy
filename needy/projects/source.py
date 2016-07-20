@@ -66,8 +66,8 @@ class SourceProject(project.Project):
     def build(self, output_directory):
         # check for needs
 
-        needy = self.needy.recursive(self.directory())
-        if needy:
+        if self.needy.find_needs_file(self.directory()):
+            needy = Needy(self.directory(), self.needy.parameters())
             needy.satisfy_target(self.target())
 
         # compile source

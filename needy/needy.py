@@ -192,9 +192,6 @@ class Needy:
         platform = self.platform(parts[0])
         return Target(platform, parts[1] if len(parts) > 1 else platform.default_architecture())
 
-    def recursive(self, path):
-        return Needy(path, self.parameters()) if self.find_needs_file(path) else None
-
     @classmethod
     def test_filters(cls, name, filters):
         for filter in filters:
@@ -296,9 +293,6 @@ class Needy:
             else:
                 ub = UniversalBinary(target_or_universal_binary, libraries, self)
                 ret.append(ub.include_path())
-            needy = self.recursive(libraries[0].source_directory())
-            if needy:
-                ret.extend(needy.include_paths(target_or_universal_binary))
         return ret
 
     def library_paths(self, target_or_universal_binary, filters=None):
@@ -310,9 +304,6 @@ class Needy:
             else:
                 ub = UniversalBinary(target_or_universal_binary, libraries, self)
                 ret.append(ub.library_path())
-            needy = self.recursive(libraries[0].source_directory())
-            if needy:
-                ret.extend(needy.library_paths(target_or_universal_binary))
         return ret
 
     def pkg_config_path(self, target_or_universal_binary, filters=None):

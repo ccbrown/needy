@@ -11,8 +11,6 @@ class LibraryTest(fake_filesystem_unittest.TestCase):
     def test_generate_pkgconfig_with_no_lib(self):
         Library.generate_pkgconfig('/', 'test')
         self.assertTrue(os.path.exists('/lib/pkgconfig/test.pc'))
-        with open('/lib/pkgconfig/test.pc', 'r') as f:
-            self.assertTrue('prefix=/' in f.read())
 
     def test_generate_pkgconfig_with_single_lib(self):
         self.fs.CreateFile('/lib/libtest.a')
@@ -37,6 +35,5 @@ class LibraryTest(fake_filesystem_unittest.TestCase):
         self.assertTrue(os.path.exists('/lib/pkgconfig/test.pc'))
         with open('/lib/pkgconfig/test.pc', 'r') as f:
             contents = f.read()
-            self.assertTrue('prefix=/' in contents)
             self.assertTrue('-la' in contents)
             self.assertTrue('-lb' in contents)

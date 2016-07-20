@@ -38,6 +38,7 @@ class JamfileGenerator(Generator):
 
         contents = """import feature ;
 import modules ;
+import notfile ;
 import toolset ;
 
 OS = [ modules.peek : OS ] ;
@@ -46,8 +47,13 @@ path-constant NEEDY : {needy} ;
 path-constant BASE_DIR : {base_dir} ;
 path-constant NEEDS_FILE : {needs_file} ;
 
-feature.feature {needy_args_feature} : : free ;
-toolset.flags satisfy-lib NEEDYARGS <{needy_args_feature}> ;
+constant PREFIX : [ option.get prefix : "/usr/local" ] ;
+
+feature.feature needy_args_{feature_suffix} : : free ;
+toolset.flags satisfy-lib NEEDY_ARGS <needy_args_{feature_suffix}> ;
+
+feature.feature build_dir_{feature_suffix} : : free ;
+toolset.flags install-lib BUILD_DIR <build_dir_{feature_suffix}> ;
 
 rule needlib-common ( name : libname )
 {{
@@ -79,10 +85,9 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
     local args = $(target) {satisfy_args} ;
     local includedir = "$(build-dir)/include" ;
 
-    make lib$(name)-{build_compatibility}.touch : $(NEEDS_FILE) $(name)-common : @satisfy-lib : $(requirements) <{needy_args_feature}>$(args) ;
-    actions satisfy-lib
-    {{
-        cd $(BASE_DIR) && $(NEEDY) satisfy $(NEEDYARGS) && cd - && touch $(<)
+    make lib$(name)-{build_compatibility}.touch : $(NEEDS_FILE) $(name)-common : @satisfy-lib : $(requirements) <needy_args_{feature_suffix}>$(args) ;
+    actions satisfy-lib {{
+        cd $(BASE_DIR) && $(NEEDY) satisfy $(NEEDY_ARGS) && cd - && touch $(<)
     }}
 
     alias $(name)
@@ -94,12 +99,18 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
           <linkflags>-L$(build-dir)/lib
           $(usage-requirements)
     ;
+
+    notfile install-$(name) : @install-lib : $(name) : $(requirements) <build_dir_{feature_suffix}>$(build-dir) ;
+    actions install-lib {{
+        mkdir -p $(PREFIX) && cp -R $(BUILD_DIR)/* $(PREFIX)/
+    }}
+    explicit install-$(name) ;
 }}
 """.format(needy=os.path.abspath(sys.argv[0]),
            base_dir=needy.path(),
            needs_file=needy.needs_file(),
            satisfy_args=needy.parameters().satisfy_args,
-           needy_args_feature='needyargs_'+hashlib.sha1(needy.path() if isinstance(needy.path(), bytes) else needy.path().encode('utf-8')).hexdigest(),
+           feature_suffix='_'+hashlib.sha1(needy.path() if isinstance(needy.path(), bytes) else needy.path().encode('utf-8')).hexdigest(),
            build_compatibility=Library.build_compatibility(),
            **target_args)
 
