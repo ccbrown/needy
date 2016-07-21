@@ -82,7 +82,7 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
         target = "$(name) {host}" ;
     }}
 
-    local args = $(target) {satisfy_args} ;
+    local args = "$(target) {satisfy_args}" ;
     local includedir = "$(build-dir)/include" ;
 
     make lib$(name)-{build_compatibility}.touch : $(NEEDS_FILE) $(name)-common : @satisfy-lib : $(requirements) <needy_args_{feature_suffix}>$(args) ;
