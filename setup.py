@@ -44,7 +44,7 @@ setup(
         ]
     },
     install_requires=[
-        'colorama', 'jinja2', 'pyyaml'
+        'colorama', 'jinja2', 'pyyaml', 'pypiwin32 : sys.platform == \'win32\''
     ],
     cmdclass={'bdist_egg': bdist_egg},
     license='MIT'

@@ -9,6 +9,16 @@ from needy.cache import SourceNotFound, KeyNotFound
 from needy.filesystem import TempDir
 
 
+def try_cache_key_lock(cache_dir, key):
+    cache = Directory(path=cache_dir)
+    try:
+        cache.lock_key(key, timeout=0)
+        cache.unlock_key(key)
+    except:
+        sys.exit(1)
+    sys.exit(0)
+
+
 class DirectoryTest(unittest.TestCase):
     def test_file_store_load(self):
         with TempDir() as cache_dir, TempDir() as d:
@@ -113,16 +123,7 @@ class DirectoryTest(unittest.TestCase):
 
     @staticmethod
     def try_lock_from_another_process(cache_dir, key):
-        def run(cache_dir, key):
-            cache = Directory(path=cache_dir)
-            try:
-                cache.lock_key(key, timeout=0)
-                cache.unlock_key(key)
-            except:
-                sys.exit(1)
-            sys.exit(0)
-
-        process = multiprocessing.Process(target=run, args=(cache_dir, key))
+        process = multiprocessing.Process(target=try_cache_key_lock, args=(cache_dir, key,))
         process.start()
         process.join()
         return process.exitcode == 0

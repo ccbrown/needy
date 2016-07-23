@@ -55,7 +55,6 @@ class BuildCacheTest(unittest.TestCase):
 
             self.assertTrue('foo' in build_cache.manifest())
 
-
     def test_store_raises_with_invalid_source(self):
         with TempDir() as cache_dir:
             build_cache = BuildCache(Directory(path=cache_dir))

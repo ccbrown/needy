@@ -57,9 +57,11 @@ class Needy:
                 else:
                     parent_needs = os.path.join(directory, 'needs')
                     break
-            directory = os.path.dirname(directory)
-            if directory == os.sep:
+
+            parent = os.path.dirname(directory)
+            if directory == os.sep or directory == parent:
                 break
+            directory = parent
 
         if ret is None:
             return None

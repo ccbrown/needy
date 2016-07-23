@@ -12,6 +12,6 @@ class ProjectTest(fake_filesystem_unittest.TestCase):
 
     def test_pre_build_creating_output_directories(self):
         project = Project(ProjectDefinition(Target(host_platform()()), '.'), None)
-        project.pre_build('build/out')
-        self.assertTrue(os.path.isdir('./build/out/include'))
-        self.assertTrue(os.path.isdir('./build/out/lib'))
+        project.pre_build(os.path.join('build', 'out'))
+        self.assertTrue(os.path.isdir(os.path.join('build', 'out', 'include')))
+        self.assertTrue(os.path.isdir(os.path.join('build', 'out', 'lib')))

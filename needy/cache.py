@@ -120,13 +120,14 @@ class Cache:
         directory, and then save modifications when the lease is returned. If
         the path is removed during the lease, the key will be unset.'''
         with self.lease(key, timeout=timeout, **kwargs):
-            with tempfile.NamedTemporaryFile() as f:
-                self.load_file(key, f.name, timeout=timeout)
-                yield f.name
-                if os.path.exists(f.name):
-                    self.store_file(f.name, key, timeout=timeout)
+            with TempDir() as temp_dir:
+                temp_file = os.path.join(temp_dir, 'f')
+                self.load_file(key, temp_file, timeout=timeout)
+                yield temp_file
+                if os.path.exists(temp_file):
+                    self.store_file(temp_file, key, timeout=timeout)
                 else:
-                    self.unset_key(f.name)
+                    self.unset_key(temp_file)
 
 
 class Manifest:

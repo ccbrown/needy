@@ -1,10 +1,9 @@
 import os
 import shutil
 import time
-import fcntl
 
 from ..cache import Cache, KeyLocked, SourceNotFound, KeyNotFound
-from ..filesystem import clean_file, lock_file
+from ..filesystem import clean_file, lock_fd, os_file
 
 
 class Directory(Cache):
@@ -31,8 +30,14 @@ class Directory(Cache):
         if not os.path.exists(source):
             raise SourceNotFound(source)
         try:
-            clean_file(destination_file)
-            shutil.copyfile(source, destination_file)
+            if key in self.__locks:
+                self.__locks[key].seek(0)
+                with open(source, 'rb') as f:
+                    shutil.copyfileobj(f, self.__locks[key])
+                self.__locks[key].truncate()
+            else:
+                clean_file(destination_file)
+                shutil.copyfile(source, destination_file)
         except IOError:
             if key in self.__locks:
                 raise
@@ -47,7 +52,12 @@ class Directory(Cache):
             # the raised error will be a KeyLocked as opposed to a KeyNotFound.
             if not os.path.exists(self.__archive_path(key)):
                 raise KeyNotFound(key)
-            shutil.copyfile(self.__archive_path(key), destination)
+            if key in self.__locks:
+                self.__locks[key].seek(0)
+                with open(destination, 'wb') as f:
+                    shutil.copyfileobj(self.__locks[key], f)
+            else:
+                shutil.copyfile(self.__archive_path(key), destination)
         except IOError as e:
             raise KeyLocked(key, e)
 
@@ -74,15 +84,18 @@ class Directory(Cache):
             except:
                 pass
 
-        fd = lock_file(self.__archive_path(key), timeout)
-        if fd:
-            self.__locks[key] = fd
+        f = os_file(self.__archive_path(key), os.O_RDWR | os.O_CREAT, 'r+b')
+
+        if lock_fd(f.fileno(), timeout):
+            self.__locks[key] = f
         else:
+            f.close()
             raise KeyLocked(key)
 
     def unlock_key(self, key):
         if key in self.__locks:
-            os.close(self.__locks[key])
+            self.__locks[key].close()
+            del self.__locks[key]
         else:
             raise KeyNotFound(key)
 

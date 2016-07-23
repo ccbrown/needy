@@ -1,3 +1,4 @@
 colorama
 jinja2
 pyyaml
+pypiwin32; sys_platform == 'win32'

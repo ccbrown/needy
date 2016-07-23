@@ -1,11 +1,10 @@
 from __future__ import print_function
 
-import fcntl
 import json
 import os
 import sys
 
-from .filesystem import lock_file
+from .filesystem import lock_fd, os_file
 
 from .caches.directory import Directory
 
@@ -27,25 +26,28 @@ class LocalConfiguration:
                 if not os.path.exists(directory):
                     raise e
 
-        self.__fd = lock_file(self.__path, timeout=0)
-        if self.__fd is None:
+        self.__file = os_file(self.__path, os.O_RDWR | os.O_CREAT, 'r+')
+
+        if not lock_fd(self.__file.fileno(), timeout=0):
             if not self.__blocking:
+                self.__file.close()
+                self.__file = None
                 return None
             print('Waiting for other needy instances to terminate...', file=sys.stderr)
-            self.__fd = lock_file(self.__path)
+            lock_fd(self.__file.fileno())
 
-        with open(self.__path, 'rt') as f:
-            contents = f.read()
-            if contents:
-                self.__configuration = json.loads(contents)
+        contents = self.__file.read()
+        if contents:
+            self.__configuration = json.loads(contents)
 
         return self
 
     def __exit__(self, etype, value, traceback):
-        with open(self.__path, 'wt') as f:
-            json.dump(self.__configuration, f)
-        if self.__fd:
-            os.close(self.__fd)
+        if self.__file:
+            self.__file.seek(0)
+            self.__file.write(json.dumps(self.__configuration))
+            self.__file.truncate()
+            self.__file.close()
 
     def development_mode(self, library_name):
         return self.__library_configuration(library_name, 'development_mode', False)
