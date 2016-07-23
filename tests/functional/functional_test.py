@@ -28,9 +28,9 @@ class TestCase(unittest.TestCase):
         with cd(self.path()):
             return main(['needy'] + command)
 
-    def build_directory(self, library):
+    def build_directory(self, library, target_or_universal_binary=Target(host_platform()())):
         needy = Needy(self.path())
-        return needy.build_directory(library, Target(host_platform()()))
+        return needy.build_directory(library, target_or_universal_binary)
 
     def needs_directory(self):
         needy = Needy(self.path())

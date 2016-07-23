@@ -107,14 +107,14 @@ class Library:
             print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t '
                   'handle spaces well, so if you have problems, consider moving the project or using a symlink.')
 
-        if self.__build_cache and not self.needy.parameters().force_build and not self.__development_mode:
+        if self.__build_cache and not self.needy.parameters().force_build and not self.is_in_development_mode():
             try:
                 self.__load_cached_artifacts()
                 return True
             except:
                 pass
 
-        if not self.__development_mode:
+        if not self.is_in_development_mode():
             self.clean_source()
 
         configuration = self.project_configuration()
@@ -206,8 +206,11 @@ class Library:
             for k, v in env_overrides.items():
                 logging.log(verbosity, '{}={}'.format(k, v))
 
+    def is_in_development_mode(self):
+        return self.__development_mode
+
     def has_up_to_date_build(self):
-        if self.needy.parameters().force_build or not os.path.isfile(self.build_status_path()) or self.__development_mode:
+        if self.needy.parameters().force_build or not os.path.isfile(self.build_status_path()) or self.is_in_development_mode():
             return False
         with open(self.build_status_path(), 'r') as status_file:
             status_text = status_file.read()
