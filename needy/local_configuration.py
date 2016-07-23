@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import fcntl
 import json
 import os
@@ -29,7 +31,7 @@ class LocalConfiguration:
         if self.__fd is None:
             if not self.__blocking:
                 return None
-            print('Waiting for other needy instances to terminate...')
+            print('Waiting for other needy instances to terminate...', file=sys.stderr)
             self.__fd = lock_file(self.__path)
 
         with open(self.__path, 'rt') as f:
