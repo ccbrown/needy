@@ -94,7 +94,7 @@ class Library:
         elif 'repository' in self.__configuration:
             source = GitRepository(self.__configuration['repository'], self.__configuration['commit'], self.source_directory())
         elif 'directory' in self.__configuration:
-            source = Directory(self.__configuration['directory'] if os.path.isabs(self.__configuration['directory']) else os.path.join(needy.path(), self.__configuration['directory']), self.source_directory())
+            source = Directory(self.__configuration['directory'] if os.path.isabs(self.__configuration['directory']) else os.path.join(self.needy.path(), self.__configuration['directory']), self.source_directory())
         else:
             raise ValueError('no source specified in configuration')
 
