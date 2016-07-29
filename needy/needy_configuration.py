@@ -12,7 +12,7 @@ from contextlib import contextmanager
 
 class NeedyConfiguration:
     def __init__(self, base_path):
-        self.__base_path = base_path
+        self.__base_path = os.path.abspath(base_path) if base_path else None
 
         with self.__locked_needyconfig(self.__base_path) as fds:
             self.__configuration = self._evaluate_needyconfigs(fds)
