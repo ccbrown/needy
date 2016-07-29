@@ -25,11 +25,11 @@ from .platform import available_platforms, host_platform
 from .generator import available_generators
 from .target import Target
 from .cd import current_directory
-from .cache import Cache
+from .needy_configuration import NeedyConfiguration
 
 
 class Needy:
-    def __init__(self, path='.', parameters={}, local_configuration=None):
+    def __init__(self, path='.', parameters={}, local_configuration=None, needy_configuration=None):
         self.__path = self.__normalize_path(path)
         self.__parameters = parameters
 
@@ -40,6 +40,8 @@ class Needy:
 
         if self.__needs_file is None:
             raise RuntimeError('No needs file found in {}'.format(self.__path))
+
+        self.__needy_configuration = needy_configuration
 
         logging.debug('Using needs file {}'.format(self.__needs_file))
         logging.debug('Using needs directory {}'.format(self.__needs_directory))
@@ -115,8 +117,9 @@ class Needy:
         else:
             print('Development mode {}disabled for {}. Please ensure that you have persisted any changes you wish to keep.'.format('already ' if was_already else '', library_name))
 
-    def cache(self):
-        return self.__local_configuration.cache() if self.__local_configuration else None
+    def needy_configuration(self):
+        '''Not to be confused with needs_configuration'''
+        return self.__needy_configuration
 
     def needs_configuration(self, target=None):
         configuration = ''
@@ -220,7 +223,11 @@ class Needy:
         while len(names):
             name = names.pop()
             development_mode = self.__local_configuration and self.__local_configuration.development_mode(name)
-            library = Library(self, name, target=target, configuration=needs_configuration['libraries'][name], development_mode=development_mode)
+            library = Library(self, name,
+                              target=target,
+                              configuration=needs_configuration['libraries'][name],
+                              development_mode=development_mode,
+                              build_caches=self.needy_configuration().build_caches())
             libraries[name] = library
             if 'dependencies' not in library.configuration():
                 graph[name] = set()

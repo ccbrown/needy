@@ -2,11 +2,8 @@ from __future__ import print_function
 
 import json
 import os
-import sys
 
 from .filesystem import lock_fd, os_file
-
-from .caches.directory import Directory
 
 
 class LocalConfiguration:
@@ -54,23 +51,6 @@ class LocalConfiguration:
 
     def set_development_mode(self, library_name, enable=True):
         self.__set_library_configuration(library_name, 'development_mode', enable)
-
-    def cache(self):
-        if 'cache' in self.__configuration:
-            cache_type = self.__configuration['cache']['type']
-            for candidate in [Directory]:
-                if cache_type == candidate.type():
-                    return candidate.from_dict(self.__configuration['cache']['configuration'])
-            raise RuntimeError('Invalid cache type: {}'.format(cache_type))
-
-    def set_cache(self, path):
-        if path:
-            self.__configuration['cache'] = {
-                'type': Directory.type(),
-                'configuration': Directory(path=path).to_dict(),
-            }
-        elif 'cache' in self.__configuration:
-            del self.__configuration['cache']
 
     def __library_configuration(self, library_name, key, default=None):
         if 'libraries' not in self.__configuration or library_name not in self.__configuration['libraries']:

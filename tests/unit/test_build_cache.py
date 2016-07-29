@@ -68,17 +68,20 @@ class BuildCacheTest(unittest.TestCase):
             with TempDir() as d:
                 self.assertRaises(KeyNotFound, lambda: build_cache.load_artifacts('foo', os.path.join(d, 'dest')))
 
-    def test_creates_cache_policies(self):
+    def test_load_policy_creates_cache_policies(self):
         with TempDir() as cache_dir, TempDir() as d:
             build_cache = BuildCache(Directory(path=cache_dir), lifetime=5)
+            build_cache._load_policies()
             self.assertTrue(BuildCache.policy_key() in os.listdir(cache_dir))
 
         with TempDir() as cache_dir, TempDir() as d:
             build_cache = BuildCache(Directory(path=cache_dir))
+            build_cache._load_policies()
             self.assertTrue(BuildCache.policy_key() in os.listdir(cache_dir))
 
         with TempDir() as cache_dir, TempDir() as d:
             build_cache = BuildCache(Directory(path=os.path.join(cache_dir, 'cache')))
+            build_cache._load_policies()
             self.assertTrue(BuildCache.policy_key() in os.listdir(os.path.join(cache_dir, 'cache')))
 
     def test_load_increases_lifetime(self):
