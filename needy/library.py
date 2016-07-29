@@ -159,6 +159,7 @@ class Library:
                 project.pre_build(build_directory)
                 project.build(build_directory)
                 project.post_build(build_directory)
+                Library.make_pkgconfigs_relocatable(build_directory)
                 if not os.path.exists(os.path.join(build_directory, 'lib', 'pkgconfig')):
                     self.generate_pkgconfig(build_directory, self.name())
             except:
@@ -282,7 +283,7 @@ class Library:
 
     @classmethod
     def build_compatibility(cls):
-        return 3
+        return 4
 
     def configuration_hash(self):
         hash = hashlib.sha256()
@@ -340,3 +341,15 @@ class Library:
                         Libs: -L${{libdir}} {lflags}
                         Cflags: -I${{includedir}}
                     """.format(name=name, version=0, lflags=' '.join([('-l'+lib_name) for lib_name in libs]))))
+
+    @staticmethod
+    def make_pkgconfigs_relocatable(build_dir):
+        if os.path.exists(build_dir):
+            for dirname, subdirs, files in os.walk(os.path.join(build_dir, 'lib')):
+                for filename in files:
+                    if filename.endswith('.pc'):
+                        pc = ''
+                        with open(os.path.join(dirname, filename), 'r') as f:
+                            pc = f.read().replace(build_dir, '${pcfiledir}/../..')
+                        with open(os.path.join(dirname, filename), 'w+') as f:
+                            f.write(pc)

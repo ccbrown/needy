@@ -129,7 +129,7 @@ class UniversalBinary:
                     for library, pc in builds:
                         with open(pc, 'r') as f:
                             contents = f.read().decode()
-                            fixed = contents.replace(library.build_directory(), directory)
+                            fixed = contents.replace(library.build_directory(), '${pcfiledir}/../..')
                             if universal_pc is not None and fixed != universal_pc:
                                 print('Package config differs beyond prefix. Not creating %s' % path)
                                 universal_pc = None
