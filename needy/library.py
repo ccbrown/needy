@@ -298,6 +298,7 @@ class Library:
         hash.update(json.dumps({
             'build-compatibility': self.build_compatibility(),
             'configuration': configuration,
+            'dependencies': [self.needy.library_configuration(self.target(), d) for d in (configuration['dependencies'] if 'dependencies' in configuration else [])],
         }, sort_keys=True).encode())
 
         return hash.digest()

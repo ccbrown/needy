@@ -204,6 +204,9 @@ class Needy:
                 return True
         return False
 
+    def library_configuration(self, target, name):
+        return self.needs_configuration(target)['libraries'][name] if name in self.needs_configuration(target)['libraries'] else None
+
     def libraries_to_build(self, target, filters=None):
         needs_configuration = self.needs_configuration(target)
 
