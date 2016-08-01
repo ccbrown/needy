@@ -103,9 +103,12 @@ class BuildCacheTest(unittest.TestCase):
 
             cache.store_artifacts(d, 'foo_key')
             self.assertTrue('foo_key' in os.listdir(cache_dir))
+            self.assertTrue('foo_key' in cache.manifest())
             sleep(4)
 
             cache.store_artifacts(d, 'bar_key')
             self.assertFalse('foo_key' in os.listdir(cache_dir))
+            self.assertFalse('foo_key' in cache.manifest())
             self.assertTrue('bar_key' in os.listdir(cache_dir))
+            self.assertTrue('bar_key' in cache.manifest())
             sleep(4)

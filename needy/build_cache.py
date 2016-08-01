@@ -107,6 +107,7 @@ class BuildCache:
         for key in [k for k in manifest if manifest[k].use_time < min_time]:
             try:
                 self.__cache.unset_key(key)
+                del manifest[key]
                 total += 1
             except:
                 pass
