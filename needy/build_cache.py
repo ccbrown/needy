@@ -5,7 +5,7 @@ import json
 
 from contextlib import contextmanager
 
-from .cache import Cache, Manifest
+from .cache import CacheError, KeyNotFound, Cache, Manifest
 from .filesystem import TempDir, dict_file
 
 
@@ -43,23 +43,15 @@ class BuildCache:
 
     @contextmanager
     def __load_manifest(self):
-        try:
-            with self.__cache.lease_file(BuildCache.manifest_key(), timeout=self.__lock_timeout, create=True) as path:
-                with Manifest(path) as m:
-                    yield m
-        except:
-            logging.warn('cache unavailable: unable to load manifest')
-            raise
+        with self.__cache.lease_file(BuildCache.manifest_key(), timeout=self.__lock_timeout, create=True) as path:
+            with Manifest(path) as m:
+                yield m
 
     @contextmanager
     def __load_cache_policies(self):
-        try:
-            with self.__cache.lease_file(BuildCache.policy_key(), timeout=self.__lock_timeout, create=True) as path:
-                with dict_file(path) as d:
-                    yield d
-        except:
-            logging.warn('key unavailable: unable to load policies')
-            raise
+        with self.__cache.lease_file(BuildCache.policy_key(), timeout=self.__lock_timeout, create=True) as path:
+            with dict_file(path) as d:
+                yield d
 
     def manifest(self):
         '''Returns manifest at call time. Manifest may change between calls'''
@@ -69,30 +61,32 @@ class BuildCache:
 
     def store_artifacts(self, directory, key):
         '''Store artifacts to key. Makes liberal use of exceptions for errors.'''
-        self._load_policies()
-        logging.info('Storing build artifacts in cache')
         try:
+            self._load_policies()
             with self.__load_manifest() as m:
                 m.touch(key)
                 self.__collect_garbage(m)
             with self.__cache.lease(key, create=True):
                 self.__cache.store_directory(directory, key, timeout=self.__lock_timeout)
-        except:
-            logging.info('key unavailable: failed to store artifacts')
+            logging.info('Stored artifacts for key: {}'.format(key))
+        except (CacheError, IOError):
+            logging.error('Failed to store artifacts for key: {}'.format(key))
             raise
 
     def load_artifacts(self, key, directory):
         '''Loads artifacts from key. Makes liberal use of exceptions for errors.'''
-        self._load_policies()
-        logging.info('Loading artifacts to build directory')
         try:
+            self._load_policies()
             with self.__load_manifest() as m:
                 m.touch(key)
                 self.__collect_garbage(m)
             with self.__cache.lease(key):
                 self.__cache.load_directory(key, directory, timeout=self.__lock_timeout)
-        except:
-            logging.warn('key unavailable: failed to load artifacts')
+            logging.info('Loaded artifacts for key: {}'.format(key))
+        except KeyNotFound:
+            raise
+        except (CacheError, IOError):
+            logging.error('Failed to load artifacts for key: {}'.format(key))
             raise
 
     def __collect_garbage(self, manifest):
@@ -109,8 +103,9 @@ class BuildCache:
                 self.__cache.unset_key(key)
                 del manifest[key]
                 total += 1
-            except:
+            except (CacheError, IOError):
+                logging.warn('Error garbage collecting cache key: {}'.format(key))
                 pass
 
         if total:
-            logging.info('garbage collection removed {} expired keys'.format(total))
+            logging.info('Garbage collection removed {} expired keys'.format(total))

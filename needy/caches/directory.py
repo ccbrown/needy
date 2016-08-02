@@ -81,7 +81,7 @@ class Directory(Cache):
         if create:
             try:
                 os.makedirs(os.path.dirname(self.__archive_path(key)))
-            except:
+            except os.error:
                 pass
 
         f = os_file(self.__archive_path(key), os.O_RDWR | os.O_CREAT, 'r+b')

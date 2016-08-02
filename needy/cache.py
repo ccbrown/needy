@@ -10,17 +10,21 @@ from contextlib import contextmanager
 from .filesystem import TempDir
 
 
-class KeyLocked(Exception):
+class CacheError(Exception):
+    pass
+
+
+class KeyLocked(CacheError):
     '''Raised when an action would read or modify a key that is locked'''
     pass
 
 
-class SourceNotFound(Exception):
+class SourceNotFound(CacheError):
     '''Raised when a source is required to exist and isn't found'''
     pass
 
 
-class KeyNotFound(Exception):
+class KeyNotFound(CacheError):
     '''Raised when a key is required to exist and isn't found'''
     pass
 

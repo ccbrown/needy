@@ -8,7 +8,7 @@ import textwrap
 
 from operator import itemgetter
 
-from .cache import KeyLocked
+from .cache import CacheError
 
 try:
     from colorama import Fore
@@ -186,7 +186,7 @@ class Library:
             try:
                 c.load_artifacts(self.__cache_key(), self.build_directory())
                 return True
-            except:
+            except (CacheError, IOError):
                 pass
         return False
 
