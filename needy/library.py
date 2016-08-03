@@ -80,7 +80,7 @@ class Library:
     @staticmethod
     def additional_project_configuration_keys():
         """ the configuration keys that we handle here instead of in Project classes (usually because we need them before determining the project type) """
-        return {'post-clean', 'environment', 'type', 'root'}
+        return {'post-clean', 'configure-steps', 'environment', 'type', 'root'}
 
     def evaluate(self, str_or_list, **kwargs):
         l = [] if not str_or_list else (str_or_list if isinstance(str_or_list, list) else [str_or_list])
@@ -152,10 +152,14 @@ class Library:
 
     def __actualize(self, project):
         build_directory = self.build_directory()
+        configuration = self.project_configuration()
         with cd(self.project_root()):
             try:
                 project.setup()
-                project.configure(build_directory)
+                if 'configure-steps' in configuration:
+                    project.run_commands(configuration['configure-steps'])
+                else:
+                    project.configure(build_directory)
                 project.pre_build(build_directory)
                 project.build(build_directory)
                 project.post_build(build_directory)

@@ -2,8 +2,7 @@ import os
 import sys
 import logging
 
-from .process import command
-from .process import command_output
+from .process import command, command_output, command_sequence
 
 
 def evaluate_conditionals(configuration, target):
@@ -95,8 +94,8 @@ class Project:
         return [str.format(**self.__string_format_variables) for str in l]
 
     def run_commands(self, commands):
-        for command in self.evaluate(commands):
-            self.command(command)
+        if commands:
+            self.command_sequence(self.evaluate(commands))
 
     def target_environment_overrides(self):
         ret = {}
@@ -164,7 +163,7 @@ class Project:
             f.write("#!/bin/sh\n{} \"$@\"".format(command))
         os.chmod(path, 0o755)
 
-    def command(self, cmd, verbosity=logging.INFO, environment_overrides={}, use_target_overrides=True):
+    def command_environment_overrides(self, environment_overrides={}, use_target_overrides=True):
         env = environment_overrides.copy()
         if use_target_overrides:
             env.update(self.target_environment_overrides())
@@ -172,7 +171,22 @@ class Project:
             for var in ['PATH', 'CC', 'CXX', 'LDFLAGS']:
                 if 'HOST_'+var in os.environ:
                     env[var] = os.environ['HOST_'+var]
-        command(cmd, environment_overrides=env)
+        return env
 
-    def command_output(self, arguments, verbosity=logging.INFO, environment_overrides={}):
-        return command_output(arguments, environment_overrides=environment_overrides)
+    def command(self, cmd, verbosity=logging.INFO, environment_overrides={}, use_target_overrides=True):
+        return command(cmd, verbosity=verbosity, environment_overrides=self.command_environment_overrides(
+            environment_overrides=environment_overrides,
+            use_target_overrides=use_target_overrides
+        ))
+
+    def command_output(self, cmd, verbosity=logging.INFO, environment_overrides={}, use_target_overrides=True):
+        return command_output(cmd, verbosity=verbosity, environment_overrides=self.command_environment_overrides(
+            environment_overrides=environment_overrides,
+            use_target_overrides=use_target_overrides
+        ))
+
+    def command_sequence(self, cmds, verbosity=logging.INFO, environment_overrides={}, use_target_overrides=True):
+        return command_sequence(cmds, verbosity=verbosity, environment_overrides=self.command_environment_overrides(
+            environment_overrides=environment_overrides,
+            use_target_overrides=use_target_overrides
+        ))

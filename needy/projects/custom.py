@@ -16,10 +16,7 @@ class CustomProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return project.Project.configuration_keys() | {'configure-steps', 'build-steps'}
-
-    def configure(self, output_directory):
-        self.run_commands(self.configuration('configure-steps') or [])
+        return project.Project.configuration_keys() | {'build-steps'}
 
     def build(self, output_directory):
         self.run_commands(self.configuration('build-steps') or [])

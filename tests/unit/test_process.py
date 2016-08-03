@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import unittest
 
@@ -15,3 +16,13 @@ class ProcessTest(unittest.TestCase):
             self.assertEqual(os.getcwd(), needy.process.command_output('echo %CD%').strip())
         else:
             self.assertEqual('hello', needy.process.command_output('printf `printf hello`'))
+
+    def test_command_sequence(self):
+        if sys.platform == 'win32':
+            needy.process.command_sequence(['set FOO=QWERTYUIOP', 'if NOT %FOO% == "QWERTYUIOP" exit 1'])
+        else:
+            needy.process.command_sequence(['export FOO=QWERTYUIOP', 'echo $FOO | grep "QWERTYUIOP"'])
+
+    def test_command_sequence_failure(self):
+        with self.assertRaises(subprocess.CalledProcessError) as a:
+            needy.process.command_sequence(['notacommand123123', 'alsonotacommand321'])
