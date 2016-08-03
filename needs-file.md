@@ -88,6 +88,7 @@ The project configuration describes how the library is built.
 * `environment` - A dictionary of environment variable overrides. In addition to the formatting parameters listed below, receives a `current` parameter with the current value of the environment variable.
 * `root` - The directory to build.
 * `post-clean` - A list of commands to execute after cleaning the project directory.
+* `configure-steps` - A list of commands used to configure the project. This overrides the default behavior for the project type.
 * `pre-build` - A list of commands to execute before building.
 * `post-build` - A list of commands to execute after building.
 
@@ -123,7 +124,6 @@ Projects that are built using Xcode use the following parameters:
 
 Projects that are built using custom steps defined by the needs file use the following parameters:
 
-* `configure-steps` - A list of commands used to configure the project.
 * `build-steps` - A list of commands used to build the project. The commands should place headers in *{build_directory}/include* and libraries in *{build_directory}/lib*.
 
 String values are formatted with the following parameters:
