@@ -50,12 +50,13 @@ def command_sequence(cmds, verbosity=logging.INFO, environment_overrides={}):
     environment_overrides['PWD'] = current_directory()
     env = os.environ.copy()
     env.update(environment_overrides)
-    stderr = devnull if verbosity < logging.getLogger().getEffectiveLevel() else subprocess.STDOUT
-    stdout = devnull if verbosity < logging.getLogger().getEffectiveLevel() else None
-    if sys.platform == 'win32':
-        subprocess.check_call(['cmd', '/c'] + [arg for cmd in cmds for arg in [cmd, '&&']][:-1], stderr=stderr, stdout=stdout, env=env)
-    else:
-        subprocess.check_call(['sh', '-c', '\n'.join(['set -ex'] + cmds)], stderr=stderr, stdout=stdout, env=env)
+    with open(os.devnull, 'w') as devnull:
+        stderr = devnull if verbosity < logging.getLogger().getEffectiveLevel() else subprocess.STDOUT
+        stdout = devnull if verbosity < logging.getLogger().getEffectiveLevel() else None
+        if sys.platform == 'win32':
+            subprocess.check_call(['cmd', '/c'] + [arg for cmd in cmds for arg in [cmd, '&&']][:-1], stderr=stderr, stdout=stdout, env=env)
+        else:
+            subprocess.check_call(['sh', '-c', '\n'.join(['set -ex'] + cmds)], stderr=stderr, stdout=stdout, env=env)
 
 
 def __format_command(cmd):

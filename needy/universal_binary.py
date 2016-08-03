@@ -100,7 +100,8 @@ class UniversalBinary:
                     for library, lib in builds:
                         f = tempfile.NamedTemporaryFile(delete=True)
                         try:
-                            command(['lipo', '-extract', library.target().architecture, lib, '-output', f.name])
+                            with open(os.devnull, 'w') as devnull:
+                                command(['lipo', '-extract', library.target().architecture, lib, '-output', f.name], stderr=devnull)
                         except subprocess.CalledProcessError:
                             command(['cp', lib, f.name])
                         inputs.append(f)
