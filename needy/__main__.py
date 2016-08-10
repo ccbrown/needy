@@ -49,7 +49,7 @@ def satisfy(args=[]):
         const=0,
         nargs='?',
         type=int,
-        help='number of jobs to process concurrently')
+        help='number of jobs to process concurrently. omit or specify 0 for full concurrency')
     parser.add_argument(
         '-f', '--force-build',
         action='store_true',
