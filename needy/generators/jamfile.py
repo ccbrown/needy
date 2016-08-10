@@ -34,8 +34,6 @@ class JamfileGenerator(Generator):
         if host_platform().identifier() in targets:
             targets['host'] = targets[host_platform().identifier()]
 
-        target_args = {key: ('-t {}' if isinstance(t, Target) else '-u {}').format(t) for key, t in targets.items()}
-
         contents = """import feature ;
 import modules ;
 import notfile ;
@@ -61,28 +59,9 @@ rule needlib-common ( name : libname )
     alias $(name) : $(dev-mode-files) ;
 }}
 
-rule needlib ( name : build-dir : extra-sources * : requirements * : default-build * : usage-requirements * )
+rule needlib ( name : build-dir : target-args + : extra-sources * : requirements * : default-build * : usage-requirements * )
 {{
-    local target = $(name) ;
-    if <target-os>iphone in $(requirements) {{
-        if <architecture>arm in $(requirements) {{
-            target = "$(name) {ios}" ;
-        }} else {{
-            target = "$(name) {iossimulator}" ;
-        }}
-    }} else if <target-os>android in $(requirements) {{
-        target = "$(name) -t android" ;
-    }} else if <target-os>appletv in $(requirements) {{
-        if <architecture>arm in $(requirements) {{
-            target = "$(name) {tvos}" ;
-        }} else {{
-            target = "$(name) {tvossimulator}" ;
-        }}
-    }} else {{
-        target = "$(name) {host}" ;
-    }}
-
-    local args = "$(target) {satisfy_args}" ;
+    local args = "$(target-args) {satisfy_args}" ;
     local includedir = "$(build-dir)/include" ;
 
     make lib$(name)-{build_compatibility}.touch : $(NEEDS_FILE) $(name)-common : @satisfy-lib : $(requirements) <needy_args_{feature_suffix}>$(args) ;
@@ -111,8 +90,8 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
            needs_file=needy.needs_file(),
            satisfy_args=needy.parameters().satisfy_args,
            feature_suffix='_'+hashlib.sha1(needy.path() if isinstance(needy.path(), bytes) else needy.path().encode('utf-8')).hexdigest(),
-           build_compatibility=Library.build_compatibility(),
-           **target_args)
+           build_compatibility=Library.build_compatibility()
+           )
 
         libraries_with_common_targets = set()
 
@@ -139,9 +118,10 @@ rule needlib ( name : build-dir : extra-sources * : requirements * : default-bui
     @staticmethod
     def __target_definitions(needy, needy_target_or_universal_binary, libraries_with_common_targets, requirements=''):
         ret = ''
+        target_args = ('-t {}' if isinstance(needy_target_or_universal_binary, Target) else '-u {}').format(needy_target_or_universal_binary)
         for name, library in needy.libraries(needy_target_or_universal_binary).items():
             if name not in libraries_with_common_targets:
                 ret += "needlib-common {0}-common : {0} ;\n".format(name)
                 libraries_with_common_targets.add(name)
-            ret += "needlib {} : {} : : {} ;\n".format(name, needy.build_directory(name, needy_target_or_universal_binary), requirements)
+            ret += "needlib {} : {} : {} : : {} ;\n".format(name, needy.build_directory(name, needy_target_or_universal_binary), target_args, requirements)
         return ret
