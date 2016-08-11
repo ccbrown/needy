@@ -59,7 +59,7 @@ rule needlib-common ( name : libname )
     alias $(name) : $(dev-mode-files) ;
 }}
 
-rule needlib ( name : build-dir : target-args + : extra-sources * : requirements * : default-build * : usage-requirements * )
+rule needlib ( name : build-dir : target-args : extra-sources * : requirements * : default-build * : usage-requirements * )
 {{
     local args = "$(target-args) {satisfy_args}" ;
     local includedir = "$(build-dir)/include" ;
@@ -123,5 +123,5 @@ rule needlib ( name : build-dir : target-args + : extra-sources * : requirements
             if name not in libraries_with_common_targets:
                 ret += "needlib-common {0}-common : {0} ;\n".format(name)
                 libraries_with_common_targets.add(name)
-            ret += "needlib {} : {} : {} : : {} ;\n".format(name, needy.build_directory(name, needy_target_or_universal_binary), target_args, requirements)
+            ret += "needlib {} : {} : \"{}\" : : {} ;\n".format(name, needy.build_directory(name, needy_target_or_universal_binary), target_args, requirements)
         return ret
