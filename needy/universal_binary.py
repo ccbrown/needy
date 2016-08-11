@@ -6,8 +6,6 @@ import shutil
 import subprocess
 import tempfile
 
-from .process import command
-
 
 class UniversalBinary:
     def __init__(self, name, libraries, needy):
@@ -101,11 +99,11 @@ class UniversalBinary:
                         f = tempfile.NamedTemporaryFile(delete=True)
                         try:
                             with open(os.devnull, 'w') as devnull:
-                                command(['lipo', '-extract', library.target().architecture, lib, '-output', f.name], stderr=devnull)
+                                subprocess.check_call(['lipo', '-extract', library.target().architecture, lib, '-output', f.name], stderr=devnull)
                         except subprocess.CalledProcessError:
-                            command(['cp', lib, f.name])
+                            subprocess.check_call(['cp', lib, f.name])
                         inputs.append(f)
-                    command(['lipo', '-create'] + [input.name for input in inputs] + ['-output', output_path])
+                    subprocess.check_call(['lipo', '-create'] + [input.name for input in inputs] + ['-output', output_path])
                     for input in inputs:
                         input.close()
                 elif extension in ['.h', '.hpp', '.ipp', '.c', '.cc', '.cpp']:
