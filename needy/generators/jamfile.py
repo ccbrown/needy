@@ -61,7 +61,7 @@ rule needlib-common ( name : libname )
 
 rule needlib ( name : build-dir : target-args : extra-sources * : requirements * : default-build * : usage-requirements * )
 {{
-    local args = "$(target-args) {satisfy_args}" ;
+    local args = "$(name) $(target-args) {satisfy_args}" ;
     local includedir = "$(build-dir)/include" ;
 
     make lib$(name)-{build_compatibility}.touch : $(NEEDS_FILE) $(name)-common : @satisfy-lib : $(requirements) <needy_args_{feature_suffix}>$(args) ;
