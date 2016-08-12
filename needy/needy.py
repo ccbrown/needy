@@ -138,6 +138,7 @@ class Needy:
                         env.globals[parts[0]] = value
             template = env.from_string(configuration)
             configuration = template.render(
+                env=os.environ,
                 platform=target.platform.identifier() if target else None,
                 architecture=target.architecture if target else None,
                 host_platform=host_platform().identifier(),
