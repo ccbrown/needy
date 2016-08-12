@@ -89,7 +89,7 @@ class UniversalBinary:
                     continue
                 elif len(self.libraries()) == 1:
                     print('Copying %s' % path)
-                    shutil.copy(source_path, output_path)
+                    shutil.copy(builds[0][1], output_path)
                 elif extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % path)
                     inputs = []
