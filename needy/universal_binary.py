@@ -82,16 +82,14 @@ class UniversalBinary:
 
                 self.__make_output_dirs_for_builds(output_path, builds)
 
-                if any([os.path.isdir(source_path) for _, source_path in builds]):
+                if len(self.libraries()) == 1 and os.path.islink(builds[0][1]):
+                    print('Copying symlink %s' % path)
+                    os.symlink(os.readlink(builds[0][1]), output_path)
+                elif any([os.path.isdir(source_path) for _, source_path in builds]):
                     continue
-
-                if len(self.libraries()) == 1:
+                elif len(self.libraries()) == 1:
                     print('Copying %s' % path)
-                    source_path = builds[0][1]
-                    if os.path.islink(source_path):
-                        os.symlink(os.readlink(source_path), output_path)
-                    else:
-                        shutil.copy(source_path, output_path)
+                    shutil.copy(source_path, output_path)
                 elif extension in ['.a', '.dylib', '.so']:
                     print('Creating universal library %s' % path)
                     inputs = []
@@ -150,7 +148,7 @@ class UniversalBinary:
 
     def __make_output_dirs_for_builds(self, output_path, builds):
         for _, source_dir in builds:
-            dir = output_path if os.path.isdir(source_dir) else os.path.dirname(output_path)
+            dir = output_path if os.path.isdir(source_dir) and not os.path.islink(source_dir) else os.path.dirname(output_path)
             if not os.path.exists(dir):
                 os.makedirs(dir)
 
