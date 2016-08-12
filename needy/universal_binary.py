@@ -82,7 +82,7 @@ class UniversalBinary:
 
                 self.__make_output_dirs_for_builds(output_path, builds)
 
-                if len(self.libraries()) == 1 and os.path.islink(builds[0][1]):
+                if os.path.islink(builds[0][1]):
                     print('Copying symlink %s' % path)
                     os.symlink(os.readlink(builds[0][1]), output_path)
                 elif any([os.path.isdir(source_path) for _, source_path in builds]):
