@@ -35,6 +35,7 @@ Variables
 * `architecture` - The architecture being built.
 * `host_platform` - The identifier of the host platform.
 * `needs_file` - The path of the needs file.
+* `env` - A map of environment variables.
 
 ### User-Defined Variables
 
