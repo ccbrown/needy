@@ -49,7 +49,7 @@ def command_sequence(cmds, verbosity=logging.INFO, environment_overrides={}):
             with TempDir() as d:
                 path = os.path.join(d, 'script.cmd')
                 with open(path, 'wb') as f:
-                    f.write('\r\n'.join(cmds))
+                    f.write('\r\n'.join(cmds).encode())
                 subprocess.check_call(['cmd', '/c', 'call', path], stderr=stderr, stdout=stdout, env=__environment(environment_overrides))
         else:
             subprocess.check_call(['sh', '-c', '\n'.join(['set -ex'] + cmds)], stderr=stderr, stdout=stdout, env=__environment(environment_overrides))
