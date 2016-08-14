@@ -7,6 +7,8 @@ import json
 
 from contextlib import contextmanager
 
+O_BINARY = getattr(os, 'O_BINARY', 0)
+
 
 class TempDir:
     def __enter__(self):
@@ -95,7 +97,7 @@ def lock_fd(fd, timeout=None):
 
 def lock_file(file_path, timeout=None):
     '''returns file descriptor to newly locked file or None if file couldn't be locked'''
-    fd = os.open(file_path, os.O_RDWR | os.O_CREAT)
+    fd = os.open(file_path, os.O_RDWR | os.O_CREAT | O_BINARY)
     try:
         if lock_fd(fd, timeout):
             return fd
