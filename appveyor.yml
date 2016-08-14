@@ -12,3 +12,8 @@ build: off
 
 test_script:
     - nosetests tests/unit
+    - nosetests tests/functional/projects
+    - nosetests tests/functional/test_build_environment.py
+    - nosetests tests/functional/test_development_mode.py
+    - nosetests tests/functional/test_directory_source.py
+    - nosetests tests/functional/test_xcconfig.py

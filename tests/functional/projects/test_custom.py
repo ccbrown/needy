@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 from ..functional_test import TestCase
 
@@ -15,12 +16,16 @@ class CustomProjectTest(TestCase):
                         'directory': empty_directory,
                         'project': {
                             'configure-steps': [
+                                'set FOO=QWERTYUIOP',
+                                'echo %FOO% > foo'
+                            ],
+                            'build-steps': 'findstr QWERTYUIOP foo'
+                        } if sys.platform == 'win32' else {
+                            'configure-steps': [
                                 'export FOO=QWERTYUIOP',
                                 'echo $FOO > foo'
                             ],
-                            'build-steps': [
-                                'cat foo | grep "QWERTYUIOP"'
-                            ]
+                            'build-steps': 'cat foo | grep QWERTYUIOP'
                         }
                     }
                 }

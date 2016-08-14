@@ -19,7 +19,7 @@ class ProcessTest(unittest.TestCase):
 
     def test_command_sequence(self):
         if sys.platform == 'win32':
-            needy.process.command_sequence(['set FOO=QWERTYUIOP', 'if NOT %FOO% == "QWERTYUIOP" exit 1'])
+            needy.process.command_sequence(['set FOO=QWERTYUIOP', 'echo %FOO% | findstr "QWERTYUIOP"'])
         else:
             needy.process.command_sequence(['export FOO=QWERTYUIOP', 'echo $FOO | grep "QWERTYUIOP"'])
 

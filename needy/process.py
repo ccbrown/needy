@@ -12,6 +12,7 @@ except ImportError:
     Style = EmptyStringAttributes()
 
 from .cd import current_directory
+from .filesystem import TempDir
 
 
 def __log_check_output(cmd, verbosity, **kwargs):
@@ -32,31 +33,33 @@ def __log_check_call(cmd, verbosity, **kwargs):
 
 
 def command(cmd, verbosity=logging.INFO, environment_overrides={}):
-    environment_overrides['PWD'] = current_directory()
-    env = os.environ.copy()
-    env.update(environment_overrides)
-    __log_check_call(cmd, verbosity, env=env)
+    __log_check_call(cmd, verbosity, env=__environment(environment_overrides))
 
 
 def command_output(cmd, verbosity=logging.INFO, environment_overrides={}):
-    environment_overrides['PWD'] = current_directory()
-    env = os.environ.copy()
-    env.update(environment_overrides)
     logging.log(verbosity, __format_command(cmd))
-    return __log_check_output(cmd, verbosity, env=env)
+    return __log_check_output(cmd, verbosity, env=__environment(environment_overrides))
 
 
 def command_sequence(cmds, verbosity=logging.INFO, environment_overrides={}):
-    environment_overrides['PWD'] = current_directory()
-    env = os.environ.copy()
-    env.update(environment_overrides)
     with open(os.devnull, 'w') as devnull:
         stderr = devnull if verbosity < logging.getLogger().getEffectiveLevel() else subprocess.STDOUT
         stdout = devnull if verbosity < logging.getLogger().getEffectiveLevel() else None
         if sys.platform == 'win32':
-            subprocess.check_call(['cmd', '/c'] + [arg for cmd in cmds for arg in [cmd, '&&']][:-1], stderr=stderr, stdout=stdout, env=env)
+            with TempDir() as d:
+                path = os.path.join(d, 'script.cmd')
+                with open(path, 'wb') as f:
+                    f.write('\r\n'.join(cmds))
+                subprocess.check_call(['cmd', '/c', 'call', path], stderr=stderr, stdout=stdout, env=__environment(environment_overrides))
         else:
-            subprocess.check_call(['sh', '-c', '\n'.join(['set -ex'] + cmds)], stderr=stderr, stdout=stdout, env=env)
+            subprocess.check_call(['sh', '-c', '\n'.join(['set -ex'] + cmds)], stderr=stderr, stdout=stdout, env=__environment(environment_overrides))
+
+
+def __environment(environment_overrides):
+    environment_overrides['PWD'] = current_directory()
+    env = os.environ.copy()
+    env.update(environment_overrides)
+    return {key: str(value) for key, value in env.items()}
 
 
 def __format_command(cmd):

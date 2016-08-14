@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from ..source import Source
 
@@ -10,8 +11,8 @@ class Directory(Source):
         self.directory = directory
 
     def clean(self):
-        if not os.path.isdir(os.path.dirname(self.directory)):
-            os.makedirs(os.path.dirname(self.directory))
-        if os.path.islink(self.directory):
+        if os.path.isdir(self.directory):
+            shutil.rmtree(self.directory)
+        elif os.path.exists(self.directory):
             os.remove(self.directory)
-        os.symlink(self.source_directory, self.directory)
+        shutil.copytree(self.source_directory, self.directory, symlinks=True, ignore=shutil.ignore_patterns('.*'))

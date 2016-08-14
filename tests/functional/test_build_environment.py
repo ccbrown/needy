@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 from .functional_test import TestCase
 
@@ -20,9 +21,9 @@ class BuildEnvironmentTest(TestCase):
                     'dependent': {
                         'directory': empty_directory,
                         'project': {
-                            'build-steps': [
-                                'echo $PKG_CONFIG_PATH | grep "dependency"'
-                            ]
+                            'build-steps': 'echo %PKG_CONFIG_PATH% | findstr "dependency"'
+                        } if sys.platform == 'win32' else {
+                            'build-steps': 'echo $PKG_CONFIG_PATH | grep "dependency"'
                         }
                     }
                 }
