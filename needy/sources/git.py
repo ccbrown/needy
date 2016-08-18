@@ -1,5 +1,6 @@
 import os
 import logging
+import distutils
 
 from ..source import Source
 from ..cd import cd
@@ -14,16 +15,22 @@ class GitRepository(Source):
         self.directory = directory
 
     def clean(self):
+        GitRepository.__assert_git_availability()
+
         if not os.path.exists(os.path.join(self.directory, '.git')):
             self.__fetch()
 
         with cd(self.directory):
-            command(['git', 'clean', '-xfd'], logging.DEBUG)
+            # intentionally use 'git' instead of find_executable. Repos with './git' shouldn't fail to clean.
+            command(['git', 'clean', '-xffd'], logging.DEBUG)
             command(['git', 'fetch'], logging.DEBUG)
-            command(['git', 'reset', '--hard', self.commit], logging.DEBUG)
+            command(['git', 'reset', 'HEAD', '--hard'], logging.DEBUG)
+            command(['git', 'checkout', '--force', self.commit], logging.DEBUG)
             command(['git', 'submodule', 'update', '--init', '--recursive'], logging.DEBUG)
 
     def __fetch(self):
+        GitRepository.__assert_git_availability()
+
         if not os.path.exists(os.path.dirname(self.directory)):
             os.makedirs(os.path.dirname(self.directory))
 
@@ -32,3 +39,8 @@ class GitRepository(Source):
 
         with cd(self.directory):
             command(['git', 'submodule', 'update', '--init', '--recursive'], logging.DEBUG)
+
+    @classmethod
+    def __assert_git_availability(cls):
+        if not distutils.spawn.find_executable('git'):
+            raise RuntimeError('No git binary is present')
