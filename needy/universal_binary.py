@@ -164,6 +164,6 @@ class UniversalBinary:
 
         hash.update(json.dumps({
             'build-compatibility': self.build_compatibility()
-        }))
+        }, sort_keys=True).encode())
 
         return hash.digest()
