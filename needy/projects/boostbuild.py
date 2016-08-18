@@ -55,6 +55,9 @@ class BoostBuildProject(project.Project):
         b2_args = self.evaluate(self.configuration('b2-args'))
         b2_args.extend(self.get_build_concurrency_args())
 
+        if not any(['variant' in arg for arg in b2_args]):
+            b2_args.append('variant=release')
+
         b2_args.append('architecture={}'.format('arm' if 'arm' in self.target().architecture else 'x86'))
         b2_args.append('address-model={}'.format('64' if '64' in self.target().architecture else '32'))
 
