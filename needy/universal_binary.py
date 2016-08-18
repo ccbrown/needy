@@ -82,28 +82,11 @@ class UniversalBinary:
 
                 self.__make_output_dirs_for_builds(output_path, builds)
 
-                if os.path.islink(builds[0][1]):
-                    print('Copying symlink %s' % path)
-                    os.symlink(os.readlink(builds[0][1]), output_path)
-                elif any([os.path.isdir(source_path) for _, source_path in builds]):
+                if not os.path.islink(builds[0][1]) and any([os.path.isdir(source_path) for _, source_path in builds]):
                     continue
-                elif len(self.libraries()) == 1:
+                elif not os.path.islink(builds[0][1]) and len(self.libraries()) == 1:
                     print('Copying %s' % path)
                     shutil.copy(builds[0][1], output_path)
-                elif extension in ['.a', '.dylib', '.so']:
-                    print('Creating universal library %s' % path)
-                    inputs = []
-                    for library, lib in builds:
-                        f = tempfile.NamedTemporaryFile(delete=True)
-                        try:
-                            with open(os.devnull, 'w') as devnull:
-                                subprocess.check_call(['lipo', '-extract', library.target().architecture, lib, '-output', f.name], stderr=devnull)
-                        except subprocess.CalledProcessError:
-                            subprocess.check_call(['cp', lib, f.name])
-                        inputs.append(f)
-                    subprocess.check_call(['lipo', '-create'] + [input.name for input in inputs] + ['-output', output_path])
-                    for input in inputs:
-                        input.close()
                 elif extension in ['.h', '.hpp', '.ipp', '.c', '.cc', '.cpp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for library, header in builds:
@@ -121,6 +104,23 @@ class UniversalBinary:
                         print('Creating universal header %s' % path)
                         with open(output_path, 'w') as f:
                             f.write(header_contents)
+                elif os.path.islink(builds[0][1]):
+                    print('Copying symlink %s' % path)
+                    os.symlink(os.readlink(builds[0][1]), output_path)
+                elif extension in ['.a', '.dylib', '.so']:
+                    print('Creating universal library %s' % path)
+                    inputs = []
+                    for library, lib in builds:
+                        f = tempfile.NamedTemporaryFile(delete=True)
+                        try:
+                            with open(os.devnull, 'w') as devnull:
+                                subprocess.check_call(['lipo', '-extract', library.target().architecture, lib, '-output', f.name], stderr=devnull)
+                        except subprocess.CalledProcessError:
+                            subprocess.check_call(['cp', lib, f.name])
+                        inputs.append(f)
+                    subprocess.check_call(['lipo', '-create'] + [input.name for input in inputs] + ['-output', output_path])
+                    for input in inputs:
+                        input.close()
                 elif extension == '.pc' and 'pkgconfig' in path:
                     universal_pc = None
                     for library, pc in builds:
@@ -152,10 +152,18 @@ class UniversalBinary:
             if not os.path.exists(dir):
                 os.makedirs(dir)
 
+    @classmethod
+    def build_compatibility(cls):
+        return 1
+
     def configuration_hash(self):
         hash = hashlib.sha256()
 
         for library in self.libraries():
             hash.update(library.configuration_hash())
+
+        hash.update(json.dumps({
+            'build-compatibility': self.build_compatibility()
+        }))
 
         return hash.digest()
