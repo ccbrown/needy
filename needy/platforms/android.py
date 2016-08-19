@@ -1,6 +1,5 @@
 from ..platform import Platform
 
-import hashlib
 import os
 import subprocess
 
@@ -21,11 +20,6 @@ class AndroidPlatform(Platform):
         parser.add_argument('--android-api-level', default=None, help='the android API level to build for. this overrides the toolchain\'s sysroot')
         parser.add_argument('--android-toolchain', default=None, help='the android toolchain to build with')
         parser.add_argument('--android-runtime', default='libstdc++', choices=['libstdc++', 'gnustl_shared'], help='the android runtime to use')
-
-    def configuration_hash(self, architecture):
-        hash = hashlib.sha256()
-        hash.update(self.__compiler_args(architecture))
-        return hash.digest()
 
     def toolchain_path(self, architecture):
         if self.__toolchain:
