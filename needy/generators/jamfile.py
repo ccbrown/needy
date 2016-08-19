@@ -79,7 +79,8 @@ rule needlib ( name : build-dir : target-args : extra-sources * : requirements *
           $(usage-requirements)
     ;
 
-    notfile install-$(name) : @install-lib : $(name) : $(requirements) <build_dir_{feature_suffix}>$(build-dir) ;
+    notfile install-$(name) : @install-lib : : $(requirements) <build_dir_{feature_suffix}>$(build-dir) ;
+    notfile satisfy-and-install-$(name) : @install-lib : $(name) : $(requirements) <build_dir_{feature_suffix}>$(build-dir) ;
     actions install-lib {{
         mkdir -p $(PREFIX) && cp -pR $(BUILD_DIR)/* $(PREFIX)/ && rm -f $(PREFIX)/needy.status
     }}
