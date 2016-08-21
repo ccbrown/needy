@@ -1,10 +1,11 @@
+import datetime
 import fnmatch
 import json
-import os
+import logging
 import multiprocessing
+import os
 import re
 import sys
-import logging
 
 from collections import OrderedDict
 
@@ -139,6 +140,7 @@ class Needy:
             template = env.from_string(configuration)
             configuration = template.render(
                 env=os.environ,
+                parameters=self.parameters(),
                 platform=target.platform.identifier() if target else None,
                 architecture=target.architecture if target else None,
                 host_platform=host_platform().identifier(),
@@ -342,7 +344,7 @@ class Needy:
         if 'libraries' not in needs_configuration:
             return
 
-        print('Satisfying needs in %s' % self.path())
+        print('Satisfying {} in {}'.format(target, self.path()))
 
         try:
             for name, library in self.libraries_to_build(target, filters):
@@ -350,8 +352,9 @@ class Needy:
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
                     self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
+                    start_time = datetime.datetime.now()
                     library.build()
-                    self.__print_status(Fore.GREEN, 'SUCCESS', name)
+                    self.__print_status(Fore.GREEN, 'SUCCESS', '{} in {}'.format(name, datetime.datetime.now() - start_time))
         except Exception as e:
             self.__print_status(Fore.RED, 'ERROR')
             print(e)
@@ -359,7 +362,7 @@ class Needy:
 
     def satisfy_universal_binary(self, universal_binary, filters=None):
         try:
-            print('Satisfying universal binary %s in %s' % (universal_binary, self.path()))
+            print('Satisfying universal binary {} in {}'.format(universal_binary, self.path()))
             configuration = self.universal_binary_configuration(universal_binary)
 
             libraries = dict()
@@ -367,16 +370,11 @@ class Needy:
             for platform, architectures in configuration.items():
                 for architecture in architectures:
                     target = Target(self.platform(platform), architecture)
+                    self.satisfy_target(target, filters)
                     for name, library in self.libraries_to_build(target, filters):
                         if name not in libraries:
                             libraries[name] = list()
                         libraries[name].append(library)
-                        if library.has_up_to_date_build():
-                            self.__print_status(Fore.GREEN, 'UP-TO-DATE', '{} for {} {}'.format(name, target.platform.identifier(), target.architecture))
-                        else:
-                            self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
-                            library.build()
-                            self.__print_status(Fore.GREEN, 'SUCCESS', name)
 
             for name, libs in libraries.items():
                 if filters and not self.test_filters(name, filters):
@@ -386,8 +384,9 @@ class Needy:
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
                     self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
+                    start_time = datetime.datetime.now()
                     binary.build()
-                    self.__print_status(Fore.GREEN, 'SUCCESS', name)
+                    self.__print_status(Fore.GREEN, 'SUCCESS', '{} in {}'.format(name, datetime.datetime.now() - start_time))
         except Exception as e:
             self.__print_status(Fore.RED, 'ERROR')
             print(e)
