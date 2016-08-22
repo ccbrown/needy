@@ -99,7 +99,12 @@ rule needlib ( name : build-dir : target-args : extra-sources * : requirements *
         contents += "\n" + self.__target_definitions(needy, targets['host'], libraries_with_common_targets)
 
         if 'ios' in available_platforms():
-            contents += "\n" + self.__target_definitions(needy, targets['ios'], libraries_with_common_targets, '<target-os>iphone <architecture>arm')
+            if isinstance(targets['ios'], Target):
+                contents += "\n" + self.__target_definitions(needy, targets['ios'], libraries_with_common_targets, '<target-os>iphone <architecture>arm')
+                for architecture in ['armv7', 'arm64']:
+                    contents += "\n" + self.__target_definitions(needy, Target(needy.platform('ios'), architecture), libraries_with_common_targets, '<target-os>iphone <architecture>arm <instruction-set>{}'.format(architecture))
+            else:
+                contents += "\n" + self.__target_definitions(needy, targets['ios'], libraries_with_common_targets, '<target-os>iphone <architecture>arm')
 
         if 'iossimulator' in available_platforms():
             contents += "\n" + self.__target_definitions(needy, targets['iossimulator'], libraries_with_common_targets, '<target-os>iphone <architecture>x86')
