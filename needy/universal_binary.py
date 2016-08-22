@@ -87,7 +87,7 @@ class UniversalBinary:
                 elif not os.path.islink(builds[0][1]) and len(self.libraries()) == 1:
                     print('Copying %s' % path)
                     shutil.copy(builds[0][1], output_path)
-                elif extension in ['.h', '.hpp', '.ipp', '.c', '.cc', '.cpp']:
+                elif extension in ['.h', '.hpp', '.hxx', '.ipp', '.c', '.cc', '.cpp']:
                     header_contents = '#if __APPLE__\n#include "TargetConditionals.h"\n#endif\n'
                     for library, header in builds:
                         macro = library.target().platform.detection_macro(library.target().architecture)
