@@ -1,10 +1,10 @@
 import json
 import os
 
-from .functional_test import TestCase
+from ..functional_test import TestCase
 
 
-class XCConfigTest(TestCase):
+class PkgConfigJamTest(TestCase):
     def test_generate(self):
         with open(os.path.join(self.path(), 'needs.json'), 'w') as needs_file:
             needs_file.write(json.dumps({
@@ -18,6 +18,13 @@ class XCConfigTest(TestCase):
                     }
                 }
             }))
-        self.assertEqual(self.execute(['generate', 'xcconfig']), 0)
-        # this is about the best we can do for a generic functional test - the file will be empty on anything but osx
-        self.assertTrue(os.path.isfile(os.path.join(self.needs_directory(), 'search-paths.xcconfig')))
+        self.assertEqual(self.satisfy(), 0)
+
+        os.environ['PKG_CONFIG_PATH'] = self.pkg_config_path()
+        self.assertEqual(self.execute(['generate', 'pkgconfig-jam']), 0)
+
+        path = os.path.join(self.needs_directory(), 'pkgconfig.jam')
+        self.assertTrue(os.path.isfile(path))
+        with open(path, 'r') as f:
+            contents = f.read()
+        self.assertTrue('cereal' in contents)

@@ -35,3 +35,7 @@ class TestCase(unittest.TestCase):
     def needs_directory(self):
         needy = Needy(self.path())
         return needy.needs_directory()
+
+    def pkg_config_path(self):
+        needy = Needy(self.path())
+        return needy.pkg_config_path(Target(host_platform()()))

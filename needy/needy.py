@@ -233,7 +233,7 @@ class Needy:
                               target=target,
                               configuration=needs_configuration['libraries'][name],
                               development_mode=development_mode,
-                              build_caches=self.needy_configuration().build_caches())
+                              build_caches=self.needy_configuration().build_caches() if self.needy_configuration() else [])
             libraries[name] = library
             if 'dependencies' not in library.configuration():
                 graph[name] = set()

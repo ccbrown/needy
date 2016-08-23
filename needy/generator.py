@@ -6,8 +6,9 @@ except ImportError:
 
 def available_generators():
     from .generators.jamfile import JamfileGenerator
+    from .generators.pkgconfig_jam import PkgConfigJamGenerator
     from .generators.xcconfig import XCConfigGenerator
-    return [JamfileGenerator, XCConfigGenerator]
+    return [JamfileGenerator, PkgConfigJamGenerator, XCConfigGenerator]
 
 
 class Generator:
