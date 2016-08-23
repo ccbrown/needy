@@ -37,7 +37,7 @@ class PkgConfigJamGenerator(Generator):
             location = os.path.realpath(subprocess.check_output(['pkg-config', package, '--variable=pcfiledir'], env=env).decode().strip())
             cflags = subprocess.check_output(['pkg-config', package, '--cflags'], env=env).decode().strip()
             ldflags = subprocess.check_output(['pkg-config', package, '--libs', '--static'], env=env).decode().strip()
-            contents += 'alias {}-package : : : : <cflags>"{}" <linkflags>"{}" ;\n'.format(package, cflags, ldflags)
+            contents += 'alias {}-package : : : : <cflags>"{}" <linkflags>"{}" ;\n'.format(package, self.__escape(cflags), self.__escape(ldflags))
             contents += textwrap.dedent('''\
                 actions install-{package}-package-action {{ mkdir -p $(INSTALL_PREFIX) && cp -pR {package_prefix}/* $(INSTALL_PREFIX)/ }}
                 notfile.notfile install-{package}-package : @$(__name__).install-{package}-package-action ;
@@ -70,3 +70,7 @@ class PkgConfigJamGenerator(Generator):
 
         with open(path, 'w') as f:
             f.write(contents)
+
+    @classmethod
+    def __escape(cls, s):
+        return s.replace('\\', '\\\\').replace('"', '\\"')
