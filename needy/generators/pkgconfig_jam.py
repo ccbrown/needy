@@ -27,7 +27,7 @@ class PkgConfigJamGenerator(Generator):
             local p = [ project.current ] ;
 
         ''').format(
-            pkg_config_path=env['PKG_CONFIG_PATH']
+            pkg_config_path=self.__escape(env.get('PKG_CONFIG_PATH', ''))
         )
 
         packages = [line.split()[0] for line in subprocess.check_output(['pkg-config', '--list-all'], env=env).decode().splitlines()]
