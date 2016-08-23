@@ -95,8 +95,8 @@ class MakeProject(project.Project):
                 'TARGET_OS=%s' % target_os
             ])
 
-        self.command(['make'] + self.__make_targets() + make_args)
         make_args.extend(self.__make_prefix_args(make_args, output_directory))
+        self.command(['make'] + self.__make_targets() + make_args)
         self.command(['make', 'install'] + make_args)
 
     def __make_targets(self):

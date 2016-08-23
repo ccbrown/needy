@@ -62,6 +62,9 @@ class PkgConfigJamGenerator(Generator):
                 }}
                 alias $(name) : $(packages)-package ;
                 alias install-$(name)-if-owned : install-$(packages)-package-if-owned ;
+
+                local p = [ project.current ] ;
+                $(p).mark-target-as-explicit install-$(name)-if-owned ;
             }}
         ''').format(
             pkg_config_packages=' '.join(packages),
