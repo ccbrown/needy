@@ -108,7 +108,7 @@ class Needy:
 
     def set_development_mode(self, library_name, enable=True):
         if not os.path.isdir(self.source_directory(library_name)):
-            raise RuntimeError('Please initialize the library source before enabling development mode.')
+            raise RuntimeError('Please initialize the library before enabling development mode.')
 
         was_already = self.__local_configuration.development_mode(library_name) == enable
         self.__local_configuration.set_development_mode(library_name, enable)
@@ -400,8 +400,8 @@ class Needy:
 
         for name, libraries in self.libraries(target, filters).items():
             assert len(libraries) == 1
-            print('Initializing {} source...'.format(name))
-            libraries[0].clean_source()
+            print('Initializing {}...'.format(name))
+            libraries[0].initialize_source()
 
     @staticmethod
     def __normalize_path(path):

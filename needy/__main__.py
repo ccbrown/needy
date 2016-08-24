@@ -26,6 +26,14 @@ def __configured_needy(scope, parameters=None):
         yield Needy(scope, parameters, local_configuration=local_configuration, needy_configuration=NeedyConfiguration(scope))
 
 
+def parse_command_args(parser, args):
+    parser.add_argument('-v', '--verbose', action='store_true', help='produce more verbose logs')
+    ret = parser.parse_args(args)
+    if ret.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    return ret
+
+
 def satisfy(args=[]):
     parser = argparse.ArgumentParser(
         prog='%s satisfy' % os.path.basename(sys.argv[0]),
@@ -37,15 +45,11 @@ def satisfy(args=[]):
     parser.add_argument('-u', '--universal-binary', help='builds the universal binary with the given name')
     parser.add_argument('-j', '--concurrency', default=1, const=0, nargs='?', type=int, help='number of jobs to process concurrently. omit or specify 0 for full concurrency')
     parser.add_argument('-f', '--force-build', action='store_true', help='force a build even when the target is up-to-date')
-    parser.add_argument('-v', '--verbose', action='store_true', help='produce more verbose logs')
     parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
 
     for platform in available_platforms().values():
         platform.add_arguments(parser)
-    parameters = parser.parse_args(args)
-
-    if parameters.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         if parameters.universal_binary:
@@ -65,7 +69,7 @@ def init(args=[]):
     parser.add_argument('library', default=None, nargs='*', help='the library to initialize the source of. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='initialize the source for this target (example: ios:armv7)')
     parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
-    parameters = parser.parse_args(args)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         needy.initialize(needy.target(parameters.target), parameters.library)
@@ -82,7 +86,7 @@ def cflags(args=[]):
     parser.add_argument('library', default=None, nargs='*', help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
-    parameters = parser.parse_args(args)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         print(' '.join([('-I%s' % path) for path in needy.include_paths(
@@ -100,7 +104,7 @@ def ldflags(args=[]):
     parser.add_argument('library', default=None, nargs='*', help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
-    parameters = parser.parse_args(args)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         print(' '.join([('-L%s' % path) for path in needy.library_paths(
@@ -118,7 +122,7 @@ def builddir(args=[]):
     parser.add_argument('library', help='the library to get the directory for')
     parser.add_argument('-t', '--target', default='host', help='gets the directory for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary')
-    parameters = parser.parse_args(args)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         print(needy.build_directory(parameters.library,
@@ -134,7 +138,7 @@ def sourcedir(args=[]):
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('library', help='the library to get the directory for')
-    parameters = parser.parse_args(args)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         print(needy.source_directory(parameters.library), end='')
@@ -150,7 +154,7 @@ def generate(args=[]):
     )
     parser.add_argument('file', default=None, nargs='+', choices=[g.identifier() for g in available_generators()], help='the file to generate')
     parser.add_argument('--satisfy-args', default='', nargs='?', help='arguments to use when satisfying needs')
-    parameters = parser.parse_args(args)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         needy.generate(parameters.file)
@@ -167,7 +171,7 @@ def development_mode(args=[]):
     parser.add_argument('library', help='the library to enable dev mode for')
     parser.add_argument('--disable', default=False, action='store_true', help='disables dev mode for the library')
     parser.add_argument('--query', default=False, action='store_true', help='if given, will return 0 if dev-mode is enabled, or 1 otherwise')
-    parameters = parser.parse_args(args)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         if parameters.query:
@@ -186,7 +190,7 @@ def pkg_config_path(args=[]):
     parser.add_argument('library', default=None, nargs='*', help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='gets path for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
-    parameters = parser.parse_args(args)
+    parameters = parse_command_args(parser, args)
 
     with __configured_needy('.', parameters) as needy:
         print(needy.pkg_config_path(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target), parameters.library), end='')

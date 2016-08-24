@@ -100,6 +100,11 @@ class Library:
 
         source.clean()
 
+    def initialize_source(self):
+        self.clean_source()
+        with OverrideEnvironment(self.__environment_overrides()):
+            self.__post_clean()
+
     def build(self):
         print('Building for %s %s' % (self.target().platform.identifier(), self.target().architecture))
 
@@ -114,16 +119,10 @@ class Library:
         if not self.is_in_development_mode():
             self.clean_source()
 
-        configuration = self.project_configuration()
-        env_overrides = self.__parse_env_overrides(configuration['environment'] if 'environment' in configuration else None)
-        self.__log_env_overrides(env_overrides)
-
-        pkg_config_path = env_overrides['PKG_CONFIG_PATH'] if 'PKG_CONFIG_PATH' in env_overrides else os.environ.get('PKG_CONFIG_PATH', '')
-        dependency_config_path = self.needy.pkg_config_path(self.target(), self.dependencies())
-        env_overrides['PKG_CONFIG_PATH'] = (dependency_config_path + ':' + pkg_config_path) if pkg_config_path and dependency_config_path else dependency_config_path
-
-        with OverrideEnvironment(env_overrides):
+        with OverrideEnvironment(self.__environment_overrides()):
             self.__post_clean()
+
+            configuration = self.project_configuration()
 
             project = self.project(ProjectDefinition(self.target(), self.project_root(), configuration))
             if not project:
@@ -199,7 +198,7 @@ class Library:
         path = os.path.relpath(self.build_directory(), self.needy.needs_directory())
         return os.path.join(path, configuration_hash)
 
-    def __parse_env_overrides(self, overrides):
+    def __parse_environment_overrides(self, overrides):
         if overrides is None:
             return dict()
         ret = overrides.copy()
@@ -207,10 +206,20 @@ class Library:
             ret[k] = self.evaluate(v, current=os.environ[k] if k in os.environ else '')[0]
         return ret
 
-    def __log_env_overrides(self, env_overrides, verbosity=logging.DEBUG):
-        if env_overrides is not None and len(env_overrides) > 0:
+    def __environment_overrides(self):
+        configuration = self.project_configuration()
+        overrides = self.__parse_environment_overrides(configuration['environment'] if 'environment' in configuration else None)
+        self.__log_environment_overrides(overrides)
+
+        pkg_config_path = overrides['PKG_CONFIG_PATH'] if 'PKG_CONFIG_PATH' in overrides else os.environ.get('PKG_CONFIG_PATH', '')
+        dependency_config_path = self.needy.pkg_config_path(self.target(), self.dependencies())
+        overrides['PKG_CONFIG_PATH'] = (dependency_config_path + ':' + pkg_config_path) if pkg_config_path and dependency_config_path else dependency_config_path
+        return overrides
+
+    def __log_environment_overrides(self, overrides, verbosity=logging.DEBUG):
+        if overrides is not None and len(overrides) > 0:
             logging.log(verbosity, 'Overriding environment with new variables:')
-            for k, v in env_overrides.items():
+            for k, v in overrides.items():
                 logging.log(verbosity, '{}={}'.format(k, v))
 
     def is_in_development_mode(self):
