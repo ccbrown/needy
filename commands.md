@@ -68,7 +68,7 @@ This example places a Jamfile in the needs directory with targets that can be us
 dev-mode
 --
 
-Enables development of a need without destroying your work. This more or less bypasses the clean of the source directory before building a specific need, allowing you to make and test changes to the library.
+Enables development of a need without destroying your work. This more or less bypasses the initialization of the source directory before building a specific need, allowing you to make and test changes to the library.
 
 Example:
 
@@ -77,6 +77,16 @@ Development mode enabled for gsl: /Users/cbrown/example/needs/gsl/source</code><
 
 <pre class="highlight"><code>cbrown@mbp:~/example% <span class="green">needy</span> dev-mode gsl --disable
 Development mode disabled for gsl. Please ensure that you have persisted any changes you wish to keep.</code></pre>
+
+init
+--
+
+Initializes the source directory for a need, according to the needs file. This includes fetching the source, cleaning the source directory, and running user-defined post-clean steps. This is often useful in conjunction with `dev-mode`.
+
+Example:
+
+<pre class="highlight"><code>cbrown@mbp:~/example% <span class="green">needy</span> init asio
+Initializing asio...</code></pre>
 
 pkg-config-path
 --
