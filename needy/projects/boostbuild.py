@@ -1,5 +1,5 @@
 import os
-import distutils
+import distutils.spawn
 import textwrap
 import sys
 

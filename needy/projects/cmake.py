@@ -1,4 +1,4 @@
-import distutils
+import distutils.spawn
 import os
 
 from .. import project

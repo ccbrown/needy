@@ -10,6 +10,7 @@ from contextlib import contextmanager
 
 from .needy import Needy
 from .local_configuration import LocalConfiguration
+from .log_formatter import LogFormatter
 from .platform import available_platforms
 from .generator import available_generators
 from .caches.directory import Directory
@@ -31,44 +32,20 @@ def satisfy(args=[]):
         description='Satisfies library and universal binary needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument(
-        'library',
-        default=None,
-        nargs='*',
-        help='the library to satisfy. shell-style wildcards are allowed')
-    parser.add_argument(
-        '-t', '--target',
-        default='host',
-        help='builds needs for this target (example: ios:armv7)')
-    parser.add_argument(
-        '-u', '--universal-binary',
-        help='builds the universal binary with the given name')
-    parser.add_argument(
-        '-j', '--concurrency',
-        default=1,
-        const=0,
-        nargs='?',
-        type=int,
-        help='number of jobs to process concurrently. omit or specify 0 for full concurrency')
-    parser.add_argument(
-        '-f', '--force-build',
-        action='store_true',
-        help='force a build even when the target is up-to-date')
-    parser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        help='produce more verbose logs')
-    parser.add_argument(
-        '-D', '--define',
-        nargs='*',
-        action='append',
-        help='specify a user-defined variable to be passed to the needs file renderer')
+    parser.add_argument('library', default=None, nargs='*', help='the library to satisfy. shell-style wildcards are allowed')
+    parser.add_argument('-t', '--target', default='host', help='builds needs for this target (example: ios:armv7)')
+    parser.add_argument('-u', '--universal-binary', help='builds the universal binary with the given name')
+    parser.add_argument('-j', '--concurrency', default=1, const=0, nargs='?', type=int, help='number of jobs to process concurrently. omit or specify 0 for full concurrency')
+    parser.add_argument('-f', '--force-build', action='store_true', help='force a build even when the target is up-to-date')
+    parser.add_argument('-v', '--verbose', action='store_true', help='produce more verbose logs')
+    parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
 
     for platform in available_platforms().values():
         platform.add_arguments(parser)
     parameters = parser.parse_args(args)
 
-    logging.basicConfig(format=('%(message)s'), level=logging.DEBUG if parameters.verbose else logging.INFO)
+    if parameters.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
 
     with __configured_needy('.', parameters) as needy:
         if parameters.universal_binary:
@@ -79,17 +56,30 @@ def satisfy(args=[]):
     return 0
 
 
+def fetch(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s fetch' % os.path.basename(sys.argv[0]),
+        description='Fetches and cleans sources.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('library', default=None, nargs='*', help='the library to fetch. shell-style wildcards are allowed')
+    parser.add_argument('-t', '--target', default='host', help='fetch for this target (example: ios:armv7)')
+    parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
+    parameters = parser.parse_args(args)
+
+    with __configured_needy('.', parameters) as needy:
+        needy.fetch(needy.target(parameters.target), parameters.library)
+
+    return 0
+
+
 def cflags(args=[]):
     parser = argparse.ArgumentParser(
         prog='%s cflags' % os.path.basename(sys.argv[0]),
         description='Gets compiler flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument(
-        'library',
-        default=None,
-        nargs='*',
-        help='the library to satisfy. shell-style wildcards are allowed')
+    parser.add_argument('library', default=None, nargs='*', help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
@@ -107,11 +97,7 @@ def ldflags(args=[]):
         description='Gets linker flags required for using the needs.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument(
-        'library',
-        default=None,
-        nargs='*',
-        help='the library to satisfy. shell-style wildcards are allowed')
+    parser.add_argument('library', default=None, nargs='*', help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='gets flags for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
@@ -130,8 +116,7 @@ def builddir(args=[]):
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('library', help='the library to get the directory for')
-    parser.add_argument(
-        '-t', '--target', default='host', help='gets the directory for this target (example: ios:armv7)')
+    parser.add_argument('-t', '--target', default='host', help='gets the directory for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary')
     parameters = parser.parse_args(args)
 
@@ -163,17 +148,8 @@ def generate(args=[]):
         description='Generates useful files.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument(
-        'file',
-        default=None,
-        nargs='+',
-        choices=[g.identifier() for g in available_generators()],
-        help='the file to generate')
-    parser.add_argument(
-        '--satisfy-args',
-        default='',
-        nargs='?',
-        help='arguments to use when satisfying needs')
+    parser.add_argument('file', default=None, nargs='+', choices=[g.identifier() for g in available_generators()], help='the file to generate')
+    parser.add_argument('--satisfy-args', default='', nargs='?', help='arguments to use when satisfying needs')
     parameters = parser.parse_args(args)
 
     with __configured_needy('.', parameters) as needy:
@@ -188,19 +164,9 @@ def development_mode(args=[]):
         description='Enables development mode for a library.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument(
-        'library',
-        help='the library to enable dev mode for')
-    parser.add_argument(
-        '--disable',
-        default=False,
-        action='store_true',
-        help='disables dev mode for the library')
-    parser.add_argument(
-        '--query',
-        default=False,
-        action='store_true',
-        help='if given, will return 0 if dev-mode is enabled, or 1 otherwise')
+    parser.add_argument('library', help='the library to enable dev mode for')
+    parser.add_argument('--disable', default=False, action='store_true', help='disables dev mode for the library')
+    parser.add_argument('--query', default=False, action='store_true', help='if given, will return 0 if dev-mode is enabled, or 1 otherwise')
     parameters = parser.parse_args(args)
 
     with __configured_needy('.', parameters) as needy:
@@ -217,11 +183,7 @@ def pkg_config_path(args=[]):
         description='Gets the path required for using pkg-config.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument(
-        'library',
-        default=None,
-        nargs='*',
-        help='the library to satisfy. shell-style wildcards are allowed')
+    parser.add_argument('library', default=None, nargs='*', help='the library to satisfy. shell-style wildcards are allowed')
     parser.add_argument('-t', '--target', default='host', help='gets path for this target (example: ios:armv7)')
     parser.add_argument('-u', '--universal-binary', help='gets flags for this universal binary')
     parameters = parser.parse_args(args)
@@ -239,11 +201,18 @@ def main(args=sys.argv):
     except ImportError:
         pass
 
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    log_handler = logging.StreamHandler()
+    log_handler.setFormatter(LogFormatter())
+    logger.addHandler(log_handler)
+
     parser = argparse.ArgumentParser(
         description='Helps with dependencies.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""available commands:
   satisfy          satisfies libraries / universal binary needs
+  fetch            fetches and cleans sources
   cflags           emits the compiler flags required to use the satisfied needs
   ldflags          emits the linker flags required to use the satisfied needs
   builddir         emits the build directory for a need
@@ -261,6 +230,7 @@ Use '%s <command> --help' to get help for a specific command.
 
     commands = {
         'satisfy': satisfy,
+        'fetch': fetch,
         'cflags': cflags,
         'ldflags': ldflags,
         'builddir': builddir,
@@ -280,10 +250,11 @@ Use '%s <command> --help' to get help for a specific command.
                 parser.print_help()
             return 1
     finally:
+        logger.removeHandler(log_handler)
         logging.shutdown()
 
     print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))
     return 1
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main(sys.argv))

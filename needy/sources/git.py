@@ -1,6 +1,7 @@
 import os
 import logging
-import distutils
+import distutils.spawn
+import subprocess
 
 from ..source import Source
 from ..cd import cd
@@ -21,9 +22,13 @@ class GitRepository(Source):
             self.__fetch()
 
         with cd(self.directory):
-            # intentionally use 'git' instead of find_executable. Repos with './git' shouldn't fail to clean.
             command(['git', 'clean', '-xffd'], logging.DEBUG)
-            command(['git', 'fetch'], logging.DEBUG)
+            try:
+                command(['git', 'fetch'], logging.DEBUG)
+            except subprocess.CalledProcessError:
+                # we should be okay with this to enable offline builds
+                logging.warn('git fetch failed for {}'.format(self.directory))
+                pass
             command(['git', 'reset', 'HEAD', '--hard'], logging.DEBUG)
             command(['git', 'checkout', '--force', self.commit], logging.DEBUG)
             command(['git', 'submodule', 'update', '--init', '--recursive'], logging.DEBUG)

@@ -32,6 +32,10 @@ class TestCase(unittest.TestCase):
         needy = Needy(self.path())
         return needy.build_directory(library, target_or_universal_binary)
 
+    def source_directory(self, library, target=Target(host_platform()())):
+        needy = Needy(self.path())
+        return needy.source_directory(library)
+
     def needs_directory(self):
         needy = Needy(self.path())
         return needy.needs_directory()

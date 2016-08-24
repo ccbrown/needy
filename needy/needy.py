@@ -107,8 +107,8 @@ class Needy:
         return self.__local_configuration.development_mode(library_name)
 
     def set_development_mode(self, library_name, enable=True):
-        if not os.path.isdir(os.path.join(self.__needs_directory, library_name)):
-            raise RuntimeError('Please build the library once before enabling development mode.')
+        if not os.path.isdir(self.source_directory(library_name)):
+            raise RuntimeError('Please fetch the library source before enabling development mode.')
 
         was_already = self.__local_configuration.development_mode(library_name) == enable
         self.__local_configuration.set_development_mode(library_name, enable)
@@ -391,6 +391,17 @@ class Needy:
             self.__print_status(Fore.RED, 'ERROR')
             print(e)
             raise
+
+    def fetch(self, target, filters=None):
+        needs_configuration = self.needs_configuration(target)
+
+        if 'libraries' not in needs_configuration:
+            return
+
+        for name, libraries in self.libraries(target, filters).items():
+            assert len(libraries) == 1
+            print('Cleaning {} source...'.format(name))
+            libraries[0].clean_source()
 
     @staticmethod
     def __normalize_path(path):
