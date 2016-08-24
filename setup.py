@@ -2,6 +2,7 @@
 
 import os
 import zipfile
+import sys
 
 from setuptools import setup
 from setuptools.command.bdist_egg import bdist_egg as _bdist_egg
@@ -44,8 +45,8 @@ setup(
         ]
     },
     install_requires=[
-        'colorama', 'jinja2', 'pyyaml', 'pypiwin32 : sys.platform == \'win32\''
-    ],
+        'colorama', 'jinja2', 'pyyaml'
+    ] + ['pypiwin32'] if sys.platform == 'win32' else [],
     cmdclass={'bdist_egg': bdist_egg},
     license='MIT'
 )
