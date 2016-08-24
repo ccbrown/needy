@@ -60,11 +60,13 @@ class PkgConfigJamGenerator(Generator):
                 if ! $(packages) {{
                     packages = $(name) ;
                 }}
-                alias $(name) : $(packages)-package ;
-                alias install-$(name)-if-owned : install-$(packages)-package-if-owned ;
+                if $(packages) in $(PKG_CONFIG_PACKAGES) {{
+                    alias $(name) : $(packages)-package ;
+                    alias install-$(name)-if-owned : install-$(packages)-package-if-owned ;
 
-                local p = [ project.current ] ;
-                $(p).mark-target-as-explicit install-$(name)-if-owned ;
+                    local p = [ project.current ] ;
+                    $(p).mark-target-as-explicit install-$(name)-if-owned ;
+                }}
             }}
         ''').format(
             pkg_config_packages=' '.join(packages),
