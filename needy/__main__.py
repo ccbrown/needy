@@ -56,19 +56,19 @@ def satisfy(args=[]):
     return 0
 
 
-def fetch(args=[]):
+def init(args=[]):
     parser = argparse.ArgumentParser(
-        prog='%s fetch' % os.path.basename(sys.argv[0]),
-        description='Fetches and cleans sources.',
+        prog='%s init' % os.path.basename(sys.argv[0]),
+        description='Initializes library source directories.',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument('library', default=None, nargs='*', help='the library to fetch. shell-style wildcards are allowed')
-    parser.add_argument('-t', '--target', default='host', help='fetch for this target (example: ios:armv7)')
+    parser.add_argument('library', default=None, nargs='*', help='the library to initialize the source of. shell-style wildcards are allowed')
+    parser.add_argument('-t', '--target', default='host', help='initialize the source for this target (example: ios:armv7)')
     parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
     parameters = parser.parse_args(args)
 
     with __configured_needy('.', parameters) as needy:
-        needy.fetch(needy.target(parameters.target), parameters.library)
+        needy.initialize(needy.target(parameters.target), parameters.library)
 
     return 0
 
@@ -212,7 +212,7 @@ def main(args=sys.argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""available commands:
   satisfy          satisfies libraries / universal binary needs
-  fetch            fetches and cleans sources
+  init             initializes library source directories
   cflags           emits the compiler flags required to use the satisfied needs
   ldflags          emits the linker flags required to use the satisfied needs
   builddir         emits the build directory for a need
@@ -230,7 +230,7 @@ Use '%s <command> --help' to get help for a specific command.
 
     commands = {
         'satisfy': satisfy,
-        'fetch': fetch,
+        'init': init,
         'cflags': cflags,
         'ldflags': ldflags,
         'builddir': builddir,
