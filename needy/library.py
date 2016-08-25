@@ -120,7 +120,8 @@ class Library:
             self.clean_source()
 
         with OverrideEnvironment(self.__environment_overrides()):
-            self.__post_clean()
+            if not self.is_in_development_mode():
+                self.__post_clean()
 
             configuration = self.project_configuration()
 
