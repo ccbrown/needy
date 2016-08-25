@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import argparse
+import logging
 import os
 import sys
 import textwrap
@@ -36,53 +37,41 @@ def disable(args=[]):
     return 0
 
 
-def query(args=[]):
-    parser = argparse.ArgumentParser(
-        prog='%s dev query' % os.path.basename(sys.argv[0]),
-        description='Exits 0 if dev mode is enabled for the given library.'
-    )
-    parser.add_argument('library', help='the library to enable dev mode for')
-    parameters = parser.parse_args(args)
-
-    with ConfiguredNeedy('.', parameters) as needy:
-        return 0 if needy.development_mode(parameters.library) else 1
-
-    return 0
-
-
 def status(args=[]):
     parser = argparse.ArgumentParser(
         prog='%s dev status' % os.path.basename(sys.argv[0]),
         description='Shows the status of libraries that are currently in dev mode.'
     )
-    parser.add_argument('-t', '--target', default='host', help='show status for this target (example: ios:armv7)')
+    parser.add_argument('library', nargs='?', help='a library to check the status of')
     parameters = parser.parse_args(args)
 
-    rows = []
-    column_count = 2
-    max_column_lengths = [0] * column_count
-
     with ConfiguredNeedy('.', parameters) as needy:
-        for name, libraries in needy.libraries(needy.target(parameters.target)).items():
-            assert len(libraries) == 1
-            library = libraries[0]
-            if library.is_in_development_mode():
-                row = (name, library.source_directory())
-                rows.append(row)
-                for column in range(0, column_count):
-                    max_column_lengths[column] = max(max_column_lengths[column], len(row[column]))
+        library_names = needy.development_mode_libraries()
+        if parameters.library:
+            if parameters.library in library_names:
+                logging.info('{} is in dev mode: {}'.format(parameters.library, needy.need_directory(parameters.library)))
+                return 0
+            else:
+                logging.info('{} is not in dev mode.'.format(parameters.library))
+                return 1
 
-    if rows:
-        print('There {} {} librar{} in dev mode:\n'.format('are' if len(rows) > 1 else 'is', len(rows), 'ies' if len(rows) > 1 else 'y'))
-        for row in rows:
-            for i in range(0, column_count):
-                print('  {:{}}  '.format(row[i], max_column_lengths[i]), end='')
+        if library_names:
+            print('There {} {} librar{} in dev mode:'.format(
+                'are' if len(library_names) > 1 else 'is',
+                len(library_names),
+                'ies' if len(library_names) > 1 else 'y')
+            )
+
             print('')
-        print('')
-    else:
-        print('There are no libraries in dev mode.')
+            max_name_length = max([len(name) for name in library_names])
+            for name in library_names:
+                print('  {}{:{}} {}'.format(name, '', max_name_length - len(name) + 1, needy.need_directory(name)))
+            print('')
 
-    return 0
+            return 0
+
+    print('There are no libraries in dev mode.')
+    return 1
 
 
 def command_handler(args=[]):
@@ -92,7 +81,6 @@ def command_handler(args=[]):
         epilog="""available commands:
   enable           enables dev mode for a need
   disable          disables dev mode for a need
-  query            exits 0 if dev mode is enabled for a given need
   status           shows the status of needs that are in dev mode
 
 Use '%s <command> --help' to get help for a specific command.
@@ -105,7 +93,6 @@ Use '%s <command> --help' to get help for a specific command.
     commands = {
         'enable': enable,
         'disable': disable,
-        'query': query,
         'status': status
     }
 

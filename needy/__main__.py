@@ -209,6 +209,7 @@ Use '%s <command> --help' to get help for a specific command.
     parser.add_argument('args', nargs=argparse.REMAINDER)
     parser.add_argument('-C', help='run as if invoked from this path')
     parser.add_argument('-v', '--verbose', action='store_true', help='produce more verbose logs')
+    parser.add_argument('-q', '--quiet', action='store_true', help='suppress output')
     parameters = parser.parse_args(args[1:])
 
     if parameters.verbose:
@@ -227,6 +228,13 @@ Use '%s <command> --help' to get help for a specific command.
         'dev': dev.command_handler
     }
 
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    if parameters.quiet:
+        sys.stdout = open(os.devnull, 'w')
+        sys.stderr = open(os.devnull, 'w')
+        logging.getLogger().setLevel(logging.CRITICAL + 1)
+
     try:
         with cd(parameters.C) if parameters.C else DummyContextManager() as f:
             if parameters.command in commands:
@@ -237,12 +245,14 @@ Use '%s <command> --help' to get help for a specific command.
                 else:
                     parser.print_help()
                 return 1
+            else:
+                print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))
+                return 1
     finally:
         logger.removeHandler(log_handler)
         logging.shutdown()
-
-    print('\'%s\' is not a valid command. See \'%s --help\'.' % (parameters.command, os.path.basename(sys.argv[0])))
-    return 1
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

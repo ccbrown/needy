@@ -44,9 +44,9 @@ class DevelopmentModeTest(TestCase):
             self.assertEqual(test.read(), 'a')
 
         # go into dev mode
-        self.assertNotEqual(self.execute(['dev', 'query', 'mylib']), 0)
+        self.assertNotEqual(self.execute(['dev', 'status', 'mylib']), 0)
         self.assertEqual(self.execute(['dev', 'enable', 'mylib']), 0)
-        self.assertEqual(self.execute(['dev', 'query', 'mylib']), 0)
+        self.assertEqual(self.execute(['dev', 'status', 'mylib']), 0)
 
         # now modifications should take effect - in dev mode, we should always be considered out-dated
         with open(os.path.join(mylib_source_directory, 'test'), 'w') as test:
@@ -58,4 +58,4 @@ class DevelopmentModeTest(TestCase):
 
         # disable dev mode
         self.assertEqual(self.execute(['dev', 'disable', 'mylib']), 0)
-        self.assertNotEqual(self.execute(['dev', 'query', 'mylib']), 0)
+        self.assertNotEqual(self.execute(['dev', 'status', 'mylib']), 0)

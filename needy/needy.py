@@ -114,8 +114,8 @@ class Needy:
                 ret = path
         return ret
 
-    def development_mode(self, library_name):
-        return self.__local_configuration.development_mode(library_name)
+    def development_mode_libraries(self):
+        return [name for name in self.__local_configuration.library_names() if self.__local_configuration.development_mode(name)]
 
     def set_development_mode(self, library_name, enable=True):
         if not os.path.isdir(self.source_directory(library_name)):
@@ -190,6 +190,9 @@ class Needy:
 
     def needs_directory(self):
         return self.__needs_directory
+
+    def need_directory(self, name):
+        return os.path.join(self.needs_directory(), name)
 
     def parameters(self):
         return self.__parameters
@@ -347,7 +350,7 @@ class Needy:
         return b.build_directory()
 
     def source_directory(self, library_name):
-        return os.path.join(self.__needs_directory, library_name, 'source')
+        return os.path.join(self.need_directory(library_name), 'source')
 
     def satisfy_target(self, target, filters=None):
         needs_configuration = self.needs_configuration(target)

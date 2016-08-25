@@ -47,6 +47,9 @@ class LocalConfiguration:
             self.__file.truncate()
             self.__file.close()
 
+    def library_names(self):
+        return self.__configuration['libraries'].keys() if 'libraries' in self.__configuration else []
+
     def development_mode(self, library_name):
         return self.__library_configuration(library_name, 'development_mode', False)
 
