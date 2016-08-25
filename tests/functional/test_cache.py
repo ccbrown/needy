@@ -26,7 +26,7 @@ class DirectoryCacheTest(TestCase):
             }))
 
         start = time.time()
-        self.assertEqual(self.execute(['satisfy', '-v', lib_name]), 0)
+        self.assertEqual(self.execute(['-v', 'satisfy', lib_name]), 0)
         uncached_time = time.time() - start
 
         self.check_output(lib_name, cache_dir)

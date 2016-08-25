@@ -55,7 +55,7 @@ toolset.flags install-lib BUILD_DIR <build_dir_{feature_suffix}> ;
 
 rule needlib-common ( name : libname )
 {{
-    local dev-mode-files = [ SPLIT_BY_CHARACTERS [ SHELL "cd $(BASE_DIR) && $(NEEDY) dev-mode $(libname) --query && find `$(NEEDY) sourcedir $(libname)` -type f -not -path '*/\.*' 2> /dev/null" ] : "\\n" ] ;
+    local dev-mode-files = [ SPLIT_BY_CHARACTERS [ SHELL "cd $(BASE_DIR) && $(NEEDY) -q dev status $(libname) && find `$(NEEDY) sourcedir $(libname)` -type f -not -path '*/\.*' 2> /dev/null" ] : "\\n" ] ;
     alias $(name) : $(dev-mode-files) ;
 }}
 
