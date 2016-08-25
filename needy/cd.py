@@ -23,7 +23,7 @@ class cd:
         global _current_directory
         self.__previous_directory = current_directory()
         os.chdir(self.__new_path)
-        _current_directory = self.__new_path
+        _current_directory = os.path.join(self.__previous_directory, self.__new_path)
 
     def __exit__(self, etype, value, traceback):
         global _current_directory

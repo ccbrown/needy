@@ -8,6 +8,7 @@ import re
 import sys
 
 from collections import OrderedDict
+from contextlib import contextmanager
 
 try:
     from colorama import Fore
@@ -26,7 +27,17 @@ from .platform import available_platforms, host_platform
 from .generator import available_generators
 from .target import Target
 from .cd import current_directory
+from .local_configuration import LocalConfiguration
 from .needy_configuration import NeedyConfiguration
+
+
+@contextmanager
+def ConfiguredNeedy(scope, parameters=None):
+    needs_directory = Needy.resolve_needs_directory(scope)
+    if needs_directory is None:
+        raise RuntimeError('No needs file found!')
+    with LocalConfiguration(os.path.join(needs_directory, 'config.json')) as local_configuration:
+        yield Needy(scope, parameters, local_configuration=local_configuration, needy_configuration=NeedyConfiguration(scope))
 
 
 class Needy:
