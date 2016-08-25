@@ -65,19 +65,6 @@ Example:
 
 This example places a Jamfile in the needs directory with targets that can be used to integrate with Boost.Build systems.
 
-dev-mode
---
-
-Enables development of a need without destroying your work. This more or less bypasses the initialization of the source directory before building a specific need, allowing you to make and test changes to the library.
-
-Example:
-
-<pre class="highlight"><code>cbrown@mbp:~/example% <span class="green">needy</span> dev-mode gsl
-Development mode enabled for gsl: /Users/cbrown/example/needs/gsl/source</code></pre>
-
-<pre class="highlight"><code>cbrown@mbp:~/example% <span class="green">needy</span> dev-mode gsl --disable
-Development mode disabled for gsl. Please ensure that you have persisted any changes you wish to keep.</code></pre>
-
 init
 --
 
@@ -97,3 +84,10 @@ Example:
 
 <pre class="highlight"><code>cbrown@mbp:~/example% <span class="green">needy</span> pkg-config-path gsl
 /Users/cbrown/example/needs/gsl/build/osx/x86_64/lib/pkgconfig</code></pre>
+
+dev
+--
+
+A suite of tools to enable in-place development of needs.
+
+See `needy dev --help` for details.
