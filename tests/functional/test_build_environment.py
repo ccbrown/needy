@@ -20,6 +20,7 @@ class BuildEnvironmentTest(TestCase):
                     },
                     'dependent': {
                         'directory': empty_directory,
+                        'dependencies': 'dependency',
                         'project': {
                             'build-steps': 'echo %PKG_CONFIG_PATH% | findstr "dependency"'
                         } if sys.platform == 'win32' else {

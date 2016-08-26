@@ -212,9 +212,11 @@ class Library:
         overrides = self.__parse_environment_overrides(configuration['environment'] if 'environment' in configuration else None)
         self.__log_environment_overrides(overrides)
 
-        pkg_config_path = overrides['PKG_CONFIG_PATH'] if 'PKG_CONFIG_PATH' in overrides else os.environ.get('PKG_CONFIG_PATH', '')
-        dependency_config_path = self.needy.pkg_config_path(self.target(), self.dependencies())
-        overrides['PKG_CONFIG_PATH'] = (dependency_config_path + ':' + pkg_config_path) if pkg_config_path and dependency_config_path else dependency_config_path
+        if self.dependencies():
+            pkg_config_path = overrides['PKG_CONFIG_PATH'] if 'PKG_CONFIG_PATH' in overrides else os.environ.get('PKG_CONFIG_PATH', '')
+            dependency_config_path = self.needy.pkg_config_path(self.target(), self.dependencies())
+            overrides['PKG_CONFIG_PATH'] = (dependency_config_path + ':' + pkg_config_path) if pkg_config_path and dependency_config_path else dependency_config_path
+
         return overrides
 
     def __log_environment_overrides(self, overrides, verbosity=logging.DEBUG):

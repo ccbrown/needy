@@ -1,5 +1,6 @@
 from ..generator import Generator
 
+import logging
 import os
 import subprocess
 import textwrap
@@ -31,12 +32,17 @@ class PkgConfigJamGenerator(Generator):
         )
 
         packages = [line.split()[0] for line in subprocess.check_output(['pkg-config', '--list-all'], env=env).decode().splitlines()]
+        broken_packages = []
         owned_packages = []
 
         for package in packages:
-            location = os.path.realpath(subprocess.check_output(['pkg-config', package, '--variable=pcfiledir'], env=env).decode().strip())
-            cflags = subprocess.check_output(['pkg-config', package, '--cflags'], env=env).decode().strip()
-            ldflags = subprocess.check_output(['pkg-config', package, '--libs', '--static'], env=env).decode().strip()
+            try:
+                location = os.path.realpath(subprocess.check_output(['pkg-config', package, '--variable=pcfiledir'], env=env).decode().strip())
+                cflags = subprocess.check_output(['pkg-config', package, '--cflags'], env=env).decode().strip()
+                ldflags = subprocess.check_output(['pkg-config', package, '--libs', '--static'], env=env).decode().strip()
+            except subprocess.CalledProcessError:
+                broken_packages.append(package)
+                continue
             contents += 'alias {}-package : : : : <cflags>"{}" <linkflags>"{}" ;\n'.format(package, self.__escape(cflags), self.__escape(ldflags))
             contents += textwrap.dedent('''\
                 actions install-{package}-package-action {{ mkdir -p $(INSTALL_PREFIX) && cp -pR {package_prefix}/* $(INSTALL_PREFIX)/ }}
@@ -51,6 +57,9 @@ class PkgConfigJamGenerator(Generator):
                 $(p).mark-target-as-explicit install-{package}-package install-{package}-package-if-owned ;
 
             ''').format(package=package)
+
+        if broken_packages:
+            logging.warn('broken packages found: {}'.format(' '.join(broken_packages)))
 
         contents += textwrap.dedent('''\
             PKG_CONFIG_PACKAGES = {pkg_config_packages} ;
@@ -69,7 +78,7 @@ class PkgConfigJamGenerator(Generator):
                 }}
             }}
         ''').format(
-            pkg_config_packages=' '.join(packages),
+            pkg_config_packages=' '.join([package for package in packages if package not in broken_packages]),
             owned_pkg_config_packages=' '.join(owned_packages)
         )
 
