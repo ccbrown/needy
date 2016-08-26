@@ -39,7 +39,7 @@ class LibraryTest(TestCase):
                 'libraries': {
                     'mylib': {
                         'directory': empty_directory,
-                        'build_directory_suffix': 'foo',
+                        'build-directory-suffix': 'foo',
                         'project': {
                             'build-steps': []
                         }

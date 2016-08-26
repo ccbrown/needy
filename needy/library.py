@@ -245,7 +245,7 @@ class Library:
 
     def build_directory(self):
         directory = os.path.join(self.__directory, 'build', self.target().platform.identifier(), self.target().architecture)
-        suffix = self.configuration().get('build_directory_suffix')
+        suffix = self.configuration().get('build-directory-suffix')
         if suffix:
             directory = os.path.join(directory, suffix.lstrip(os.path.sep))
         return directory
