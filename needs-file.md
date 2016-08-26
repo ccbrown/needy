@@ -78,6 +78,7 @@ These are the parameters that can be specified in your needs file.
 * `checksum` - If a download is given, you must provide a checksum to verify the download. This can currently be an MD5 or SHA1 hash.
 * `directory` - The location on disk to use for the library. This has applications when using dependencies that you're also developing, but should otherwise be avoided.
 * `dependencies` - A list of library dependencies. Libraries listed here will always be built before this one.
+* `build-directory-suffix` - A suffix to apply to the build directory. For example, if you have debug and release variants, you may wish to build them in differently locations, so both can be present simultaneously.
 * `project` - A dictionary of project configuration parameters.
 
 ### Project
