@@ -221,6 +221,14 @@ class Needy:
                 return True
         return False
 
+    def library(self, target, name):
+        development_mode = self.__local_configuration and self.__local_configuration.development_mode(name)
+        return Library(self, name,
+                       target=target,
+                       configuration=self.library_configuration(target, name),
+                       development_mode=development_mode,
+                       build_caches=self.needy_configuration().build_caches() if self.needy_configuration() else [])
+
     def library_configuration(self, target, name):
         return self.needs_configuration(target)['libraries'][name] if name in self.needs_configuration(target)['libraries'] else None
 
@@ -242,12 +250,7 @@ class Needy:
 
         while len(names):
             name = names.pop()
-            development_mode = self.__local_configuration and self.__local_configuration.development_mode(name)
-            library = Library(self, name,
-                              target=target,
-                              configuration=needs_configuration['libraries'][name],
-                              development_mode=development_mode,
-                              build_caches=self.needy_configuration().build_caches() if self.needy_configuration() else [])
+            library = self.library(target, name)
             libraries[name] = library
             if 'dependencies' not in library.configuration():
                 graph[name] = set()
@@ -343,8 +346,7 @@ class Needy:
 
     def build_directory(self, library, target_or_universal_binary):
         if isinstance(target_or_universal_binary, Target):
-            l = Library(self, library, target=target_or_universal_binary)
-            return l.build_directory()
+            return self.library(target_or_universal_binary, library).build_directory()
         l = Library(self, library)
         b = UniversalBinary(target_or_universal_binary, [l], self)
         return b.build_directory()

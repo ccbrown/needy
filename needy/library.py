@@ -244,7 +244,11 @@ class Library:
         return self.__directory
 
     def build_directory(self):
-        return os.path.join(self.__directory, 'build', self.target().platform.identifier(), self.target().architecture)
+        directory = os.path.join(self.__directory, 'build', self.target().platform.identifier(), self.target().architecture)
+        suffix = self.configuration().get('build_directory_suffix')
+        if suffix:
+            directory = os.path.join(directory, suffix.lstrip(os.path.sep))
+        return directory
 
     def build_status_path(self):
         return os.path.join(self.build_directory(), 'needy.status')
