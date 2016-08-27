@@ -5,7 +5,8 @@ from .functional_test import TestCase
 from needy.filesystem import dict_file, TempDir
 from needy.cd import cd
 
-class DirectorySource(TestCase):
+
+class DirectorySourceTest(TestCase):
 
     def prepare_needs(self, prefix):
         foo_include = os.path.join(prefix, 'foo', 'include')

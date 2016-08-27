@@ -149,16 +149,25 @@ class Needy:
                         value = parts[1] if len(parts) >= 2 else 1
                         env.globals[parts[0]] = value
             template = env.from_string(configuration)
-            configuration = template.render(
-                env=os.environ,
-                parameters=self.parameters(),
-                platform=target.platform.identifier() if target else None,
-                architecture=target.architecture if target else None,
-                host_platform=host_platform().identifier(),
-                needs_file=self.needs_file(),
-                needs_directory=self.needs_directory(),
-                build_directory=lambda library, target_override=None: self.build_directory(library, self.target(target_override) if target_override else target) if target else None
-            )
+            if getattr(self, '_needs_configuration_first_pass', None):
+                configuration = self._needs_configuration_first_pass
+            else:
+                variables = {
+                    'env': os.environ,
+                    'parameters': self.parameters(),
+                    'platform': target.platform.identifier() if target else None,
+                    'architecture': target.architecture if target else None,
+                    'host_platform': host_platform().identifier(),
+                    'needs_file': self.needs_file(),
+                    'needs_directory': self.needs_directory(),
+                    'build_directory': lambda library, target_override=None: None
+                }
+                self._needs_configuration_first_pass = template.render(**variables)
+                try:
+                    variables['build_directory'] = lambda library, target_override=None: self.build_directory(library, self.target(target_override) if target_override else target) if target else None
+                    configuration = template.render(**variables)
+                finally:
+                    self._needs_configuration_first_pass = None
         except ImportError:
             if re.compile('{%.*%}').search(configuration) or re.compile('{{.*}}').search(configuration) or re.compile('{#.*#}').search(configuration):
                 raise RuntimeError('The needs file appears to contain Jinja templating. Please install the jinja2 Python package.')

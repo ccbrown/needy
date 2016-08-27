@@ -17,5 +17,6 @@ test_script:
     - nosetests tests/functional/test_directory_source.py
     - nosetests tests/functional/test_init.py
     - nosetests tests/functional/test_library.py
+    - nosetests tests/functional/test_needy.py
     - nosetests tests/functional/generators/test_xcconfig.py
     - pip install -e .
