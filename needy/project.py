@@ -139,7 +139,7 @@ class Project:
             self.__create_wrapper('python', sys.executable)
 
     def pre_build(self, output_directory):
-        build_dirs = [os.path.join(output_directory, d) for d in ['include', os.path.join('lib', 'pkgconfig')]]
+        build_dirs = [os.path.join(output_directory, d) for d in ['include', 'lib']]
         self.__create_directories(build_dirs)
         self.run_commands(self.configuration('pre-build'))
 
