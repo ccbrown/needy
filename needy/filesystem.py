@@ -138,3 +138,15 @@ def dict_file(path):
     yield d
     with open(path, 'w') as f:
         json.dump(d, f)
+
+
+def force_rmtree(path):
+    def rmtree_onerror(func, path, exc_info):
+        ''' from http://stackoverflow.com/questions/2656322/shutil-rmtree-fails-on-windows-with-access-is-denied '''
+        import stat
+        if not os.access(path, os.W_OK):
+            os.chmod(path, stat.S_IWUSR)
+            func(path)
+        else:
+            raise
+    shutil.rmtree(path, onerror=rmtree_onerror)

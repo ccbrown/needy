@@ -425,8 +425,30 @@ class Needy:
 
         for name, libraries in self.libraries(target, filters).items():
             assert len(libraries) == 1
-            print('Initializing {}...'.format(name))
+            logging.info('Initializing {}...'.format(name))
             libraries[0].initialize_source()
+
+    def synchronize(self, target, filters=None):
+        if 'libraries' not in self.needs_configuration(target):
+            return
+
+        dev_mode_libraries = self.development_mode_libraries()
+
+        libraries_to_sync = []
+
+        for name, libraries in self.libraries(target, filters).items():
+            if filters and name not in dev_mode_libraries:
+                raise RuntimeError('{} does not have development mode enabled'.format(name))
+            elif name in dev_mode_libraries:
+                libraries_to_sync.append((name, libraries))
+
+        if len(libraries_to_sync) == 0:
+            logging.warning('no libraries have development mode enabled')
+
+        for name, libraries in libraries_to_sync:
+            assert len(libraries) == 1
+            logging.info('Synchronizing {}...'.format(name))
+            libraries[0].synchronize_source()
 
     @staticmethod
     def __normalize_path(path):

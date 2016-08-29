@@ -74,6 +74,22 @@ def status(args=[]):
     return 1
 
 
+def sync(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s dev sync' % os.path.basename(sys.argv[0]),
+        description='Synchronizes upstream changes while keeping local changes.'
+    )
+    parser.add_argument('library', nargs='*', help='a library to synchronize')
+    parser.add_argument('-t', '--target', default='host', help='synchronize the source for this target (example: ios:armv7)')
+    parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
+    parameters = parser.parse_args(args)
+
+    with ConfiguredNeedy('.', parameters) as needy:
+        needy.synchronize(needy.target(parameters.target), parameters.library)
+
+    return 0
+
+
 def command_handler(args=[]):
     parser = argparse.ArgumentParser(
         description='Provides tools for development of needs.',
@@ -93,7 +109,8 @@ Use '%s <command> --help' to get help for a specific command.
     commands = {
         'enable': enable,
         'disable': disable,
-        'status': status
+        'status': status,
+        'sync': sync,
     }
 
     if parameters.command in commands:

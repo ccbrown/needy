@@ -10,3 +10,7 @@ class Source:
     def clean(self):
         """ should fetch (if necessary) and clean the source """
         raise NotImplementedError('clean')
+
+    def synchronize(self):
+        """ should fetch (if necessary) while preserving local modifications """
+        raise NotImplementedError('synchronize')

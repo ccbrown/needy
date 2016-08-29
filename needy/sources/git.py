@@ -33,17 +33,28 @@ class GitRepository(Source):
             command(['git', 'checkout', '--force', self.commit], logging.DEBUG)
             command(['git', 'submodule', 'update', '--init', '--recursive'], logging.DEBUG)
 
-    def __fetch(self):
+    def synchronize(self):
+        GitRepository.__assert_git_availability()
+
+        if not os.path.exists(os.path.join(self.directory, '.git')):
+            self.__fetch(verbosity=logging.INFO)
+
+        with cd(self.directory):
+            command(['git', 'fetch'])
+            command(['git', 'checkout', self.commit])
+            command(['git', 'submodule', 'update', '--init', '--recursive'])
+
+    def __fetch(self, verbosity=logging.DEBUG):
         GitRepository.__assert_git_availability()
 
         if not os.path.exists(os.path.dirname(self.directory)):
             os.makedirs(os.path.dirname(self.directory))
 
         with cd(os.path.dirname(self.directory)):
-            command(['git', 'clone', self.repository, os.path.basename(self.directory)], logging.DEBUG)
+            command(['git', 'clone', self.repository, os.path.basename(self.directory)], verbosity)
 
         with cd(self.directory):
-            command(['git', 'submodule', 'update', '--init', '--recursive'], logging.DEBUG)
+            command(['git', 'submodule', 'update', '--init', '--recursive'], verbosity)
 
     @classmethod
     def __assert_git_availability(cls):
