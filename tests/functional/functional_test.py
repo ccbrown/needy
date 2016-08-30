@@ -1,5 +1,4 @@
 import os
-import shutil
 import tempfile
 import unittest
 
@@ -8,6 +7,7 @@ from needy.cd import cd
 from needy.needy import Needy
 from needy.platform import host_platform
 from needy.target import Target
+from needy.filesystem import force_rmtree
 
 
 class TestCase(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestCase(unittest.TestCase):
         return self
 
     def tearDown(self):
-        shutil.rmtree(self.__path)
+        force_rmtree(self.__path)
 
     def path(self):
         return self.__path
