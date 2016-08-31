@@ -8,38 +8,6 @@ except ImportError:
     pass
 
 
-def available_platforms():
-    from .platforms.generic import GenericPlatform
-    from .platforms.android import AndroidPlatform
-    platforms = [GenericPlatform, AndroidPlatform]
-
-    if sys.platform == 'darwin':
-        from .platforms.osx import OSXPlatform
-        from .platforms.ios import iOSPlatform, iOSSimulatorPlatform
-        from .platforms.tvos import tvOSPlatform, tvOSSimulatorPlatform
-        platforms.extend([
-            OSXPlatform,
-            iOSPlatform,
-            iOSSimulatorPlatform,
-            tvOSPlatform,
-            tvOSSimulatorPlatform,
-        ])
-
-    ret = {}
-    for platform in platforms:
-        ret[platform.identifier()] = platform
-    return ret
-
-
-def host_platform():
-    if sys.platform == 'darwin':
-        from .platforms.osx import OSXPlatform
-        return OSXPlatform
-
-    from .platforms.generic import GenericPlatform
-    return GenericPlatform
-
-
 class Platform:
     def __init__(self, parameters={}):
         pass
@@ -55,6 +23,9 @@ class Platform:
     @staticmethod
     def add_arguments(parser):
         pass
+
+    def environment_overrides(self, architecture):
+        return {}
 
     def configuration_hash(self, architecture):
         """ returns a configuration hash in hex that can be used to detemine when a rebuild is necessary """

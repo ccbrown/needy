@@ -57,4 +57,4 @@ class tvOSSimulatorPlatform(tvOSPlatform):
         return 'TARGET_OS_TV && TARGET_OS_SIMULATOR'
 
     def default_architecture(self):
-        return platform.machine()
+        return platform.machine().lower()

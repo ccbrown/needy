@@ -119,7 +119,7 @@ class AndroidPlatform(Platform):
         for path in include_paths:
             ret.append('-I%s' % path)
 
-        return ' '.join(ret)
+        return ret
 
     def c_compiler(self, architecture):
         return self.__compiler(architecture, ['clang', 'gcc'])
@@ -131,7 +131,7 @@ class AndroidPlatform(Platform):
         prefix = self.binary_prefix(architecture)
         for compiler in ['{}-{}'.format(prefix, c) for c in choices]:
             if os.path.exists(os.path.join(self.toolchain_path(architecture), 'bin', compiler)):
-                return '{} {}'.format(compiler, self.__compiler_args(architecture))
+                return [compiler] + self.__compiler_args(architecture)
         raise RuntimeError('Unable to locate a suitable compiler matching {} in {}'.format(choices, os.path.join(self.toolchain_path(architecture), 'bin')))
 
     def ndk_home(self):

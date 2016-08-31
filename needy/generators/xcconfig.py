@@ -1,5 +1,5 @@
 from ..generator import Generator
-from ..platform import available_platforms
+from ..platforms import available_platforms
 from ..target import Target
 
 import os

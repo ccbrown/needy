@@ -32,15 +32,7 @@ from .filesystem import clean_directory
 from .build_cache import BuildCache
 
 from .process import command
-
-from .projects.androidmk import AndroidMkProject
-from .projects.autotools import AutotoolsProject
-from .projects.boostbuild import BoostBuildProject
-from .projects.cmake import CMakeProject
-from .projects.custom import CustomProject
-from .projects.make import MakeProject
-from .projects.source import SourceProject
-from .projects.xcode import XcodeProject
+from .projects import project_types
 
 
 class Library:
@@ -207,17 +199,12 @@ class Library:
         path = os.path.relpath(self.build_directory(), self.needy.needs_directory())
         return os.path.join(path, configuration_hash)
 
-    def __parse_environment_overrides(self, overrides):
-        if overrides is None:
-            return dict()
-        ret = overrides.copy()
-        for k, v in ret.items():
-            ret[k] = self.evaluate(v, current=os.environ[k] if k in os.environ else '')[0]
-        return ret
-
     def __environment_overrides(self):
         configuration = self.project_configuration()
-        overrides = self.__parse_environment_overrides(configuration['environment'] if 'environment' in configuration else None)
+        overrides = self.target().platform.environment_overrides(self.target().architecture)
+        if 'environment' in configuration:
+            for key, value in configuration['environment'].items():
+                overrides[key] = self.evaluate(value, current=overrides.get(key, os.environ.get(key, '')))[0]
         self.__log_environment_overrides(overrides)
 
         if self.dependencies():
@@ -275,7 +262,7 @@ class Library:
         return os.path.join(self.build_directory(), 'lib')
 
     def project(self, definition):
-        candidates = [AndroidMkProject, AutotoolsProject, CMakeProject, BoostBuildProject, MakeProject, XcodeProject, SourceProject, CustomProject]
+        candidates = project_types
 
         if 'type' in definition.configuration:
             for candidate in candidates:

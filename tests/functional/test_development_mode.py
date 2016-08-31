@@ -21,7 +21,7 @@ class DevelopmentModeTest(TestCase):
                 },
                 'universal-binaries': {
                     'test': {
-                        'host': [platform.machine()]
+                        'host': [platform.machine().lower()]
                     }
                 }
             }))

@@ -5,7 +5,7 @@ import unittest
 from needy.__main__ import main
 from needy.cd import cd
 from needy.needy import Needy
-from needy.platform import host_platform
+from needy.platforms import host_platform
 from needy.target import Target
 from needy.filesystem import force_rmtree
 

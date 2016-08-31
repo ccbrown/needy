@@ -62,4 +62,4 @@ class iOSSimulatorPlatform(iOSPlatform):
         return None
 
     def default_architecture(self):
-        return platform.machine()
+        return platform.machine().lower()

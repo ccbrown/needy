@@ -1,6 +1,6 @@
 from ..generator import Generator
 from ..library import Library
-from ..platform import available_platforms, host_platform
+from ..platforms import available_platforms, host_platform
 from ..target import Target
 
 import hashlib

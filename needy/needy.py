@@ -23,8 +23,8 @@ except ImportError:
 from .process import command_output
 from .library import Library
 from .universal_binary import UniversalBinary
-from .platform import available_platforms, host_platform
-from .generator import available_generators
+from .platforms import available_platforms, host_platform
+from .generators import available_generators
 from .target import Target
 from .cd import current_directory
 from .local_configuration import LocalConfiguration

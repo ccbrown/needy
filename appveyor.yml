@@ -12,11 +12,12 @@ build: off
 
 test_script:
     - nosetests tests/unit
+    - nosetests tests/functional/generators
+    - nosetests tests/functional/libraries
     - nosetests tests/functional/projects
     - nosetests tests/functional/test_development_mode.py
     - nosetests tests/functional/test_directory_source.py
     - nosetests tests/functional/test_init.py
     - nosetests tests/functional/test_library.py
     - nosetests tests/functional/test_needy.py
-    - nosetests tests/functional/generators/test_xcconfig.py
     - pip install -e .

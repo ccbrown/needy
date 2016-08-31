@@ -15,7 +15,7 @@ class GenericPlatform(Platform):
         return True
 
     def default_architecture(self):
-        return platform.machine()
+        return platform.machine().lower()
 
     def c_compiler(self, architecture):
         command = 'gcc'
@@ -24,8 +24,8 @@ class GenericPlatform(Platform):
         elif spawn.find_executable('clang'):
             command = 'clang'
         if platform.system() == 'Darwin':
-            return '%s -arch %s' % (command, architecture)
-        return '%s -m%s' % (command, '32' if architecture == 'i386' else '64')
+            return [command, '-arch', architecture]
+        return [command, '-m{}'.format('32' if architecture == 'i386' else '64')]
 
     def cxx_compiler(self, architecture):
         command = 'g++'
@@ -34,5 +34,5 @@ class GenericPlatform(Platform):
         elif spawn.find_executable('clang++'):
             command = 'clang++'
         if platform.system() == 'Darwin':
-            return '%s -arch %s' % (command, architecture)
-        return '%s -m%s' % (command, '32' if architecture == 'i386' else '64')
+            return [command, '-arch', architecture]
+        return [command, '-m{}'.format('32' if architecture == 'i386' else '64')]

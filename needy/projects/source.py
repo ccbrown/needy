@@ -1,6 +1,6 @@
+import fnmatch
 import pipes
 import os
-import shlex
 import shutil
 
 from distutils import dir_util
@@ -49,6 +49,8 @@ class SourceProject(project.Project):
         else:
             def non_headers(directory, files):
                 return [f for f in files if os.path.isfile(os.path.join(directory, f)) and os.path.splitext(f)[1] not in ['.h', '.hh', '.hpp']]
+            if os.path.exists(destination):
+                shutil.rmtree(destination)
             shutil.copytree(header_directory, destination, ignore=non_headers)
 
     @staticmethod
@@ -61,7 +63,7 @@ class SourceProject(project.Project):
 
     @staticmethod
     def configuration_keys():
-        return project.Project.configuration_keys() | {'source-directory', 'header-directory'}
+        return project.Project.configuration_keys() | {'source-directory', 'header-directory', 'exclude'}
 
     def build(self, output_directory):
         # check for needs
@@ -75,11 +77,12 @@ class SourceProject(project.Project):
         source_directory = self.source_directory(self.directory(), self.configuration())
         header_directory = self.header_directory(self.directory(), self.configuration())
 
-        additional_flags = ['-I%s' % source_directory]
+        include_paths = []
         if header_directory != source_directory:
-            additional_flags.append('-I%s' % header_directory)
+            include_paths.append(header_directory)
 
         if source_directory:
+            include_paths.append(source_directory)
             object_directory = os.path.join(output_directory, 'obj')
             os.makedirs(object_directory)
 
@@ -88,31 +91,58 @@ class SourceProject(project.Project):
             for root, dirs, files in os.walk(source_directory):
                 for file in files:
                     input = os.path.join(root, file)
-                    output = os.path.join(object_directory, os.path.relpath(input, source_directory))
+                    relpath = os.path.relpath(input, source_directory)
+                    if self.__should_exclude(relpath):
+                        continue
+                    output = os.path.join(object_directory, relpath)
                     name, extension = os.path.splitext(output)
                     output = name + '.o'
 
-                    if self.__compile(input, output, additional_flags):
+                    if self.__compile(input, output, include_paths):
                         objects.append(output)
 
             if len(objects) > 0:
-                # TODO: link objects
-                raise NotImplementedError('not fully unimplemented')
+                self.__link(objects, os.path.join(output_directory, 'lib'))
 
-        # copy headers
         self.copy_headers(self.directory(), self.configuration(), os.path.join(output_directory, 'include'))
 
-    def __compile(self, input, output, additional_flags):
+    def __compile(self, input, output, include_paths):
         name, extension = os.path.splitext(input)
 
         if not os.path.exists(os.path.dirname(output)):
             os.makedirs(os.path.dirname(output))
 
+        platform = self.target().platform
+        architecture = self.target().architecture
+
+        if platform.identifier() == 'windows':
+            flags = ['/c', input, '/Fo{}'.format(output), '/Ox'] + ['/I{}'.format(path) for path in include_paths]
+        else:
+            flags = ['-c', input, '-o', output, '-O3'] + ['-I{}'.format(path) for path in include_paths]
+
         if extension == '.c':
-            self.command(shlex.split(self.target().platform.c_compiler(self.target().architecture)) + ['-c', input, '-o', output] + additional_flags)
+            self.command(platform.c_compiler(architecture) + flags)
         elif extension == '.cpp':
-            self.command(shlex.split(self.target().platform.cxx_compiler(self.target().architecture)) + ['-c', input, '-o', output] + additional_flags)
+            self.command(platform.cxx_compiler(architecture) + flags)
         else:
             return False
 
         return True
+
+    def __link(self, objects, lib_directory):
+        platform = self.target().platform
+        architecture = self.target().architecture
+
+        name = os.path.basename(os.path.dirname(self.directory()))
+
+        if platform.identifier() == 'windows':
+            self.command(['lib'] + objects + ['-OUT:{}'.format(os.path.join(lib_directory, '{}.lib'.format(name)))])
+        else:
+            self.command(['ar', '-rv'] + ['-o', os.path.join(lib_directory, 'lib{}.a'.format(name))] + objects)
+
+    def __should_exclude(self, path):
+        if 'exclude' in self.configuration():
+            for pattern in self.evaluate(self.configuration()['exclude']):
+                if fnmatch.fnmatch(path, pattern):
+                    return True
+        return False

@@ -11,8 +11,8 @@ from .cd import cd
 from .utility import DummyContextManager
 from .needy import ConfiguredNeedy
 from .log_formatter import LogFormatter
-from .platform import available_platforms
-from .generator import available_generators
+from .platforms import available_platforms
+from .generators import available_generators
 from .caches.directory import Directory
 from .needy_configuration import NeedyConfiguration
 

@@ -2,6 +2,11 @@ import os
 import sys
 import logging
 
+try:
+    from shlex import quote
+except ImportError:
+    from pipes import quote
+
 from .process import command, command_output, command_sequence
 
 
@@ -160,7 +165,7 @@ class Project:
 
         path = 'needy-wrappers/{}'.format(name)
         with open(path, 'w') as f:
-            f.write("#!/bin/sh\n{} \"$@\"".format(command))
+            f.write("#!/bin/sh\n{} \"$@\"".format(' '.join(quote(arg) for arg in command) if isinstance(command, list) else command))
         os.chmod(path, 0o755)
 
     def command_environment_overrides(self, environment_overrides={}, use_target_overrides=True):

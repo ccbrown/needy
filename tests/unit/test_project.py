@@ -1,7 +1,7 @@
 import os
 from pyfakefs import fake_filesystem_unittest
 
-from needy.platform import host_platform
+from needy.platforms import host_platform
 from needy.project import Project, ProjectDefinition
 from needy.target import Target
 
