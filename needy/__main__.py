@@ -175,6 +175,24 @@ def pkg_config_path(args=[]):
     return 0
 
 
+def source_exec(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s exec' % os.path.basename(sys.argv[0]),
+        description='Invoke a command from the source directory of a need',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('library', help='the library who\'s source directory will be used')
+    parser.add_argument('command', nargs='+', help='command to invoke')
+    parameters = parser.parse_args(args)
+
+    with ConfiguredNeedy('.', parameters) as needy:
+        if not os.path.isdir(needy.source_directory(parameters.library)):
+            raise RuntimeError('Please initialize the library before using exec.')
+
+    os.chdir(needy.source_directory(parameters.library))
+    os.execvp(parameters.command[0], parameters.command)
+
+
 def main(args=sys.argv):
     try:
         import colorama
@@ -201,6 +219,7 @@ def main(args=sys.argv):
   pkg-config-path  emits the pkg-config path for a need
   generate         generates useful files
   dev              provides tools for development of needs
+  exec             invoke command from a need source directory
 
 Use '%s <command> --help' to get help for a specific command.
 """ % os.path.basename(sys.argv[0])
@@ -225,7 +244,8 @@ Use '%s <command> --help' to get help for a specific command.
         'pkg-config-path': pkg_config_path,
         'generate': generate,
         'dev-mode': dev_mode_name_change_notice,
-        'dev': dev.command_handler
+        'dev': dev.command_handler,
+        'exec': source_exec,
     }
 
     original_stdout = sys.stdout
