@@ -45,6 +45,8 @@ class SourceProject(project.Project):
         source_directory = SourceProject.source_directory(directory, configuration)
         header_directory = SourceProject.header_directory(directory, configuration)
 
+        logging.info('Copying headers from {}'.format(header_directory))
+
         if header_directory != source_directory:
             dir_util.copy_tree(header_directory, destination)
         else:
@@ -116,6 +118,8 @@ class SourceProject(project.Project):
         platform = self.target().platform
         architecture = self.target().architecture
 
+        logging.info('Compiling {}'.format(input))
+
         if platform.identifier() == 'windows':
             flags = ['/c', input, '/Fo{}'.format(output), '/Ox'] + ['/I{}'.format(path) for path in include_paths]
         else:
@@ -136,10 +140,13 @@ class SourceProject(project.Project):
 
         name = os.path.basename(os.path.dirname(self.directory()))
 
+        output = os.path.join(lib_directory, ('{}.lib' if platform.identifier() == 'windows' else 'lib{}.a').format(name))
+        logging.info('Linking {}'.format(output))
+
         if platform.identifier() == 'windows':
-            self.command(['lib'] + objects + ['-OUT:{}'.format(os.path.join(lib_directory, '{}.lib'.format(name)))], verbosity=logging.DEBUG)
+            self.command(['lib'] + objects + ['-OUT:{}'.format(output)], verbosity=logging.DEBUG)
         else:
-            self.command(['ar', '-rv'] + ['-o', os.path.join(lib_directory, 'lib{}.a'.format(name))] + objects, verbosity=logging.DEBUG)
+            self.command(['ar', '-rv', output] + objects, verbosity=logging.DEBUG)
 
     def __should_exclude(self, path):
         if 'exclude' in self.configuration():
