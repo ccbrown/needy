@@ -247,7 +247,7 @@ class Needy:
     def library_configuration(self, target, name):
         return self.needs_configuration(target)['libraries'][name] if name in self.needs_configuration(target)['libraries'] else None
 
-    def libraries_to_build(self, target, filters=None):
+    def libraries_to_build(self, target, filters=None, include_dependencies=True):
         needs_configuration = self.needs_configuration(target)
 
         if 'libraries' not in needs_configuration:
@@ -267,7 +267,7 @@ class Needy:
             name = names.pop()
             library = self.library(target, name)
             libraries[name] = library
-            if 'dependencies' not in library.configuration():
+            if 'dependencies' not in library.configuration() or not include_dependencies:
                 graph[name] = set()
                 continue
             dependencies = library.dependencies()
@@ -311,7 +311,8 @@ class Needy:
 
         return needs_configuration['universal-binaries'][universal_binary]
 
-    def libraries(self, target_or_universal_binary, filters=None):
+    def libraries(self, target_or_universal_binary, filters=None, include_dependencies=True):
+        ''' Libraries and dependent libraries. Dependent libraries may not match the filters. '''
         libraries = dict()
         targets = []
 
@@ -324,7 +325,7 @@ class Needy:
                     targets.append(Target(self.platform(platform), architecture))
 
         for target in targets:
-            for name, library in self.libraries_to_build(target, filters):
+            for name, library in self.libraries_to_build(target, filters, include_dependencies=include_dependencies):
                 if name not in libraries:
                     libraries[name] = list()
                 libraries[name].append(library)
@@ -429,7 +430,7 @@ class Needy:
         if 'libraries' not in needs_configuration:
             return
 
-        for name, libraries in self.libraries(target, filters).items():
+        for name, libraries in self.libraries(target, filters, include_dependencies=False).items():
             assert len(libraries) == 1
             logging.info('Initializing {}...'.format(name))
             libraries[0].initialize_source()
@@ -442,7 +443,7 @@ class Needy:
 
         libraries_to_sync = []
 
-        for name, libraries in self.libraries(target, filters).items():
+        for name, libraries in self.libraries(target, filters, include_dependencies=False).items():
             if filters and name not in dev_mode_libraries:
                 raise RuntimeError('{} does not have development mode enabled'.format(name))
             elif name in dev_mode_libraries:
