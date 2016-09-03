@@ -81,6 +81,10 @@ pre code {
     color: #14acc1;
 }
 
+.red {
+    color: red;
+}
+
 @media (min-width: 961px) {
     body > header {
         float: left;

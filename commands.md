@@ -5,7 +5,7 @@ title: Commands
 {{ page.title }}
 ==
 
-This is an overview of the commands available. You should also see the authoritative source for more: `needy --help`.
+This is an overview of some of the commands available. You should also see the authoritative source for more: `needy --help`.
 
 satisfy
 --
@@ -23,6 +23,20 @@ c++ -c smaz.c -o smaz.o
 ar -rc /Users/cbrown/example/needs/smaz/build/osx/x86_64/lib/libsmaz.a smaz.o
 cp smaz.h /Users/cbrown/example/needs/smaz/build/osx/x86_64/include/smaz.h
 <span class="green">[SUCCESS]</span> smaz</code></pre>
+
+status
+--
+
+Shows the status of your needs. Useful for seeing what's up-to-date.
+
+Example:
+
+<pre class="highlight"><code>cbrown@mbp:~/example% <span class="green">needy</span> status -u iphoneos
+Status for iphoneos:
+
+<span class="red">    sparkle         out-of-date</span>
+<span class="green">    webglnoise      up-to-date</span>
+<span class="red">    args            out-of-date</span></code></pre>
 
 cflags
 --
