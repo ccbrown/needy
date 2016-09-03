@@ -2,6 +2,7 @@ import fnmatch
 import pipes
 import os
 import shutil
+import logging
 
 from distutils import dir_util
 from .. import project
@@ -121,9 +122,9 @@ class SourceProject(project.Project):
             flags = ['-c', input, '-o', output, '-O3'] + ['-I{}'.format(path) for path in include_paths]
 
         if extension == '.c':
-            self.command(platform.c_compiler(architecture) + flags)
+            self.command(platform.c_compiler(architecture) + flags, verbosity=logging.DEBUG)
         elif extension == '.cpp':
-            self.command(platform.cxx_compiler(architecture) + flags)
+            self.command(platform.cxx_compiler(architecture) + flags, verbosity=logging.DEBUG)
         else:
             return False
 
@@ -136,9 +137,9 @@ class SourceProject(project.Project):
         name = os.path.basename(os.path.dirname(self.directory()))
 
         if platform.identifier() == 'windows':
-            self.command(['lib'] + objects + ['-OUT:{}'.format(os.path.join(lib_directory, '{}.lib'.format(name)))])
+            self.command(['lib'] + objects + ['-OUT:{}'.format(os.path.join(lib_directory, '{}.lib'.format(name)))], verbosity=logging.DEBUG)
         else:
-            self.command(['ar', '-rv'] + ['-o', os.path.join(lib_directory, 'lib{}.a'.format(name))] + objects)
+            self.command(['ar', '-rv'] + ['-o', os.path.join(lib_directory, 'lib{}.a'.format(name))] + objects, verbosity=logging.DEBUG)
 
     def __should_exclude(self, path):
         if 'exclude' in self.configuration():
