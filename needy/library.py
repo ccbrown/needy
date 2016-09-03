@@ -223,8 +223,8 @@ class Library:
     def is_in_development_mode(self):
         return self.__development_mode
 
-    def has_up_to_date_build(self):
-        if self.needy.parameters().force_build or not os.path.isfile(self.build_status_path()) or self.is_in_development_mode():
+    def is_up_to_date(self):
+        if not os.path.isfile(self.build_status_path()) or self.is_in_development_mode():
             return False
         with open(self.build_status_path(), 'r') as status_file:
             status_text = status_file.read()
@@ -234,6 +234,13 @@ class Library:
             if 'configuration' not in status or binascii.unhexlify(status['configuration']) != self.configuration_hash():
                 return False
         return True
+
+    def status_text(self):
+        if self.is_in_development_mode():
+            return 'dev mode'
+        if self.is_up_to_date():
+            return 'up-to-date'
+        return 'out-of-date'
 
     def directory(self):
         return self.__directory

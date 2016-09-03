@@ -28,15 +28,15 @@ class UniversalBinary:
     def library_path(self):
         return os.path.join(self.build_directory(), 'lib')
 
-    def is_up_to_date(self):
-        if self.needy.parameters().force_build:
-            return False
+    def is_in_development_mode(self):
+        return any([library.is_in_development_mode() for library in self.libraries()])
 
+    def is_up_to_date(self):
         if not os.path.isfile(self.build_status_path()):
             return False
 
         for library in self.libraries():
-            if library.is_in_development_mode():
+            if not library.is_up_to_date():
                 return False
 
         with open(self.build_status_path(), 'r') as status_file:
@@ -48,6 +48,13 @@ class UniversalBinary:
                 return False
 
         return True
+
+    def status_text(self):
+        if self.is_in_development_mode():
+            return 'dev mode'
+        if self.is_up_to_date():
+            return 'up-to-date'
+        return 'out-of-date'
 
     def build_status_path(self):
         return os.path.join(self.build_directory(), 'needy.status')

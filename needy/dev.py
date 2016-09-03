@@ -65,7 +65,7 @@ def status(args=[]):
             print('')
             max_name_length = max([len(name) for name in library_names])
             for name in library_names:
-                print('  {}{:{}} {}'.format(name, '', max_name_length - len(name) + 1, needy.need_directory(name)))
+                print('    {}{:{}}{}'.format(name, '', max_name_length - len(name) + 4, needy.need_directory(name)))
             print('')
 
             return 0

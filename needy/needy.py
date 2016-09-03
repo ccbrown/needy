@@ -380,7 +380,7 @@ class Needy:
 
         try:
             for name, library in self.libraries_to_build(target, filters):
-                if library.has_up_to_date_build():
+                if not self.parameters().force_build and library.is_up_to_date():
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
                     self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
@@ -412,7 +412,7 @@ class Needy:
                 if filters and not self.test_filters(name, filters):
                     continue
                 binary = UniversalBinary(universal_binary, libs, self)
-                if binary.is_up_to_date():
+                if not self.parameters().force_build and binary.is_up_to_date():
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
                     self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
@@ -423,6 +423,21 @@ class Needy:
             self.__print_status(Fore.RED, 'ERROR')
             print(e)
             raise
+
+    def show_status(self, target_or_universal_binary):
+        print('Status for {}:\n'.format(target_or_universal_binary))
+        names_to_libraries = self.libraries(target_or_universal_binary)
+        max_name_length = max([len(name) for name in names_to_libraries.keys()])
+        for name, libraries in names_to_libraries.items():
+            if isinstance(target_or_universal_binary, Target):
+                status = libraries[0].status_text()
+                color = Fore.GREEN if libraries[0].is_up_to_date() else Fore.RED
+            else:
+                binary = UniversalBinary(target_or_universal_binary, libraries, self)
+                status = binary.status_text()
+                color = Fore.GREEN if binary.is_up_to_date() else Fore.RED
+            print(color + '    {}{:{}}{}'.format(name, '', max_name_length - len(name) + 4, status) + Fore.RESET)
+        print('')
 
     def initialize(self, target, filters=None):
         needs_configuration = self.needs_configuration(target)

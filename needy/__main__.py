@@ -43,6 +43,23 @@ def satisfy(args=[]):
     return 0
 
 
+def status(args=[]):
+    parser = argparse.ArgumentParser(
+        prog='%s status' % os.path.basename(sys.argv[0]),
+        description='Shows the current status of the project\'s needs.',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument('-t', '--target', default='host', help='shows the status for this target (example: ios:armv7)')
+    parser.add_argument('-u', '--universal-binary', help='shows the status for the universal binary with the given name')
+    parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
+    parameters = parser.parse_args(args)
+
+    with ConfiguredNeedy('.', parameters) as needy:
+        needy.show_status(parameters.universal_binary if parameters.universal_binary else needy.target(parameters.target))
+
+    return 0
+
+
 def init(args=[]):
     parser = argparse.ArgumentParser(
         prog='%s init' % os.path.basename(sys.argv[0]),
@@ -211,6 +228,7 @@ def main(args=sys.argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""available commands:
   satisfy          satisfies libraries / universal binary needs
+  status           shows the status of the project's needs
   init             initializes library source directories
   cflags           emits the compiler flags required to use the satisfied needs
   ldflags          emits the linker flags required to use the satisfied needs
@@ -236,6 +254,7 @@ Use '%s <command> --help' to get help for a specific command.
 
     commands = {
         'satisfy': satisfy,
+        'status': status,
         'init': init,
         'cflags': cflags,
         'ldflags': ldflags,

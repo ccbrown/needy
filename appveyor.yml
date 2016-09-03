@@ -17,7 +17,6 @@ test_script:
     - nosetests tests/functional/projects
     - nosetests tests/functional/test_development_mode.py
     - nosetests tests/functional/test_directory_source.py
-    - nosetests tests/functional/test_init.py
     - nosetests tests/functional/test_library.py
     - nosetests tests/functional/test_needy.py
     - pip install -e .
