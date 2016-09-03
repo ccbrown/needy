@@ -29,6 +29,10 @@ class Download(Source):
         self.cache_directory = cache_directory
         self.local_download_path = os.path.join(cache_directory, checksum)
 
+    @classmethod
+    def identifier(cls):
+        return 'download'
+
     def clean(self):
         if not self.checksum:
             raise ValueError('checksums are required for downloads')

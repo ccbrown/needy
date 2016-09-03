@@ -427,16 +427,26 @@ class Needy:
     def show_status(self, target_or_universal_binary):
         print('Status for {}:\n'.format(target_or_universal_binary))
         names_to_libraries = self.libraries(target_or_universal_binary)
-        max_name_length = max([len(name) for name in names_to_libraries.keys()])
+        max_column_length = max([len(name) for name in names_to_libraries.keys()])
+        for name, libraries in names_to_libraries.items():
+            if isinstance(target_or_universal_binary, Target):
+                max_column_length = max([max_column_length] + [len(key) + 2 for key in libraries[0].substatus_texts().keys()])
+            else:
+                binary = UniversalBinary(target_or_universal_binary, libraries, self)
+                max_column_length = max([max_column_length] + [len(key) + 2 for key in binary.substatus_texts().keys()])
         for name, libraries in names_to_libraries.items():
             if isinstance(target_or_universal_binary, Target):
                 status = libraries[0].status_text()
+                substatuses = libraries[0].substatus_texts()
                 color = Fore.GREEN if libraries[0].is_up_to_date() else Fore.RED
             else:
                 binary = UniversalBinary(target_or_universal_binary, libraries, self)
                 status = binary.status_text()
+                substatuses = binary.substatus_texts()
                 color = Fore.GREEN if binary.is_up_to_date() else Fore.RED
-            print(color + '    {}{:{}}{}'.format(name, '', max_name_length - len(name) + 4, status) + Fore.RESET)
+            print(color + '    {}{:{}}{}'.format(name, '', max_column_length - len(name) + 4, status) + Fore.RESET)
+            for key, value in substatuses.items():
+                print((Style.DIM + '      {}{:{}}{}' + Style.RESET_ALL).format(key, '', max_column_length - len(key) + 2, value))
         print('')
 
     def initialize(self, target, filters=None):

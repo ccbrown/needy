@@ -10,6 +10,10 @@ class Directory(Source):
         self.source_directory = source_directory
         self.directory = directory
 
+    @classmethod
+    def identifier(cls):
+        return 'directory'
+
     def clean(self):
         if os.path.isdir(self.directory):
             shutil.rmtree(self.directory)

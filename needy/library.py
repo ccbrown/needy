@@ -81,7 +81,7 @@ class Library:
         return [str.format(**variables) for str in l]
 
     def clean_source(self):
-        source = self.__get_configured_source()
+        source = self.source()
         source.clean()
 
     def initialize_source(self):
@@ -90,20 +90,18 @@ class Library:
             self.__post_clean()
 
     def synchronize_source(self):
-        source = self.__get_configured_source()
+        source = self.source()
         source.synchronize()
 
-    def __get_configured_source(self):
-        if 'download' in self.__configuration:
-            source = Download(self.__configuration['download'], self.__configuration['checksum'], self.source_directory(), os.path.join(self.directory(), 'download'))
-        elif 'repository' in self.__configuration:
-            source = GitRepository(self.__configuration['repository'], self.__configuration['commit'], self.source_directory())
-        elif 'directory' in self.__configuration:
-            source = Directory(self.__configuration['directory'] if os.path.isabs(self.__configuration['directory']) else os.path.join(self.needy.path(), self.__configuration['directory']), self.source_directory())
-        else:
-            raise ValueError('no source specified in configuration')
-
-        return source
+    def source(self):
+        cfg = self.__configuration
+        if 'download' in cfg:
+            return Download(cfg['download'], cfg['checksum'], self.source_directory(), os.path.join(self.directory(), 'download'))
+        if 'repository' in cfg:
+            return GitRepository(cfg['repository'], cfg['commit'], self.source_directory())
+        if 'directory' in cfg:
+            return Directory(cfg['directory'] if os.path.isabs(cfg['directory']) else os.path.join(self.needy.path(), cfg['directory']), self.source_directory())
+        raise ValueError('no source specified in configuration')
 
     def build(self):
         print('Building for %s %s' % (self.target().platform.identifier(), self.target().architecture))
@@ -243,6 +241,16 @@ class Library:
         if self.is_up_to_date():
             return 'up-to-date'
         return 'out-of-date'
+
+    def substatus_texts(self):
+        ret = {}
+        if self.is_in_development_mode():
+            status = self.source().status_text()
+            if status:
+                ret[os.path.relpath(self.source_directory())] = '{}: {}'.format(self.source().identifier(), status)
+            else:
+                ret[os.path.relpath(self.source_directory())] = '{}'.format(self.source().identifier())
+        return ret
 
     def directory(self):
         return self.__directory

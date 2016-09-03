@@ -56,6 +56,21 @@ class UniversalBinary:
             return 'up-to-date'
         return 'out-of-date'
 
+    def substatus_texts(self):
+        substatuses = {}
+        for library in self.libraries():
+            for key, value in library.substatus_texts().items():
+                if key not in substatuses:
+                    substatuses[key] = []
+                substatuses[key].append((library.target(), value))
+        ret = {}
+        for key, values in substatuses.items():
+            if len(values) == len(self.libraries()) and len(set([value for target, value in values])) == 1:
+                ret[key] = values[0][1]
+            else:
+                ret.update({'{} ({})'.format(key, target): value for target, value in values})
+        return ret
+
     def build_status_path(self):
         return os.path.join(self.build_directory(), 'needy.status')
 
