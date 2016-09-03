@@ -49,7 +49,7 @@ def status(args=[]):
         library_names = needy.development_mode_libraries()
         if parameters.library:
             if parameters.library in library_names:
-                logging.info('{} is in dev mode: {}'.format(parameters.library, needy.need_directory(parameters.library)))
+                logging.info('{} is in dev mode: {}'.format(parameters.library, os.path.relpath(needy.need_directory(parameters.library))))
                 return 0
             else:
                 logging.info('{} is not in dev mode.'.format(parameters.library))
@@ -65,7 +65,7 @@ def status(args=[]):
             print('')
             max_name_length = max([len(name) for name in library_names])
             for name in library_names:
-                print('    {}{:{}}{}'.format(name, '', max_name_length - len(name) + 4, needy.need_directory(name)))
+                print('    {}{:{}}{}'.format(name, '', max_name_length - len(name) + 4, os.path.relpath(needy.need_directory(name))))
             print('')
 
             return 0
