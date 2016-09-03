@@ -27,10 +27,10 @@ class XcodePlatform(Platform):
         args.append('-m%s-version-min=%s' % (self.os_name(), self.__minimum_version))
         if self.__embed_bitcode:
             args.append('-fembed-bitcode')
-        return ' '.join(args)
+        return args
 
     def c_compiler(self, architecture):
-        return ['xcrun', '-sdk', self.sdk(), 'clang', self.__common_compiler_args(architecture)]
+        return ['xcrun', '-sdk', self.sdk(), 'clang'] + self.__common_compiler_args(architecture)
 
     def cxx_compiler(self, architecture):
-        return ['xcrun', '-sdk', self.sdk(), 'clang++', self.__common_compiler_args(architecture)]
+        return ['xcrun', '-sdk', self.sdk(), 'clang++'] + self.__common_compiler_args(architecture)
