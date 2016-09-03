@@ -26,12 +26,12 @@ class DevelopmentModeTest(TestCase):
                 }
             }))
         mylib_source_directory = os.path.join(self.needs_directory(), 'mylib', 'source')
+        output_test_file = os.path.join(self.build_directory('mylib', 'test'), 'test')
 
         # start with a normal build
         with open(os.path.join(source_directory, 'test'), 'w') as test:
             test.write('a')
         self.assertEqual(self.execute(['satisfy', 'mylib', '-u', 'test']), 0)
-        output_test_file = os.path.join(self.build_directory('mylib', 'test'), 'test')
         with open(output_test_file, 'r') as test:
             self.assertEqual(test.read(), 'a')
 
@@ -39,7 +39,6 @@ class DevelopmentModeTest(TestCase):
         with open(os.path.join(mylib_source_directory, 'test'), 'w') as test:
             test.write('b')
         self.assertEqual(self.execute(['satisfy', 'mylib', '-u', 'test']), 0)
-        output_test_file = os.path.join(self.build_directory('mylib', 'test'), 'test')
         with open(output_test_file, 'r') as test:
             self.assertEqual(test.read(), 'a')
 
@@ -52,13 +51,19 @@ class DevelopmentModeTest(TestCase):
         with open(os.path.join(mylib_source_directory, 'test'), 'w') as test:
             test.write('c')
         self.assertEqual(self.execute(['satisfy', 'mylib', '-u', 'test']), 0)
-        output_test_file = os.path.join(self.build_directory('mylib', 'test'), 'test')
         with open(output_test_file, 'r') as test:
             self.assertEqual(test.read(), 'c')
 
         # disable dev mode
         self.assertEqual(self.execute(['dev', 'disable', 'mylib']), 0)
         self.assertNotEqual(self.execute(['dev', 'status', 'mylib']), 0)
+
+        # now that we've left dev mode, we should be out-dated
+        with open(os.path.join(source_directory, 'test'), 'w') as test:
+            test.write('a')
+        self.assertEqual(self.execute(['satisfy', 'mylib', '-u', 'test']), 0)
+        with open(output_test_file, 'r') as test:
+            self.assertEqual(test.read(), 'a')
 
     def test_synchronize(self):
         source_directory = os.path.join(self.path(), 'src')

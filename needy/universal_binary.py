@@ -147,11 +147,12 @@ class UniversalBinary:
             shutil.rmtree(directory)
             raise
 
-        with open(self.build_status_path(), 'w') as status_file:
-            status = {
-                'configuration': binascii.hexlify(self.configuration_hash()).decode()
-            }
-            json.dump(status, status_file)
+        if not self.is_in_development_mode():
+            with open(self.build_status_path(), 'w') as status_file:
+                status = {
+                    'configuration': binascii.hexlify(self.configuration_hash()).decode()
+                }
+                json.dump(status, status_file)
 
     def __make_output_dirs_for_builds(self, output_path, builds):
         for _, source_dir in builds:

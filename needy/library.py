@@ -171,6 +171,8 @@ class Library:
                 raise
 
     def __write_build_status(self):
+        if self.is_in_development_mode():
+            return
         with open(self.build_status_path(), 'w') as status_file:
             status = {
                 'configuration': binascii.hexlify(self.configuration_hash()).decode()
