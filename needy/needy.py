@@ -158,7 +158,6 @@ class Needy:
             else:
                 variables = {
                     'env': os.environ,
-                    'parameters': self.parameters(),
                     'platform': target.platform.identifier() if target else None,
                     'architecture': target.architecture if target else None,
                     'host_platform': host_platform().identifier(),
