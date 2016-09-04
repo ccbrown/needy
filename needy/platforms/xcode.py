@@ -23,7 +23,7 @@ class XcodePlatform(Platform):
 
     def __common_compiler_args(self, architecture):
         args = []
-        args.append('-arch %s' % architecture)
+        args.extend(['-arch', architecture])
         args.append('-m%s-version-min=%s' % (self.os_name(), self.__minimum_version))
         if self.__embed_bitcode:
             args.append('-fembed-bitcode')
