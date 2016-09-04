@@ -66,7 +66,8 @@ class Library:
             'build_directory': self.build_directory(),
             'platform': self.target().platform.identifier(),
             'architecture': self.target().architecture,
-            'needs_file_directory': self.needy.path()
+            'needs_file_directory': self.needy.path(),
+            'build_concurrency': self.needy.build_concurrency(),
         }
 
     @staticmethod
@@ -307,7 +308,9 @@ class Library:
                     logging.debug('  - {}'.format(reasons))
                 if valid:
                     if len(missing_prerequisites) > 0:
-                        print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' Detected {} project, but the following prerequisites are missing: {}'.format(candidate.identifier(), ', '.join(missing_prerequisites)))
+                        print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' Detected {} project, but the following prerequisites are missing: {}'.format(
+                            candidate.identifier(), ', '.join(missing_prerequisites)
+                        ))
                         continue
                     return candidate(definition, self.needy)
 
