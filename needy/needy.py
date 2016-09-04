@@ -213,7 +213,7 @@ class Needy:
         return self.__parameters
 
     def build_concurrency(self):
-        if self.parameters().concurrency > 0:
+        if getattr(self.parameters(), 'concurrency', 0) > 0:
             return self.parameters().concurrency
         return multiprocessing.cpu_count()
 
