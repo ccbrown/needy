@@ -133,5 +133,6 @@ String values are formatted with the following parameters:
 * `platform` - The identifier of the platform being built. For example, 'osx'.
 * `architecture` - The architecture being built. For example, 'x86_64'.
 * `needs_file_directory` - The directory that contains the needs file.
+* `build_concurrency` - The number of parallel processes desired.
 
 This means you may need to escape curly braces in your strings (see [the Python format string documentation](https://docs.python.org/2/library/string.html#formatstrings)).
