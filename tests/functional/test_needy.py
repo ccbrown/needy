@@ -63,9 +63,15 @@ class NeedyTest(TestCase):
                         directory: {empty_directory}
                         build-directory-suffix: suffix
                         project:
-                            build-steps: echo {{{{ build_directory('mylib') }}}} | {match_command} "suffix"
+                            build-steps:
+                                - echo {{{{ build_directory('mylib') }}}} | {match_command} "suffix"
+                                - echo {{{{ architecture }}}} | {match_command} "{architecture}"
+                universal-binaries:
+                    ub:
+                        host: ['{architecture}']
             ''').format(
                 empty_directory=empty_directory,
-                match_command='findstr' if sys.platform == 'win32' else 'grep'
+                match_command='findstr' if sys.platform == 'win32' else 'grep',
+                architecture=host_platform()().default_architecture()
             ))
-        self.assertEqual(self.execute(['satisfy']), 0)
+        self.assertEqual(self.execute(['satisfy', '-u', 'ub']), 0)
