@@ -58,8 +58,6 @@ class Needy:
         logging.debug('Using needs file {}'.format(self.__needs_file))
         logging.debug('Using needs directory {}'.format(self.__needs_directory))
 
-        self.__cached_needs_configuration = None
-
     @staticmethod
     def resolve_needs_directory(directory):
         directory = Needy.__normalize_path(directory)
@@ -136,8 +134,6 @@ class Needy:
         return self.__needy_configuration
 
     def needs_configuration(self, target=None):
-        if self.__cached_needs_configuration:
-            return self.__cached_needs_configuration
         configuration = ''
         with open(self.needs_file(), 'r') as needs_file:
             configuration = needs_file.read()
@@ -178,8 +174,7 @@ class Needy:
         name, extension = os.path.splitext(self.needs_file())
 
         if extension == '.json':
-            self.__cached_needs_configuration = json.loads(configuration, object_pairs_hook=OrderedDict)
-            return self.__cached_needs_configuration
+            return json.loads(configuration, object_pairs_hook=OrderedDict)
 
         if extension == '.yaml':
             try:
@@ -193,8 +188,7 @@ class Needy:
                     return OrderedDict(loader.construct_pairs(node))
 
                 OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
-                self.__cached_needs_configuration = yaml.load(configuration, OrderedLoader)
-                return self.__cached_needs_configuration
+                return yaml.load(configuration, OrderedLoader)
             except ImportError:
                 raise RuntimeError('The needs are defined in a YAML file. Please install the pyyaml Python package.')
 
