@@ -28,7 +28,13 @@ def main(args=sys.argv):
     available_commands = commands.available_commands()
 
     parser = argparse.ArgumentParser(description='Helps with dependencies.')
-    parser.add_argument('-C', help='run as if invoked from this path')
+
+    try:
+        from argcomplete.completers import DirectoriesCompleter
+        parser.add_argument('-C', help='run as if invoked from this path').completer = DirectoriesCompleter()
+    except ImportError:
+        pass
+
     parser.add_argument('-v', '--verbose', action='store_true', help='produce more verbose logs')
     parser.add_argument('-q', '--quiet', action='store_true', help='suppress output')
 
