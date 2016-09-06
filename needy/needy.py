@@ -304,6 +304,9 @@ class Needy:
 
         return needs_configuration['universal-binaries'][universal_binary]
 
+    def universal_binary_names(self):
+        return self.needs_configuration().get('universal-binaries', {}).keys()
+
     def libraries(self, target_or_universal_binary, filters=None, include_dependencies=True):
         ''' Libraries and dependent libraries. Dependent libraries may not match the filters. '''
         libraries = dict()

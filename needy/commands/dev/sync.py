@@ -1,10 +1,10 @@
 import textwrap
 
-from ...command import Command
+from ... import command
 from ...needy import ConfiguredNeedy
 
 
-class SyncCommand(Command):
+class SyncCommand(command.Command):
     def name(self):
         return 'sync'
 
@@ -17,8 +17,8 @@ class SyncCommand(Command):
             '''),
             help='synchronizes upstream changes while keeping local changes'
         )
-        parser.add_argument('library', nargs='*', help='a library to synchronize')
-        parser.add_argument('-t', '--target', default='host', help='synchronize the source for this target (example: ios:armv7)')
+        parser.add_argument('library', nargs='*', help='a library to synchronize').completer = command.library_completer
+        parser.add_argument('-t', '--target', default='host', help='synchronize the source for this target (example: ios:armv7)').completer = command.target_completer
         parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
 
     def execute(self, arguments):

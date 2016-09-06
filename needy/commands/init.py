@@ -1,10 +1,10 @@
 import textwrap
 
-from ..command import Command
+from .. import command
 from ..needy import ConfiguredNeedy
 
 
-class InitCommand(Command):
+class InitCommand(command.Command):
     def name(self):
         return 'init'
 
@@ -17,8 +17,8 @@ class InitCommand(Command):
             '''),
             help='initializes library source directories'
         )
-        parser.add_argument('library', default=None, nargs='*', help='the library to initialize the source of. shell-style wildcards are allowed')
-        parser.add_argument('-t', '--target', default='host', help='initialize the source for this target (example: ios:armv7)')
+        parser.add_argument('library', default=None, nargs='*', help='the library to initialize the source of. shell-style wildcards are allowed').completer = command.library_completer
+        parser.add_argument('-t', '--target', default='host', help='initialize the source for this target (example: ios:armv7)').completer = command.target_completer
         parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
 
     def execute(self, arguments):

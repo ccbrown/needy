@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# PYTHON_ARGCOMPLETE_OK
+
 import argparse
 import logging
 import os
@@ -37,6 +40,12 @@ def main(args=sys.argv):
     )
     for name, command in available_commands.items():
         command.add_parser(subparser_group)
+
+    try:
+        import argcomplete
+        argcomplete.autocomplete(parser)
+    except ImportError:
+        pass
 
     arguments = parser.parse_args(args[1:])
 
