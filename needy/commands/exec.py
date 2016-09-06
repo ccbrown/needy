@@ -1,17 +1,17 @@
 import os
 
-from ..command import Command
+from .. import command
 from ..needy import ConfiguredNeedy
 
 
-class ExecCommand(Command):
+class ExecCommand(command.Command):
     def name(self):
         return 'exec'
 
     def add_parser(self, group):
         short_description = 'invoke a command from the source directory of a need'
         parser = group.add_parser(self.name(), description=short_description.capitalize()+'.', help=short_description)
-        parser.add_argument('library', help='the library who\'s source directory will be used')
+        parser.add_argument('library', help='the library who\'s source directory will be used').completer = command.library_completer
         parser.add_argument('command', nargs='+', help='command to invoke')
 
     def execute(self, arguments):

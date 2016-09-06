@@ -4,11 +4,11 @@ import logging
 import os
 import textwrap
 
-from ...command import Command
+from ... import command
 from ...needy import ConfiguredNeedy
 
 
-class StatusCommand(Command):
+class StatusCommand(command.Command):
     def name(self):
         return 'status'
 
@@ -22,7 +22,7 @@ class StatusCommand(Command):
             '''),
             help='shows the status of libraries that are in dev mode'
         )
-        parser.add_argument('library', nargs='?', help='a library to check the status of')
+        parser.add_argument('library', nargs='?', help='a library to check the status of').completer = command.library_completer
 
     def execute(self, arguments):
         with ConfiguredNeedy('.', arguments) as needy:

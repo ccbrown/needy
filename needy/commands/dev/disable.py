@@ -1,10 +1,10 @@
 import textwrap
 
-from ...command import Command
+from ... import command
 from ...needy import ConfiguredNeedy
 
 
-class DisableCommand(Command):
+class DisableCommand(command.Command):
     def name(self):
         return 'disable'
 
@@ -17,7 +17,7 @@ class DisableCommand(Command):
             '''),
             help='disables dev mode for a library'
         )
-        parser.add_argument('library', help='the library to disable dev mode for')
+        parser.add_argument('library', help='the library to disable dev mode for').completer = command.library_completer
 
     def execute(self, arguments):
         with ConfiguredNeedy('.', arguments) as needy:
