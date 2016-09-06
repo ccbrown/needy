@@ -3,20 +3,19 @@ environment:
         - PYTHON: C:\\Python27
         - PYTHON: C:\\Python33
         - PYTHON: C:\\Python34
-
 install:
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-    - pip install -r requirements-dev.txt
-
+    - pip install -r requirements-dev.txt codecov
 build: off
-
 test_script:
-    - nosetests tests/unit
-    - nosetests tests/functional/generators
-    - nosetests tests/functional/libraries
-    - nosetests tests/functional/projects
-    - nosetests tests/functional/test_development_mode.py
-    - nosetests tests/functional/test_directory_source.py
-    - nosetests tests/functional/test_library.py
-    - nosetests tests/functional/test_needy.py
+    - nosetests --with-coverage --cover-package=needy tests/unit
+    - nosetests --with-coverage --cover-package=needy tests/functional/generators
+    - nosetests --with-coverage --cover-package=needy tests/functional/libraries
+    - nosetests --with-coverage --cover-package=needy tests/functional/projects
+    - nosetests --with-coverage --cover-package=needy tests/functional/test_development_mode.py
+    - nosetests --with-coverage --cover-package=needy tests/functional/test_directory_source.py
+    - nosetests --with-coverage --cover-package=needy tests/functional/test_library.py
+    - nosetests --with-coverage --cover-package=needy tests/functional/test_needy.py
     - pip install -e .
+after_test:
+    - codecov

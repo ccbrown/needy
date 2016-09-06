@@ -2,16 +2,19 @@ language: python
 sudo: required
 dist: trusty
 python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-script:
-  - nosetests
-  - scripts/build-examples
-  - pip install -e .
+  - 2.7
+  - 3.3
+  - 3.4
+  - 3.5
 before_install:
   - wget https://github.com/boostorg/build/releases/download/2014.10/boost-build-2014-10.tar.bz2 -O boost-build-2014-10.tar.bz2
   - tar -xvf boost-build-2014-10.tar.bz2
   - pushd boost-build/ && ./bootstrap.sh && sudo ./b2 install && popd
-install: "pip install -r requirements-dev.txt"
+install:
+  - pip install -r requirements-dev.txt codecov
+script:
+  - nosetests --with-coverage --cover-package=needy
+  - scripts/build-examples
+  - pip install -e .
+after_success:
+  - codecov
