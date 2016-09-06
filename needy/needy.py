@@ -29,6 +29,7 @@ from .target import Target
 from .cd import current_directory
 from .local_configuration import LocalConfiguration
 from .needy_configuration import NeedyConfiguration
+from .memoize import MemoizeMethod
 
 
 @contextmanager
@@ -133,6 +134,7 @@ class Needy:
         '''Not to be confused with needs_configuration'''
         return self.__needy_configuration
 
+    @MemoizeMethod
     def needs_configuration(self, target=None):
         configuration = ''
         with open(self.needs_file(), 'r') as needs_file:
