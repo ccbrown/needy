@@ -31,10 +31,11 @@ def main(args=sys.argv):
 
     try:
         from argcomplete.completers import DirectoriesCompleter
-        parser.add_argument('-C', help='run as if invoked from this path').completer = DirectoriesCompleter()
     except ImportError:
-        pass
+        class DirectoriesCompleter:
+            pass
 
+    parser.add_argument('-C', help='run as if invoked from this path').completer = DirectoriesCompleter()
     parser.add_argument('-v', '--verbose', action='store_true', help='produce more verbose logs')
     parser.add_argument('-q', '--quiet', action='store_true', help='suppress output')
 
