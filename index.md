@@ -46,6 +46,11 @@ This should go into a file named *needs.yaml* (or you could put the equivalent J
 
 From there, you'll need to integrate with your build system. The most flexible way is via the `needy cflags` and `needy ldflags` commands. Passing the output of those commands as compiler and linker arguments will add all of the header and library output to your search paths, and all you'll need to do is add `-l` flags if necessary.
 
+Tab Completion
+--
+
+You can get tab completion for Needy by installing [argcomplete](https://github.com/kislyuk/argcomplete).
+
 Does it work with all libraries?
 --
 
