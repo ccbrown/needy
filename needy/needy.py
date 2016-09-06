@@ -194,7 +194,7 @@ class Needy:
 
             return None
 
-        raise NotImplementedError('file parsing not implemented')
+        raise RuntimeError('No needs file found.')
 
     def needs_directory(self):
         return self.__needs_directory

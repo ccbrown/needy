@@ -27,11 +27,18 @@ def completer(f):
     def wrapper(parsed_args, **kwds):
         import argcomplete
         try:
-            with cd(parsed_args.C) if parsed_args.C else DummyContextManager() as _:
+            with cd(parsed_args.C) if getattr(parsed_args, 'C', None) else DummyContextManager() as _:
                 return f(parsed_args=parsed_args, **kwds)
         except Exception as e:
             argcomplete.warn('An error occurred during argument completion: {}'.format(e))
     return wrapper
+
+
+try:
+    from argcomplete.completers import DirectoriesCompleter
+    directory_completer = DirectoriesCompleter()
+except ImportError:
+    directory_completer = None
 
 
 @completer
@@ -42,7 +49,7 @@ def library_completer(prefix, parsed_args, **kwargs):
 
 
 @completer
-def target_completer(prefix, parsed_args, **kwargs):
+def target_completer(prefix, **kwargs):
     if ':' in prefix:
         # architectures don't have any formal constraints, but we can provide some common ones
         architectures = ['x86_64', 'i386', 'armv7', 'arm64', 'amd64']
