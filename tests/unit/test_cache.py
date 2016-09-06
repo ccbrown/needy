@@ -5,7 +5,7 @@ from pyfakefs import fake_filesystem_unittest
 from needy.cache import Manifest
 
 
-class ManifestEntry(unittest.TestCase):
+class ManifestEntryTest(unittest.TestCase):
     def test_serialization(self):
         entry = {'use_time': 5}
         self.assertEqual(Manifest.Entry(entry).use_time, 5)
