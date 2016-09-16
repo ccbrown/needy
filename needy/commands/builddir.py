@@ -12,8 +12,7 @@ class BuildDirCommand(command.Command):
         short_description = 'gets the build directory for a need'
         parser = group.add_parser(self.name(), description=short_description.capitalize()+'.', help=short_description)
         parser.add_argument('library', help='the library to get the directory for').completer = command.library_completer
-        parser.add_argument('-t', '--target', default='host', help='gets the directory for this target (example: ios:armv7)').completer = command.target_completer
-        parser.add_argument('-u', '--universal-binary', help='gets the directory for this universal binary').completer = command.universal_binary_completer
+        command.add_target_specification_args(parser, 'gets the directory')
 
     def execute(self, arguments):
         with ConfiguredNeedy('.', arguments) as needy:

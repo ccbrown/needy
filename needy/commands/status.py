@@ -16,9 +16,7 @@ class StatusCommand(command.Command):
             '''),
             help='shows the current status of the project\'s needs'
         )
-        parser.add_argument('-t', '--target', default='host', help='shows the status for this target (example: ios:armv7)').completer = command.target_completer
-        parser.add_argument('-u', '--universal-binary', help='shows the status for the universal binary with the given name').completer = command.universal_binary_completer
-        parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
+        command.add_target_specification_args(parser, 'shows the status')
 
     def execute(self, arguments):
         with ConfiguredNeedy('.', arguments) as needy:

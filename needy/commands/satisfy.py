@@ -14,11 +14,9 @@ class SatisfyCommand(command.Command):
             help='satisfies library and universal binary needs'
         )
         parser.add_argument('library', default=None, nargs='*', help='the library to satisfy. shell-style wildcards are allowed').completer = command.library_completer
-        parser.add_argument('-t', '--target', default='host', help='builds needs for this target (example: ios:armv7)').completer = command.target_completer
-        parser.add_argument('-u', '--universal-binary', help='builds the universal binary with the given name').completer = command.universal_binary_completer
         parser.add_argument('-j', '--concurrency', default=1, const=0, nargs='?', type=int, help='number of jobs to process concurrently. omit or specify 0 for full concurrency')
         parser.add_argument('-f', '--force-build', action='store_true', help='force a build even when the target is up-to-date')
-        parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
+        command.add_target_specification_args(parser, 'builds needs')
 
         for platform in available_platforms().values():
             platform.add_arguments(parser)

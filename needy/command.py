@@ -66,3 +66,9 @@ def target_completer(prefix, **kwargs):
 def universal_binary_completer(prefix, parsed_args, **kwargs):
     with ConfiguredNeedy('.', parsed_args) as needy:
         return [name for name in needy.universal_binary_names() if name.startswith(prefix)]
+
+
+def add_target_specification_args(parser, action='executes'):
+    parser.add_argument('-t', '--target', default='host', help='{} for this target (example: ios:armv7)'.format(action)).completer = target_completer
+    parser.add_argument('-u', '--universal-binary', help='{} for the universal binary with the given name'.format(action)).completer = universal_binary_completer
+    parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
