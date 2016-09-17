@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 import textwrap
+import hashlib
 
 
 class PkgConfigJamGenerator(Generator):
@@ -25,7 +26,8 @@ class PkgConfigJamGenerator(Generator):
             logging.warn('broken packages found: {}'.format(' '.join(broken_package_names)))
 
         contents = self.__get_header(self.__escape(env.get('PKG_CONFIG_PATH', '')))
-        contents += self.__get_pkg_actions(needy, packages)
+        contents += self.__get_path_targets(needy, packages)
+        contents += self.__get_pkg_targets(needy, packages)
         contents += self.__get_pkgconfig_rules(needy, packages, owned_packages, broken_package_names)
 
         with open(path, 'w') as f:
@@ -74,23 +76,38 @@ class PkgConfigJamGenerator(Generator):
         )
 
     @classmethod
-    def __get_pkg_actions(cls, needy, packages):
-        rules = ''
+    def __get_path_targets(cls, needy, packages):
+        lines = ''
+        paths = set([os.path.abspath(os.path.join(p['location'], '..', '..')) for p in packages])
+        for path in paths:
+            path_hash = hashlib.sha256(path.encode('utf-8')).hexdigest().lower()
+            lines += textwrap.dedent('''\
+                actions copy-path-{path_hash}-action {{ mkdir -p $(INSTALL_PREFIX) && cp -pR {path}/* $(INSTALL_PREFIX)/ }}
+                notfile.notfile copy-path-{path_hash} : @$(__name__).copy-path-{path_hash}-action ;
+                $(p).mark-target-as-explicit copy-path-{path_hash} ;
+
+            ''').format(path_hash=path_hash, path=path)
+        return lines
+
+    @classmethod
+    def __get_pkg_targets(cls, needy, packages):
+        lines = ''
         for package in packages:
-            rules += 'alias {}-package : : : : <cflags>"{}" <linkflags>"{}" ;\n'.format(package['name'], PkgConfigJamGenerator.__escape(package['cflags']), PkgConfigJamGenerator.__escape(package['ldflags']))
-            rules += textwrap.dedent('''\
-                actions install-{package}-package-action {{ mkdir -p $(INSTALL_PREFIX) && cp -pR {package_prefix}/* $(INSTALL_PREFIX)/ }}
-                notfile.notfile install-{package}-package : @$(__name__).install-{package}-package-action ;
-            ''').format(package=package['name'], package_prefix=os.path.dirname(os.path.dirname(package['location'])))
+            path = os.path.abspath(os.path.join(package['location'], '..', '..'))
+            path_hash = hashlib.sha256(path.encode('utf-8')).hexdigest().lower()
+            lines += 'alias {}-package : : : : <cflags>"{}" <linkflags>"{}" ;\n'.format(package['name'], PkgConfigJamGenerator.__escape(package['cflags']), PkgConfigJamGenerator.__escape(package['ldflags']))
+            lines += textwrap.dedent('''\
+                alias install-{package}-package : copy-path-{path_hash} ;
+            ''').format(package=package['name'], path_hash=path_hash)
             if not os.path.relpath(package['location'], os.path.realpath(needy.needs_directory())).startswith('..'):
-                rules += 'alias install-{package}-package-if-owned : install-{package}-package ;\n'.format(package=package['name'])
+                lines += 'alias install-{package}-package-if-owned : install-{package}-package ;\n'.format(package=package['name'])
             else:
-                rules += 'alias install-{package}-package-if-owned ;\n'.format(package=package['name'])
-            rules += textwrap.dedent('''\
+                lines += 'alias install-{package}-package-if-owned ;\n'.format(package=package['name'])
+            lines += textwrap.dedent('''\
                 $(p).mark-target-as-explicit install-{package}-package install-{package}-package-if-owned ;
 
             ''').format(package=package['name'])
-        return rules
+        return lines
 
     @classmethod
     def __get_pkgconfig_rules(cls, needy, packages, owned_packages, broken_package_names):
