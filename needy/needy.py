@@ -144,6 +144,7 @@ class Needy:
             from jinja2 import Environment, PackageLoader
             env = Environment()
             env.filters['dirname'] = os.path.dirname
+            env.filters['json_escape'] = lambda s: json.dumps(s)[1:][:-1]
             if hasattr(self.__parameters, 'define') and self.__parameters.define:
                 for defines in self.__parameters.define:
                     for define in defines:
@@ -457,6 +458,22 @@ class Needy:
             assert len(libraries) == 1
             logging.info('Initializing {}...'.format(name))
             libraries[0].initialize_source()
+
+    def clean(self, target, filters=None, only_build_directory=False, force=False):
+        libs = list(self.libraries(target, filters, include_dependencies=False).items())
+        for name, libraries in libs:
+            assert len(libraries) == 1
+            if self.__local_configuration.development_mode(name) and not force:
+                if len(libs) == 1:
+                    raise RuntimeError('{} is in development mode; cannot clean without force'.format(name))
+                else:
+                    logging.info('{} is in development mode; cannot clean without force'.format(name))
+                    continue
+            logging.info('Cleaning {}...'.format(name))
+            libraries[0].clean_build()
+            if only_build_directory:
+                continue
+            libraries[0].clean_source()
 
     def synchronize(self, target, filters=None):
         if 'libraries' not in self.needs_configuration(target):

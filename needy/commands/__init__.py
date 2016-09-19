@@ -6,6 +6,7 @@ def available_commands():
         ('.builddir', 'BuildDirCommand'),
         ('.cflags', 'CFlagsCommand'),
         ('.dev', 'DevCommand'),
+        ('.clean', 'CleanCommand'),
         ('.exec', 'ExecCommand'),
         ('.generate', 'GenerateCommand'),
         ('.init', 'InitCommand'),

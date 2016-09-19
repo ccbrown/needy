@@ -85,6 +85,9 @@ class Library:
         source = self.source()
         source.clean()
 
+    def clean_build(self):
+        clean_directory(self.build_directory())
+
     def initialize_source(self):
         self.clean_source()
         with OverrideEnvironment(self.__environment_overrides()):
@@ -134,7 +137,8 @@ class Library:
 
             project.set_string_format_variables(**self.string_format_variables())
 
-            clean_directory(self.build_directory())
+            if not self.is_in_development_mode():
+                self.clean_build()
 
             self.__actualize(project)
             self.__write_build_status()
@@ -170,12 +174,13 @@ class Library:
                 raise
 
     def __write_build_status(self):
-        if self.is_in_development_mode():
-            return
         with open(self.build_status_path(), 'w') as status_file:
-            status = {
-                'configuration': binascii.hexlify(self.configuration_hash()).decode()
-            }
+            if self.is_in_development_mode():
+                status = {}
+            else:
+                status = {
+                    'configuration': binascii.hexlify(self.configuration_hash()).decode()
+                }
             json.dump(status, status_file)
 
     def __cache_artifacts(self):

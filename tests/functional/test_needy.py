@@ -28,6 +28,35 @@ class NeedyTest(TestCase):
         self.assertEqual(self.execute(['init', 'project']), 0)
         self.assertFalse(os.path.exists(os.path.join(self.source_directory('project'), 'bar')))
 
+    def test_clean(self):
+        empty_directory = os.path.join(self.path(), 'empty')
+        os.makedirs(empty_directory)
+        with open(os.path.join(self.path(), 'needs.json'), 'w') as needs_file:
+            needs_file.write(json.dumps({
+                'libraries': {
+                    'project': {
+                        'directory': empty_directory,
+                        'project': {
+                            'build-steps': [
+                                'cd {{ build_directory(\'project\')|json_escape }}',
+                                'echo foo > bar'
+                            ]
+                        }
+                    }
+                }
+            }))
+        self.assertEqual(self.execute(['satisfy', 'project']), 0)
+        self.assertTrue(os.path.exists(os.path.join(self.build_directory('project'), 'bar')))
+
+        # fails in dev mode
+        self.assertEqual(self.execute(['dev', 'enable', 'project']), 0)
+        self.assertRaises(RuntimeError, lambda: self.execute(['clean', 'project']))
+        self.assertTrue(os.path.exists(os.path.join(self.build_directory('project'), 'bar')))
+
+        self.assertEqual(self.execute(['dev', 'disable', 'project']), 0)
+        self.assertEqual(self.execute(['clean', 'project']), 0)
+        self.assertFalse(os.path.exists(os.path.join(self.build_directory('project'), 'bar')))
+
     def test_status(self):
         empty_directory = os.path.join(self.path(), 'empty')
         os.makedirs(empty_directory)
