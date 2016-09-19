@@ -81,8 +81,21 @@ class PkgConfigJamGenerator(Generator):
         paths = set([os.path.abspath(os.path.join(p['location'], '..', '..')) for p in packages])
         for path in paths:
             path_hash = hashlib.sha256(path.encode('utf-8')).hexdigest().lower()
+            # This is the worst. Specifically, Boost Build is the worst. Their semaphore
+            # targets appear to be entirely broken (in addition to factually incorrect
+            # documentation) and so we have to write our own semaphore to ensure that
+            # this sort of file copying to $(INSTALL_PREFIX) occurs atomically.
+            #
+            # The reason this is necessary at all is due to a race condition in
+            # cp/mkdir of the destination path that errors on duplicate
+            # files/directories even in the presence of the -p flag.
             lines += textwrap.dedent('''\
-                actions copy-path-{path_hash}-action {{ mkdir -p $(INSTALL_PREFIX) && cp -pR {path}/* $(INSTALL_PREFIX)/ }}
+                actions copy-path-{path_hash}-action {{
+                    set -e ; trap "{{ rmdir $(INSTALL_PREFIX)/needy-copy-path.lock 2>/dev/null || true ; }}" EXIT SIGTERM SIGINT
+                    mkdir -p $(INSTALL_PREFIX) && test -d $(INSTALL_PREFIX) && test -w $(INSTALL_PREFIX)
+                    until mkdir -p $(INSTALL_PREFIX)/needy-copy-path.lock 2>/dev/null ; do python -c "import time;time.sleep(0.1)" ; done
+                    cp -pR {path}/* $(INSTALL_PREFIX)/
+                }}
                 notfile.notfile copy-path-{path_hash} : @$(__name__).copy-path-{path_hash}-action ;
                 $(p).mark-target-as-explicit copy-path-{path_hash} ;
 
