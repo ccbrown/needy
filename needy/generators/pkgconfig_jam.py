@@ -91,7 +91,7 @@ class PkgConfigJamGenerator(Generator):
             # files/directories even in the presence of the -p flag.
             lines += textwrap.dedent('''\
                 actions copy-path-{path_hash}-action {{
-                    set -e ; trap "{{ rmdir $(INSTALL_PREFIX)/needy-copy-path.lock 2>/dev/null || true ; }}" EXIT SIGTERM SIGINT
+                    set -e ; trap "{{ rmdir $(INSTALL_PREFIX)/needy-copy-path.lock 2>/dev/null || true ; }}" EXIT TERM INT
                     mkdir -p $(INSTALL_PREFIX) && test -d $(INSTALL_PREFIX) && test -w $(INSTALL_PREFIX)
                     until mkdir -p $(INSTALL_PREFIX)/needy-copy-path.lock 2>/dev/null ; do python -c "import time;time.sleep(0.1)" ; done
                     cp -pR {path}/* $(INSTALL_PREFIX)/
