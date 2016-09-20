@@ -42,6 +42,16 @@ class NeedyTest(TestCase):
                                 'echo foo > bar'
                             ]
                         }
+                    },
+                    'project2': {
+                        'directory': empty_directory,
+                        'project': {
+                            'build-steps': [
+                                'echo foo > bar',
+                                'cd {{ build_directory(\'project2\')|json_escape }}',
+                                'echo foo > bar'
+                            ]
+                        }
                     }
                 }
             }))
@@ -53,9 +63,25 @@ class NeedyTest(TestCase):
         self.assertRaises(RuntimeError, lambda: self.execute(['clean', 'project']))
         self.assertTrue(os.path.exists(os.path.join(self.build_directory('project'), 'bar')))
 
+        # doesn't fail if a filter covers more than one library
+        self.assertEqual(self.execute(['dev', 'enable', 'project']), 0)
+        self.assertEqual(self.execute(['clean']), 0)
+        self.assertTrue(os.path.exists(os.path.join(self.build_directory('project'), 'bar')))
+
+        self.assertEqual(self.execute(['satisfy', 'project']), 0)
+        self.assertTrue(os.path.exists(os.path.join(self.build_directory('project'), 'bar')))
+
         self.assertEqual(self.execute(['dev', 'disable', 'project']), 0)
         self.assertEqual(self.execute(['clean', 'project']), 0)
         self.assertFalse(os.path.exists(os.path.join(self.build_directory('project'), 'bar')))
+
+        # clean only the build directory
+        self.assertEqual(self.execute(['satisfy', 'project2']), 0)
+        self.assertTrue(os.path.exists(os.path.join(self.source_directory('project2'), 'bar')))
+        self.assertTrue(os.path.exists(os.path.join(self.build_directory('project2'), 'bar')))
+        self.assertEqual(self.execute(['clean', 'project2', '--build-directory']), 0)
+        self.assertFalse(os.path.exists(os.path.join(self.build_directory('project2'), 'bar')))
+        self.assertTrue(os.path.exists(os.path.join(self.source_directory('project2'), 'bar')))
 
     def test_status(self):
         empty_directory = os.path.join(self.path(), 'empty')
@@ -76,6 +102,14 @@ class NeedyTest(TestCase):
                     }
                 }
             }))
+        self.assertEqual(self.execute(['status']), 0)
+        self.assertEqual(self.execute(['status', '-u', 'ub']), 0)
+        self.assertEqual(self.execute(['satisfy', 'project']), 0)
+        self.assertEqual(self.execute(['status']), 0)
+        self.assertEqual(self.execute(['status', '-u', 'ub']), 0)
+
+        # same thing with dev mode
+        self.assertEqual(self.execute(['dev', 'enable', 'project']), 0)
         self.assertEqual(self.execute(['status']), 0)
         self.assertEqual(self.execute(['status', '-u', 'ub']), 0)
         self.assertEqual(self.execute(['satisfy', 'project']), 0)
