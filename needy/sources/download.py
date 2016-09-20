@@ -11,6 +11,7 @@ import tarfile
 import tempfile
 import time
 import zipfile
+import logging
 
 try:
     import urllib.request as urllib2
@@ -39,7 +40,7 @@ class Download(Source):
 
         self.__fetch()
 
-        print('Unpacking to %s' % self.destination)
+        logging.info('Unpacking to %s' % self.destination)
         self.__clean_destination_dir()
         self.__unpack()
         self.__trim_lone_dirs()
@@ -53,7 +54,7 @@ class Download(Source):
 
     @classmethod
     def get(cls, url, checksum, destination):
-        print('Downloading from %s' % url)
+        logging.info('Downloading from %s' % url)
         download = None
         attempts = 0
         download_successful = False
@@ -61,13 +62,13 @@ class Download(Source):
             try:
                 download = urllib2.urlopen(url, timeout=5)
             except urllib2.URLError as e:
-                print(e)
+                logging.warning(e)
             except socket.timeout as e:
-                print(e)
+                logging.warning(e)
             attempts = attempts + 1
             download_successful = download and download.code == 200 and 'content-length' in download.info()
             if not download_successful:
-                print('Download failed. Retrying...')
+                logging.warning('Download failed. Retrying...')
             time.sleep(attempts)
         if not download_successful:
             raise IOError('unable to download library')
@@ -95,10 +96,10 @@ class Download(Source):
                 print('\r       \r', end='')
                 sys.stdout.flush()
 
-            print('Verifying checksum...')
+            logging.debug('Verifying checksum...')
             if not cls.verify_checksum(local_file.name, checksum):
                 raise ValueError('incorrect checksum')
-            print('Checksum verified.')
+            logging.debug('Checksum verified.')
 
             shutil.move(local_file.name, destination)
         except:
