@@ -1,3 +1,4 @@
+import distutils.spawn
 import json
 import os
 import sys
@@ -5,6 +6,7 @@ import textwrap
 
 from .functional_test import TestCase
 
+from needy.override_environment import OverrideEnvironment
 from needy.platforms import host_platform
 
 
@@ -138,3 +140,53 @@ class NeedyTest(TestCase):
                 architecture=host_platform()().default_architecture()
             ))
         self.assertEqual(self.execute(['satisfy', '-u', 'ub']), 0)
+
+    if distutils.spawn.find_executable('pkg-config'):
+        def test_pkgconfig_dependency_injection(self):
+            empty_directory = os.path.join(self.path(), 'empty')
+            os.makedirs(empty_directory)
+            with open(os.path.join(self.path(), 'needs.json'), 'w') as needs_file:
+                needs_file.write(json.dumps({
+                    'libraries': {
+                        'a': {
+                            'directory': empty_directory,
+                            'dependencies': 'b',
+                            'project': {
+                                'build-steps': 'echo foo > {build_directory}/bar'
+                            }
+                        },
+                        'b': {
+                            'directory': empty_directory,
+                            'dependencies': 'c',
+                            'project': {
+                                'build-steps': 'echo foo > {build_directory}/bar'
+                            }
+                        },
+                        'c': {
+                            'directory': empty_directory,
+                            'project': {
+                                'build-steps': 'echo foo > {build_directory}/bar'
+                            }
+                        }
+                    }
+                }))
+            pkgconfig_directory = os.path.join(self.path(), 'pkgconfig')
+            os.makedirs(pkgconfig_directory)
+            with open(os.path.join(pkgconfig_directory, 'b.pc'), 'w') as pkgconfig_file:
+                pkgconfig_file.write(textwrap.dedent('''
+                    prefix=${pcfiledir}/../..
+                    exec_prefix=${prefix}
+                    libdir=${exec_prefix}/lib
+                    includedir=${prefix}/include
+
+                    Name: b
+                    Version: 0
+                    Description: b
+                    Libs: -L${libdir}
+                    Cflags: -I${includedir}
+                '''))
+            with OverrideEnvironment({'PKG_CONFIG_PATH': pkgconfig_directory}):
+                self.assertEqual(self.execute(['satisfy', 'a']), 0)
+                self.assertTrue(os.path.exists(os.path.join(self.build_directory('a'), 'bar')))
+                self.assertFalse(os.path.exists(os.path.join(self.build_directory('b'), 'bar')))
+                self.assertFalse(os.path.exists(os.path.join(self.build_directory('c'), 'bar')))

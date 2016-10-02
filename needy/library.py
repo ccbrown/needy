@@ -213,9 +213,11 @@ class Library:
                 overrides[key] = self.evaluate(value, current=overrides.get(key, os.environ.get(key, '')))[0]
         self.__log_environment_overrides(overrides)
 
-        if self.dependencies():
+        dependencies = self.dependencies()
+        dependencies_to_provide = [dependency for dependency in dependencies if not self.needy.library_is_overridden(dependency)]
+        if dependencies_to_provide:
             pkg_config_path = overrides['PKG_CONFIG_PATH'] if 'PKG_CONFIG_PATH' in overrides else os.environ.get('PKG_CONFIG_PATH', '')
-            dependency_config_path = self.needy.pkg_config_path(self.target(), self.dependencies())
+            dependency_config_path = self.needy.pkg_config_path(self.target(), dependencies_to_provide)
             overrides['PKG_CONFIG_PATH'] = (dependency_config_path + ':' + pkg_config_path) if pkg_config_path and dependency_config_path else dependency_config_path
 
         return overrides

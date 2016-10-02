@@ -1,10 +1,12 @@
 import datetime
+import distutils.spawn
 import fnmatch
 import json
 import logging
 import multiprocessing
 import os
 import re
+import subprocess
 import sys
 
 from collections import OrderedDict
@@ -243,7 +245,20 @@ class Needy:
     def library_configuration(self, target, name):
         return self.needs_configuration(target)['libraries'][name] if name in self.needs_configuration(target)['libraries'] else None
 
+    @classmethod
+    def pkgconfig_package_is_present(cls, name):
+        if not distutils.spawn.find_executable('pkg-config'):
+            return False
+        env = os.environ.copy()
+        env['PKG_CONFIG_LIBDIR'] = ''
+        return subprocess.call(['pkg-config', name, '--exists'], env=env) == 0
+
+    @classmethod
+    def library_is_overridden(cls, name):
+        return cls.pkgconfig_package_is_present(name)
+
     def libraries_to_build(self, target, filters=None, include_dependencies=True):
+        """ returns a list of (name, library) tuples for libraries that should be built by needy, in the order that they should be built in """
         needs_configuration = self.needs_configuration(target)
 
         if 'libraries' not in needs_configuration:
@@ -267,8 +282,9 @@ class Needy:
                 graph[name] = set()
                 continue
             dependencies = library.dependencies()
-            graph[name] = set(dependencies)
-            for dependency in dependencies:
+            dependencies_to_build = [dependency for dependency in dependencies if not self.library_is_overridden(dependency)]
+            graph[name] = set(dependencies_to_build)
+            for dependency in dependencies_to_build:
                 if dependency not in graph:
                     names.append(dependency)
 
