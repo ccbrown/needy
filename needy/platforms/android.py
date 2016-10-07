@@ -35,7 +35,7 @@ class AndroidPlatform(Platform):
         if 'arm' in architecture:
             toolchain = 'arm-linux-androideabi-4.9'
         else:
-            raise ValueError('unsupported architecture')
+            raise ValueError('unsupported architecture: {}'.format(architecture))
 
         path = os.path.join(self.ndk_home(), 'toolchains', toolchain, 'prebuilt')
         if not os.path.exists(path):
@@ -58,19 +58,19 @@ class AndroidPlatform(Platform):
         elif 'arm' in architecture:
             arch_directory = 'arch-arm'
         else:
-            raise ValueError('unsupported architecture')
+            raise ValueError('unsupported architecture: {}'.format(architecture))
 
         return os.path.join(self.ndk_home(), 'platforms', 'android-%s' % self.api_level, arch_directory)
 
     def __cxx_stl_architecture_name(self, architecture):
         if architecture == 'armv7':
             return 'armeabi-v7a'
-        raise ValueError('unsupported architecture')
+        raise ValueError('unsupported architecture: {}'.format(architecture))
 
     def binary_prefix(self, architecture):
         if 'arm' in architecture:
             return 'arm-linux-androideabi'
-        raise ValueError('unsupported architecture')
+        raise ValueError('unsupported architecture: {}'.format(architecture))
 
     def binary_paths(self, architecture):
         toolchain_path = self.toolchain_path(architecture)
@@ -137,7 +137,7 @@ class AndroidPlatform(Platform):
     def ndk_home(self):
         ndk_home = os.getenv('ANDROID_NDK_HOME', os.getenv('NDK_HOME'))
         if not ndk_home:
-            raise RuntimeError('unable to locate ndk')
+            raise RuntimeError('unable to locate ndk in ANDROID_NDK_HOME or NDK_HOME')
         return ndk_home
 
     def default_architecture(self):
