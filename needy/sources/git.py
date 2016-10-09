@@ -39,7 +39,8 @@ class GitRepository(Source):
     def clean(self):
         GitRepository.__assert_git_availability()
 
-        self.__fetch_if_necessary()
+        self.__repair_source()
+        self.__fetch()
 
         with cd(self.directory):
             command(['git', 'clean', '-xffd'], logging.DEBUG)
@@ -58,7 +59,7 @@ class GitRepository(Source):
             command(['git', 'checkout', self.commit])
             command(['git', 'submodule', 'update', '--init', '--recursive'])
 
-    def __fetch_if_necessary(self):
+    def __repair_source(self):
         if not os.path.exists(os.path.join(self.directory, '.git')):
             self.__clone()
 
@@ -66,7 +67,6 @@ class GitRepository(Source):
         if current_origin != self.repository:
             logging.debug('changing remote \'origin\' from {} to {}'.format(current_origin, self.repository))
             self.__replace_remote('origin', self.repository)
-            self.__fetch()
 
     def __current_remote(self, remote):
         if os.path.exists(self.directory):
