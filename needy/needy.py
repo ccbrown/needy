@@ -32,6 +32,7 @@ from .cd import current_directory
 from .local_configuration import LocalConfiguration
 from .needy_configuration import NeedyConfiguration
 from .memoize import MemoizeMethod
+from .utility import log_section
 
 
 @contextmanager
@@ -398,9 +399,10 @@ class Needy:
                 if not self.parameters().force_build and library.is_up_to_date():
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
-                    self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
-                    start_time = datetime.datetime.now()
-                    library.build()
+                    with log_section('needy.satisfy.{}'.format(name)):
+                        self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
+                        start_time = datetime.datetime.now()
+                        library.build()
                     self.__print_status(Fore.GREEN, 'SUCCESS', '{} in {}'.format(name, datetime.datetime.now() - start_time))
         except Exception as e:
             self.__print_status(Fore.RED, 'ERROR')
@@ -430,9 +432,10 @@ class Needy:
                 if not self.parameters().force_build and binary.is_up_to_date():
                     self.__print_status(Fore.GREEN, 'UP-TO-DATE', name)
                 else:
-                    self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
-                    start_time = datetime.datetime.now()
-                    binary.build()
+                    with log_section('needy.satisfy.{}'.format(name)):
+                        self.__print_status(Fore.CYAN, 'OUT-OF-DATE', name)
+                        start_time = datetime.datetime.now()
+                        binary.build()
                     self.__print_status(Fore.GREEN, 'SUCCESS', '{} in {}'.format(name, datetime.datetime.now() - start_time))
         except Exception as e:
             self.__print_status(Fore.RED, 'ERROR')
