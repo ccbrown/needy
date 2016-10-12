@@ -117,6 +117,12 @@ Projects that are built using CMake use the following parameters:
 
 * `cmake-options` - Options to be given to CMake.
 
+Projects that are built using MSBuild use the following parameters:
+
+* `msbuild-project` - The Visual Studio project or solution to use.
+* `msbuild-properties` - The properties to set or override for the project.
+* `header-directory` - If no include directory is created by the project, Needy will copy headers from this directory.
+
 Projects that are built using Xcode use the following parameters:
 
 * `xcode-project` - The Xcode project to use.

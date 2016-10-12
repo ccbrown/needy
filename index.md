@@ -22,11 +22,11 @@ Support
 
 Requires Python 2.7 or 3.3+. No additional packages are required – basic functionality works without any installation. There are a few optional packages that are recommended such as [YAML](http://pyyaml.org/wiki/PyYAML) and [Jinja2](http://jinja.pocoo.org). They are specified in the usual places (*setup.py* and *requirements.txt*).
 
-**Officially runs on:** OSX and Linux
+**Officially runs on:** OSX, Linux, and Windows
 
-**Officially builds for:** OSX, Linux, iOS, TvOS, and Android
+**Officially builds for:** OSX, Linux, iOS, TvOS, Android, and Windows
 
-It is continuously tested and used in production processes for these platforms.
+Needy is continuously tested on all of these platforms. It is known to be used in production processes for all of these platforms except Windows, for which support is relatively immature. Put in an issue or pull request if you find it lacking.
 
 Theoretically it runs on anything with Python and builds for anything.
 
