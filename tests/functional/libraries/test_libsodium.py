@@ -21,5 +21,5 @@ class LibSodiumTest(TestCase):
                     }
                 }))
             self.assertEqual(self.satisfy(), 0)
-            self.assertTrue(os.path.isfile(os.path.join(self.build_directory('lua'), 'include', 'sodium.h')))
-            self.assertTrue(os.path.isfile(os.path.join(self.build_directory('lua'), 'lib', 'libsodium.lib')))
+            self.assertTrue(os.path.isfile(os.path.join(self.build_directory('sodium'), 'include', 'sodium.h')))
+            self.assertTrue(os.path.isfile(os.path.join(self.build_directory('sodium'), 'lib', 'libsodium.lib')))
