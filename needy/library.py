@@ -142,7 +142,8 @@ class Library:
 
             self.__actualize(project)
             self.__write_build_status()
-            self.__cache_artifacts()
+            if not self.is_in_development_mode():
+                self.__cache_artifacts()
 
         return True
 
