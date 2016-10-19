@@ -1,4 +1,5 @@
 import os
+import argparse
 
 from .. import command
 from ..needy import ConfiguredNeedy
@@ -12,7 +13,8 @@ class ExecCommand(command.Command):
         short_description = 'invoke a command from the source directory of a need'
         parser = group.add_parser(self.name(), description=short_description.capitalize()+'.', help=short_description)
         parser.add_argument('library', help='the library who\'s source directory will be used').completer = command.library_completer
-        parser.add_argument('command', nargs='+', help='command to invoke')
+        parser.add_argument('command', help='command to invoke')
+        parser.add_argument('args', default=[], nargs=argparse.REMAINDER, help='arguments for the command')
 
     def execute(self, arguments):
         with ConfiguredNeedy('.', arguments) as needy:
@@ -20,4 +22,4 @@ class ExecCommand(command.Command):
                 raise RuntimeError('Please initialize the library before using exec.')
 
         os.chdir(needy.source_directory(arguments.library))
-        os.execvp(arguments.command[0], arguments.command)
+        os.execvp(arguments.command, [arguments.command] + arguments.args)
