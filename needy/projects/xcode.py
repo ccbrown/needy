@@ -5,6 +5,7 @@ import logging
 
 from .. import project
 from ..cd import cd
+from ..filesystem import copy_if_changed
 from ..process import command_output
 from ..platforms.xcode import XcodePlatform
 
@@ -84,7 +85,7 @@ class XcodeProject(project.Project):
         for file in os.listdir(extras_build_dir):
             name, extension = os.path.splitext(file)
             if extension in lib_extensions:
-                shutil.move(os.path.join(extras_build_dir, file), lib_directory)
+                copy_if_changed(os.path.join(extras_build_dir, file), lib_directory)
 
         if not os.listdir(extras_build_dir):
             os.rmdir(extras_build_dir)
