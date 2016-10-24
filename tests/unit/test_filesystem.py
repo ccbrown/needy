@@ -4,10 +4,12 @@ import tempfile
 import shutil
 import multiprocessing
 import sys
+import binascii
+import hashlib
 
 from pyfakefs import fake_filesystem_unittest
 
-from needy.filesystem import lock_file, clean_file, clean_directory, TempDir, dict_file
+from needy.filesystem import lock_file, clean_file, clean_directory, TempDir, dict_file, copy_if_changed, file_hash
 
 
 def try_file_lock(path):
@@ -95,3 +97,43 @@ class FakeFilesystemTest(fake_filesystem_unittest.TestCase):
 
         with open(os.path.join('tmp', 'file')) as f:
             self.assertEqual(f.read(), '{"bar": "test"}')
+
+    def test_file_hash(self):
+        self.fs.CreateFile(os.path.join('file'), contents='foo')
+        foo_hash = b'2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae'
+
+        with open('file', 'rb') as f:
+            self.assertEqual(binascii.hexlify(file_hash(f, hashlib.sha256())), foo_hash)
+
+    def test_copy_if_changed(self):
+        file1 = self.fs.CreateFile(os.path.join('file1'), contents='foo')
+
+        file2 = self.fs.CreateFile(os.path.join('file2'), contents='foo')
+        file3 = self.fs.CreateFile(os.path.join('file3'), contents='bar')
+
+        file1.st_mtime = 1
+        file2.st_mtime = 2
+        file3.st_mtime = 3
+
+        copy_if_changed('file2', 'file1')
+
+        self.assertEqual(os.path.getmtime('file1'), 1)
+
+        with open('file1', 'r') as f:
+            self.assertEqual(f.read(), 'foo')
+
+        copy_if_changed('file3', 'file1')
+
+        self.assertEqual(os.path.getmtime('file1'), 3)
+
+        with open('file1', 'r') as f:
+            self.assertEqual(f.read(), 'bar')
+
+    def test_copy_if_changed_directory_destination(self):
+        self.fs.CreateFile(os.path.join('tmp', 'foo'), contents='foo')
+        self.fs.CreateFile('foo', contents='bar')
+
+        copy_if_changed('foo', 'tmp')
+
+        with open(os.path.join('tmp', 'foo'), 'r') as f:
+            self.assertEqual(f.read(), 'bar')

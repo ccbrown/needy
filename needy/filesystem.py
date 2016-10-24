@@ -4,6 +4,7 @@ import signal
 import tempfile
 import time
 import json
+import hashlib
 
 from contextlib import contextmanager
 
@@ -125,6 +126,29 @@ def clean_directory(directory_path):
 def os_file(path, flags, mode):
     fd = os.open(path, flags)
     return os.fdopen(fd, mode)
+
+
+def copy_if_changed(src, dst):
+    ''' Wrapper around shutil.copy2 that only performs a copy if src and dst differ in content'''
+    if os.path.isdir(dst):
+        dst = os.path.join(dst, os.path.split(src)[1])
+    if os.path.exists(dst):
+        with open(src, 'rb') as f:
+            src_file_hash = file_hash(f, hashlib.sha256())
+        with open(dst, 'rb') as f:
+            dst_file_hash = file_hash(f, hashlib.sha256())
+        if src_file_hash == dst_file_hash:
+            return
+    shutil.copy2(src, dst)
+
+
+# from http://stackoverflow.com/questions/3431825
+def file_hash(afile, hasher, blocksize=65536):
+    buf = afile.read(blocksize)
+    while len(buf) > 0:
+        hasher.update(buf)
+        buf = afile.read(blocksize)
+    return hasher.digest()
 
 
 @contextmanager
