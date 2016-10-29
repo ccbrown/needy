@@ -126,9 +126,9 @@ class SourceProject(project.Project):
             flags = ['-c', input, '-o', output, '-O3'] + ['-I{}'.format(path) for path in include_paths]
 
         if extension == '.c':
-            self.command(platform.c_compiler(architecture) + flags, verbosity=logging.DEBUG)
+            self.command(['needy-cc'] + flags, verbosity=logging.DEBUG)
         elif extension == '.cpp':
-            self.command(platform.cxx_compiler(architecture) + flags, verbosity=logging.DEBUG)
+            self.command(['needy-cxx'] + flags, verbosity=logging.DEBUG)
         else:
             return False
 
