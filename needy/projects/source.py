@@ -1,6 +1,7 @@
 import fnmatch
 import pipes
 import os
+import shlex
 import shutil
 import logging
 
@@ -126,8 +127,12 @@ class SourceProject(project.Project):
             flags = ['-c', input, '-o', output, '-O3'] + ['-I{}'.format(path) for path in include_paths]
 
         if extension == '.c':
+            if 'CFLAGS' in os.environ:
+                flags.extend(shlex.split(os.environ['CFLAGS']))
             self.command(['needy-cc'] + flags, verbosity=logging.DEBUG)
         elif extension == '.cpp':
+            if 'CXXFLAGS' in os.environ:
+                flags.extend(shlex.split(os.environ['CXXFLAGS']))
             self.command(['needy-cxx'] + flags, verbosity=logging.DEBUG)
         else:
             return False
