@@ -129,11 +129,11 @@ class SourceProject(project.Project):
         if extension == '.c':
             if 'CFLAGS' in os.environ:
                 flags.extend(shlex.split(os.environ['CFLAGS']))
-            self.command(['needy-cc'] + flags, verbosity=logging.DEBUG)
+            self.command((['needy-cc'] if platform.identifier() != 'windows' else platform.c_compiler(architecture)) + flags, verbosity=logging.DEBUG)
         elif extension == '.cpp':
             if 'CXXFLAGS' in os.environ:
                 flags.extend(shlex.split(os.environ['CXXFLAGS']))
-            self.command(['needy-cxx'] + flags, verbosity=logging.DEBUG)
+            self.command((['needy-cxx'] if platform.identifier() != 'windows' else platform.cxx_compiler(architecture)) + flags, verbosity=logging.DEBUG)
         else:
             return False
 
