@@ -8,6 +8,7 @@ def available_commands():
         ('.disable', 'DisableCommand'),
         ('.enable', 'EnableCommand'),
         ('.status', 'StatusCommand'),
+        ('.render', 'RenderCommand'),
         ('.sync', 'SyncCommand'),
     ]]
     return {command.name(): command for command in commands}

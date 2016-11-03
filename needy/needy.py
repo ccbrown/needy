@@ -139,48 +139,12 @@ class Needy:
 
     @MemoizeMethod
     def needs_configuration(self, target=None):
-        configuration = ''
-        with open(self.needs_file(), 'r') as needs_file:
-            configuration = needs_file.read()
-
-        try:
-            from jinja2 import Environment, PackageLoader
-            env = Environment()
-            env.filters['dirname'] = os.path.dirname
-            env.filters['json_escape'] = lambda s: json.dumps(s)[1:][:-1]
-            if hasattr(self.__parameters, 'define') and self.__parameters.define:
-                for defines in self.__parameters.define:
-                    for define in defines:
-                        parts = define.split('=', 1)
-                        value = parts[1] if len(parts) >= 2 else 1
-                        env.globals[parts[0]] = value
-            template = env.from_string(configuration)
-            if getattr(self, '_needs_configuration_first_pass', None):
-                configuration = self._needs_configuration_first_pass
-            else:
-                variables = {
-                    'env': os.environ,
-                    'platform': target.platform.identifier() if target else None,
-                    'architecture': target.architecture if target else None,
-                    'host_platform': host_platform().identifier(),
-                    'needs_file': self.needs_file(),
-                    'needs_directory': self.needs_directory(),
-                    'build_directory': lambda library, target_override=None: None
-                }
-                self._needs_configuration_first_pass = template.render(**variables)
-                try:
-                    variables['build_directory'] = lambda library, target_override=None: self.build_directory(library, self.target(target_override) if target_override else target) if target else None
-                    configuration = template.render(**variables)
-                finally:
-                    self._needs_configuration_first_pass = None
-        except ImportError:
-            if re.compile('{%.*%}').search(configuration) or re.compile('{{.*}}').search(configuration) or re.compile('{#.*#}').search(configuration):
-                raise RuntimeError('The needs file appears to contain Jinja templating. Please install the jinja2 Python package.')
+        rendered = self.render(target=target)
 
         name, extension = os.path.splitext(self.needs_file())
 
         if extension == '.json':
-            return json.loads(configuration, object_pairs_hook=OrderedDict)
+            return json.loads(rendered, object_pairs_hook=OrderedDict)
 
         if extension == '.yaml':
             try:
@@ -194,13 +158,58 @@ class Needy:
                     return OrderedDict(loader.construct_pairs(node))
 
                 OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
-                return yaml.load(configuration, OrderedLoader)
+                return yaml.load(rendered, OrderedLoader)
             except ImportError:
                 raise RuntimeError('The needs are defined in a YAML file. Please install the pyyaml Python package.')
 
             return None
 
         raise RuntimeError('No needs file found.')
+
+    def render(self, target=None):
+        ''' return rendered needs from needs file '''
+        source = ''
+        with open(self.needs_file(), 'r') as needs_file:
+            source = needs_file.read()
+
+        return self.__render(source, target=target)
+
+    @MemoizeMethod
+    def __render(self, source, target=None):
+        try:
+            from jinja2 import Environment, PackageLoader
+            env = Environment()
+            env.filters['dirname'] = os.path.dirname
+            env.filters['json_escape'] = lambda s: json.dumps(s)[1:][:-1]
+            if hasattr(self.__parameters, 'define') and self.__parameters.define:
+                for defines in self.__parameters.define:
+                    for define in defines:
+                        parts = define.split('=', 1)
+                        value = parts[1] if len(parts) >= 2 else 1
+                        env.globals[parts[0]] = value
+            template = env.from_string(source)
+            if getattr(self, '_needs_configuration_first_pass', None):
+                source = self._needs_configuration_first_pass
+            else:
+                variables = {
+                    'env': os.environ,
+                    'platform': target.platform.identifier() if target else None,
+                    'architecture': target.architecture if target else None,
+                    'host_platform': host_platform().identifier(),
+                    'needs_file': self.needs_file(),
+                    'needs_directory': self.needs_directory(),
+                    'build_directory': lambda library, target_override=None: None
+                }
+                self._needs_configuration_first_pass = template.render(**variables)
+                try:
+                    variables['build_directory'] = lambda library, target_override=None: self.build_directory(library, self.target(target_override) if target_override else target) if target else None
+                    source = template.render(**variables)
+                finally:
+                    self._needs_configuration_first_pass = None
+        except ImportError:
+            if re.compile('{%.*%}').search(source) or re.compile('{{.*}}').search(source) or re.compile('{#.*#}').search(source):
+                raise RuntimeError('The needs file appears to contain Jinja templating. Please install the jinja2 Python package.')
+        return source
 
     def needs_directory(self):
         return self.__needs_directory

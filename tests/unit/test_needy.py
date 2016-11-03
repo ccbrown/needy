@@ -1,5 +1,7 @@
 import json
 import os
+import textwrap
+
 from pyfakefs import fake_filesystem_unittest
 
 from needy.needy import Needy
@@ -39,3 +41,17 @@ class NeedyTest(fake_filesystem_unittest.TestCase):
         self.assertEqual(len(libraries), 2)
         self.assertEqual(libraries[0][0], 'dependency')
         self.assertEqual(libraries[1][0], 'dependant')
+
+    def test_render(self):
+        self.fs.CreateFile('needs.json', contents=textwrap.dedent('''\
+            libraries:
+                mylib:
+                    {% set bar = 'bar' -%}
+                    directory: {{bar}}
+        '''))
+        needy = Needy(needy_configuration=NeedyConfiguration(None))
+        self.assertEqual(needy.render().strip(), textwrap.dedent('''\
+            libraries:
+                mylib:
+                    directory: bar
+        ''').strip())
