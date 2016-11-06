@@ -25,6 +25,9 @@ class AndroidPlatform(Platform):
         if self.__toolchain:
             return self.__toolchain
 
+        if 'ANDROID_TOOLCHAIN' in os.environ:
+            return os.environ['ANDROID_TOOLCHAIN']
+
         try:
             which = subprocess.check_output(['which', '{}-c++'.format(self.binary_prefix(architecture))])
             return os.path.dirname(os.path.dirname(which))
