@@ -107,18 +107,15 @@ class Project:
 
         needy_wrappers = os.path.join(self.directory(), 'needy-wrappers')
 
-        if 'CC' in os.environ:
-            ret['HOST_CC'] = os.environ.get('HOST_CC', os.environ['CC'])
+        ret['HOST_CC'] = os.environ.get('HOST_CC', os.environ.get('CC', ''))
         if self.target().platform.c_compiler(self.target().architecture):
             ret['CC'] = os.path.join(needy_wrappers, 'needy-cc')
 
-        if 'CXX' in os.environ:
-            ret['HOST_CXX'] = os.environ.get('HOST_CXX', os.environ['CXX'])
+        ret['HOST_CXX'] = os.environ.get('HOST_CXX', os.environ.get('CXX', ''))
         if self.target().platform.cxx_compiler(self.target().architecture):
             ret['CXX'] = os.path.join(needy_wrappers, 'needy-cxx')
 
-        if 'LDFLAGS' in os.environ:
-            ret['HOST_LDFLAGS'] = os.environ.get('HOST_LDFLAGS', os.environ['LDFLAGS'])
+        ret['HOST_LDFLAGS'] = os.environ.get('HOST_LDFLAGS', os.environ.get('LDFLAGS', ''))
         libraries = self.target().platform.libraries(self.target().architecture)
         if len(libraries) > 0:
             ret['LDFLAGS'] = ' '.join(libraries + ([os.environ['LDFLAGS']] if 'LDFLAGS' in os.environ else []))
