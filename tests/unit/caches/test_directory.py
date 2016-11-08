@@ -14,19 +14,19 @@ class DirectoryTest(fake_filesystem_unittest.TestCase):
         self.assertEquals(cache.type(), 'directory')
         self.assertEquals(cache.description(), 'cache')
 
-        self.assertFalse(cache.get('key', 'tmp'))
+        self.assertFalse(cache.get('key', 'obj'))
 
         self.fs.CreateFile('a', contents='AAA')
         self.assertTrue(cache.set('a', 'a'))
-        self.assertTrue(cache.get('a', 'tmp'))
-        with open('tmp', 'r') as f:
+        self.assertTrue(cache.get('a', 'obj'))
+        with open('obj', 'r') as f:
             self.assertEquals(f.read(), 'AAA')
 
         cache.prune()
-        self.assertTrue(cache.get('a', 'tmp'))
+        self.assertTrue(cache.get('a', 'obj'))
 
         distant_past = time.time() - 60 * 60 * 24 * 30
         self.fs.GetObject(cache._object_path('a')).st_atime = distant_past
 
         cache.prune()
-        self.assertFalse(cache.get('a', 'tmp'))
+        self.assertFalse(cache.get('a', 'obj'))

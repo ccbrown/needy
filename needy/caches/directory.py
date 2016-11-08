@@ -4,7 +4,7 @@ import shutil
 import time
 
 from .file_cache import FileCache
-from ..filesystem import clean_file
+from ..filesystem import clean_file, TempDir
 
 
 class DirectoryCache(FileCache):
@@ -26,7 +26,14 @@ class DirectoryCache(FileCache):
     def set(self, key, source):
         destination_file = self._object_path(key)
         clean_file(destination_file)
-        shutil.copyfile(source, destination_file)
+        with TempDir() as d:
+            staging_path = os.path.join(d, 'tmp')
+            shutil.copyfile(source, staging_path)
+            try:
+                os.rename(staging_path, destination_file)
+            except OSError:
+                if not os.path.exists(destination_file):
+                    raise
         return True
 
     def get(self, key, destination):
