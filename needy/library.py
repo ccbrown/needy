@@ -4,11 +4,12 @@ import json
 import os
 import shutil
 import logging
+import tarfile
 import textwrap
 
 from operator import itemgetter
 
-from .cache import CacheError
+from .filesystem import TempDir
 
 try:
     from colorama import Fore
@@ -29,7 +30,6 @@ from .cd import cd
 from .override_environment import OverrideEnvironment
 from .target import Target
 from .filesystem import clean_directory
-from .build_cache import BuildCache
 
 from .process import command
 from .projects import project_types
@@ -108,15 +108,16 @@ class Library:
         raise ValueError('no source specified in configuration')
 
     def build(self):
-        print('Building for %s %s' % (self.target().platform.identifier(), self.target().architecture))
+        if not self.needy.parameters().force_build and not self.is_in_development_mode():
+            if self.__load_cached_artifacts():
+                logging.info('Build restored from cache')
+                return True
+
+        logging.info('Building for %s %s' % (self.target().platform.identifier(), self.target().architecture))
 
         if ' ' in self.__directory:
             print(Fore.YELLOW + '[WARNING]' + Fore.RESET + ' The build path contains spaces. Some build systems don\'t '
                   'handle spaces well, so if you have problems, consider moving the project or using a symlink.')
-
-        if not self.needy.parameters().force_build and not self.is_in_development_mode():
-            if self.__load_cached_artifacts():
-                return True
 
         if not self.is_in_development_mode():
             self.clean_source()
@@ -185,20 +186,27 @@ class Library:
             json.dump(status, status_file)
 
     def __cache_artifacts(self):
-        if self.__build_caches:
-            try:
-                self.__build_caches[0].store_artifacts(self.build_directory(), self.__cache_key())
-            except:
-                pass
+        if not self.__build_caches:
+            return False
+        with TempDir() as temp_dir:
+            temp_tar = os.path.join(temp_dir, 'temp')
+            tar = tarfile.open(temp_tar, 'w:gz')
+            tar.add(self.build_directory(), arcname='.')
+            tar.close()
+            for cache in self.__build_caches:
+                if cache.set(self.__cache_key(), temp_tar):
+                    return True
+        return False
 
     def __load_cached_artifacts(self):
-        '''Returns True if there is a cache and it was able to load artifacts'''
-        for c in self.__build_caches:
-            try:
-                c.load_artifacts(self.__cache_key(), self.build_directory())
-                return True
-            except (CacheError, IOError):
-                pass
+        with TempDir() as temp_dir:
+            temp_tar = os.path.join(temp_dir, 'artifacts.tgz')
+            for cache in self.__build_caches:
+                if cache.get(self.__cache_key(), temp_tar):
+                    tar = tarfile.open(temp_tar, 'r:gz')
+                    tar.extractall(path=self.build_directory())
+                    tar.close()
+                    return True
         return False
 
     def __cache_key(self):

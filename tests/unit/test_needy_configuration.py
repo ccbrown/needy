@@ -30,9 +30,6 @@ class NeedyConfigurationTest(unittest.TestCase):
             c = NeedyConfiguration(os.path.dirname(path))
 
             self.assertEqual(len(c.build_caches()), 3)
-            self.assertEqual(c.build_caches()[0].cache().to_dict()['path'], 'foo')
-            self.assertEqual(c.build_caches()[1].cache().to_dict()['path'], 'bar')
-            self.assertEqual(c.build_caches()[2].cache().to_dict()['path'], 'foobar')
 
     def test_config_merging(self):
         with TempDir() as d:
@@ -46,12 +43,9 @@ class NeedyConfigurationTest(unittest.TestCase):
 
             c = NeedyConfiguration(os.path.dirname(leaf))
             self.assertEqual(len(c.build_caches()), 2)
-            self.assertEqual(c.build_caches()[0].cache().to_dict()['path'], 'foo')
-            self.assertEqual(c.build_caches()[1].cache().to_dict()['path'], 'bar')
 
             c = NeedyConfiguration(os.path.dirname(root))
             self.assertEqual(len(c.build_caches()), 1)
-            self.assertEqual(c.build_caches()[0].cache().to_dict()['path'], 'bar')
 
     def test_empty_root_doesnt_effect_leaf(self):
         with TempDir() as d:
@@ -65,4 +59,3 @@ class NeedyConfigurationTest(unittest.TestCase):
 
             c = NeedyConfiguration(os.path.dirname(leaf))
             self.assertEqual(len(c.build_caches()), 1)
-            self.assertEqual(c.build_caches()[0].cache().to_dict()['path'], 'foo')

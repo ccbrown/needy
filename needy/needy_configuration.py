@@ -3,9 +3,9 @@ import json
 import logging
 import time
 
-from .caches.directory import Directory
-from .build_cache import BuildCache
+from .caches.directory import DirectoryCache
 from .filesystem import os_file, lock_fd
+from .memoize import MemoizeMethod
 
 from contextlib import contextmanager
 
@@ -97,6 +97,7 @@ class NeedyConfiguration:
 
         return config
 
+    @MemoizeMethod
     def build_caches(self):
         build_caches = []
         if 'build-caches' in self.__configuration:
@@ -104,4 +105,4 @@ class NeedyConfiguration:
                 build_caches = self.__configuration['build-caches']
             else:
                 build_caches = [self.__configuration['build-caches']]
-        return [BuildCache(Directory.from_dict(c)) for c in [c if isinstance(c, dict) else {'path': c} for c in build_caches]]
+        return [DirectoryCache.from_dict(c) for c in [c if isinstance(c, dict) else {'path': c} for c in build_caches]]
