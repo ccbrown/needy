@@ -4,6 +4,7 @@ import logging
 import time
 
 from .caches.directory import DirectoryCache
+from .caches.s3 import S3Cache
 from .filesystem import os_file, lock_fd
 from .memoize import MemoizeMethod
 
@@ -105,4 +106,11 @@ class NeedyConfiguration:
                 build_caches = self.__configuration['build-caches']
             else:
                 build_caches = [self.__configuration['build-caches']]
-        return [DirectoryCache.from_dict(c) for c in [c if isinstance(c, dict) else {'path': c} for c in build_caches]]
+        ret = []
+        for c in build_caches:
+            config = c if isinstance(c, dict) else {'path': c}
+            if config['path'].lower().startswith('s3://'):
+                ret.append(S3Cache.from_dict(config))
+            else:
+                ret.append(DirectoryCache.from_dict(config))
+        return ret
