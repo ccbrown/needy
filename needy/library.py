@@ -169,11 +169,17 @@ class Library:
                 project.build(build_directory)
                 project.post_build(build_directory)
                 Library.make_pkgconfigs_relocatable(build_directory)
-                if not os.path.exists(os.path.join(build_directory, 'lib', 'pkgconfig')):
+                if self.__should_generate_pkgconfig():
                     self.generate_pkgconfig(build_directory, self.name())
             except:
                 shutil.rmtree(build_directory)
                 raise
+
+    def __should_generate_pkgconfig(self):
+        lib_dir = os.path.join(self.build_directory(), 'lib')
+        include_dir = os.path.join(self.build_directory(), 'include')
+        return (not os.path.exists(os.path.join(lib_dir, 'pkgconfig')) and
+                (len(os.listdir(include_dir)) > 0 or len(os.listdir(lib_dir)) > 0))
 
     def __write_build_status(self):
         with open(self.build_status_path(), 'w') as status_file:
@@ -334,7 +340,7 @@ class Library:
 
     @classmethod
     def build_compatibility(cls):
-        return 5
+        return 6
 
     def configuration_hash(self):
         hash = hashlib.sha256()
