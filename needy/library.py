@@ -176,10 +176,12 @@ class Library:
                 raise
 
     def __should_generate_pkgconfig(self):
+        def is_empty(path):
+            return not os.path.exists(path) or len(os.listdir(path)) == 0
         lib_dir = os.path.join(self.build_directory(), 'lib')
         include_dir = os.path.join(self.build_directory(), 'include')
-        return (not os.path.exists(os.path.join(lib_dir, 'pkgconfig')) and
-                (len(os.listdir(include_dir)) > 0 or len(os.listdir(lib_dir)) > 0))
+        return (is_empty(os.path.join(lib_dir, 'pkgconfig')) and
+                (not is_empty(include_dir) or not is_empty(lib_dir)))
 
     def __write_build_status(self):
         with open(self.build_status_path(), 'w') as status_file:
