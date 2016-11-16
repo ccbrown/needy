@@ -348,12 +348,11 @@ class Library:
     def configuration_dict(self):
         configuration = self.__configuration.copy()
         configuration['project'] = self.project_configuration()
-
         return {
             'build-compatibility': self.build_compatibility(),
             'platform-configuration': (self.target().platform.configuration(self.target().architecture) or {}),
             'library-configuration': configuration,
-            'dependencies': [self.needy.library_configuration(self.target(), d) for d in (configuration['dependencies'] if 'dependencies' in configuration else [])],
+            'dependencies': [self.needy.library_configuration(self.target(), d) for d in self.dependencies()],
         }
 
     @staticmethod
