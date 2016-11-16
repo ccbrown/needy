@@ -11,14 +11,6 @@ from operator import itemgetter
 
 from .filesystem import TempDir
 
-try:
-    from colorama import Fore
-except ImportError:
-    class EmptyStringAttributes:
-        def __getattr__(self, name):
-            return ''
-    Fore = EmptyStringAttributes()
-
 from .project import evaluate_conditionals
 from .project import ProjectDefinition
 
@@ -34,6 +26,7 @@ from .filesystem import clean_directory
 from .process import command
 from .projects import project_types
 
+from .utility import Fore
 
 class Library:
     def __init__(self, needy, name, target=None, configuration=None, development_mode=False, build_caches=[]):
@@ -185,13 +178,8 @@ class Library:
 
     def __write_build_status(self):
         with open(self.build_status_path(), 'w') as status_file:
-            if self.is_in_development_mode():
-                status = {}
-            else:
-                status = {
-                    'configuration': binascii.hexlify(self.configuration_hash()).decode()
-                }
-            json.dump(status, status_file)
+            status = {} if self.is_in_development_mode() else self.configuration_dict()
+            json.dump(status, status_file, sort_keys=True, indent=4, separators=(',', ': '))
 
     def __cache_artifacts(self):
         if not self.__build_caches:
@@ -203,6 +191,11 @@ class Library:
             tar.close()
             for cache in self.__build_caches:
                 if cache.set(self.__cache_key(), temp_tar):
+                    d = self.configuration_dict()
+                    logging.debug('cache object hash {} formed from...\n{}'.format(
+                        binascii.hexlify(self.configuration_hash(d)),
+                        json.dumps(d, sort_keys=True, indent=4, separators=(',', ': ')))
+                    )
                     return True
         return False
 
@@ -249,16 +242,19 @@ class Library:
         return self.__development_mode
 
     def is_up_to_date(self):
-        if not os.path.isfile(self.build_status_path()) or self.is_in_development_mode():
+        if self.is_in_development_mode():
             return False
+        d = self.status_dict()
+        return d and self.configuration_hash(d) == self.configuration_hash()
+
+    def status_dict(self):
+        if not os.path.isfile(self.build_status_path()):
+            return None
         with open(self.build_status_path(), 'r') as status_file:
             status_text = status_file.read()
             if not status_text.strip():
-                return False
-            status = json.loads(status_text)
-            if 'configuration' not in status or binascii.unhexlify(status['configuration']) != self.configuration_hash():
-                return False
-        return True
+                return None
+            return json.loads(status_text)
 
     def status_text(self):
         if self.is_in_development_mode():
@@ -344,23 +340,21 @@ class Library:
     def build_compatibility(cls):
         return 6
 
-    def configuration_hash(self):
+    def configuration_hash(self, config_dict=None):
         hash = hashlib.sha256()
+        hash.update(json.dumps(config_dict or self.configuration_dict(), sort_keys=True).encode())
+        return hash.digest()
 
-        platform_configuration_hash = self.target().platform.configuration_hash(self.target().architecture)
-        if platform_configuration_hash:
-            hash.update(platform_configuration_hash)
-
+    def configuration_dict(self):
         configuration = self.__configuration.copy()
         configuration['project'] = self.project_configuration()
 
-        hash.update(json.dumps({
+        return {
             'build-compatibility': self.build_compatibility(),
-            'configuration': configuration,
+            'platform-configuration': (self.target().platform.configuration(self.target().architecture) or {}),
+            'library-configuration': configuration,
             'dependencies': [self.needy.library_configuration(self.target(), d) for d in (configuration['dependencies'] if 'dependencies' in configuration else [])],
-        }, sort_keys=True).encode())
-
-        return hash.digest()
+        }
 
     @staticmethod
     def generate_pkgconfig(prefix, library_name):

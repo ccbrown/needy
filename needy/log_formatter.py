@@ -1,14 +1,6 @@
 import logging
 
-try:
-    from colorama import Fore
-    from colorama import Style
-except ImportError:
-    class EmptyStringAttributes:
-        def __getattr__(self, name):
-            return ''
-    Fore = EmptyStringAttributes()
-    Style = EmptyStringAttributes()
+from .utility import Fore, Style
 
 
 class LogFormatter(logging.Formatter):

@@ -3,16 +3,9 @@ import os
 import subprocess
 import sys
 
-try:
-    from colorama import Style
-except ImportError:
-    class EmptyStringAttributes:
-        def __getattr__(self, name):
-            return ''
-    Style = EmptyStringAttributes()
-
 from .cd import current_directory
 from .filesystem import TempDir
+from .utility import Style
 
 
 def __log_check_output(cmd, verbosity, **kwargs):

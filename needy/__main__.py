@@ -29,9 +29,15 @@ def main(args=sys.argv):
     available_commands = commands.available_commands()
 
     parser = argparse.ArgumentParser(description='Helps with dependencies.')
-    parser.add_argument('-C', help='run as if invoked from this path').completer = command.directory_completer
-    parser.add_argument('-v', '--verbose', action='store_true', help='produce more verbose logs')
-    parser.add_argument('-q', '--quiet', action='store_true', help='suppress output')
+    parser.add_argument('-C',
+                        help='run as if invoked from this path').completer = command.directory_completer
+    parser.add_argument('-v', '--verbose',
+                        action='store_true',
+                        default='NEEDY_VERBOSE_LOGGING' in os.environ,
+                        help='produce more verbose logs')
+    parser.add_argument('-q', '--quiet',
+                        action='store_true',
+                        help='suppress output')
 
     subparser_group = parser.add_subparsers(
         title='commands',
