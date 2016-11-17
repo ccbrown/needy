@@ -18,9 +18,6 @@ class SatisfyCommand(command.Command):
         parser.add_argument('-f', '--force-build', action='store_true', help='force a build even when the target is up-to-date')
         command.add_target_specification_args(parser, 'builds needs')
 
-        for platform in available_platforms().values():
-            platform.add_arguments(parser)
-
     def execute(self, arguments):
         with ConfiguredNeedy('.', arguments) as needy:
             if arguments.universal_binary:

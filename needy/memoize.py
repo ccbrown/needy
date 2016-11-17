@@ -55,9 +55,17 @@ class MemoizeMethod(object):
             cache = obj.__memoize_cache
         except AttributeError:
             cache = obj.__memoize_cache = {}
-        key = (self.func, args[1:], frozenset(kw.items()))
+        key = (self.func, tuple([self.__make_hashable(a) for a in args[1:]]), frozenset(kw.items()))
         try:
             res = cache[key]
         except KeyError:
             res = cache[key] = self.func(*args, **kw)
         return res
+
+    @classmethod
+    def __make_hashable(cls, obj):
+        if isinstance(obj, list):
+            return tuple(obj)
+        elif isinstance(obj, dict):
+            return frozenset(obj.items())
+        return obj

@@ -73,3 +73,5 @@ def add_target_specification_args(parser, action='executes', allow_universal_bin
     if allow_universal_binary:
         parser.add_argument('-u', '--universal-binary', help='{} for the universal binary with the given name'.format(action)).completer = universal_binary_completer
     parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
+    for platform in available_platforms().values():
+        platform.add_arguments(parser)
