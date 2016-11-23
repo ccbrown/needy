@@ -86,6 +86,11 @@ class Needy:
                 if not os.path.isdir(real_needs_directory):
                     os.makedirs(real_needs_directory)
                 if not os.path.exists(ret):
+                    # If ret is a broken symlink, os.path.exists returns false
+                    # and we need to remove the broken symlink before trying to
+                    # relink it.
+                    if os.path.islink(ret):
+                        os.unlink(ret)
                     os.symlink(real_needs_directory, ret)
 
         return ret
