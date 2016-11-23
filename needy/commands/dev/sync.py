@@ -18,8 +18,7 @@ class SyncCommand(command.Command):
             help='synchronizes upstream changes while keeping local changes'
         )
         parser.add_argument('library', nargs='*', help='a library to synchronize').completer = command.library_completer
-        parser.add_argument('-t', '--target', default='host', help='synchronize the source for this target (example: ios:armv7)').completer = command.target_completer
-        parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
+        command.add_target_specification_args(parser, 'sync needs')
 
     def execute(self, arguments):
         with ConfiguredNeedy('.', arguments) as needy:

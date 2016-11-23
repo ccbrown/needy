@@ -16,8 +16,7 @@ class RenderCommand(command.Command):
             '''),
             help='display a rendered needs file'
         )
-        parser.add_argument('-t', '--target', default='host', help='synchronize the source for this target (example: ios:armv7)').completer = command.target_completer
-        parser.add_argument('-D', '--define', nargs='*', action='append', help='specify a user-defined variable to be passed to the needs file renderer')
+        command.add_target_specification_args(parser, 'render needs')
 
     def execute(self, arguments):
         with ConfiguredNeedy('.', arguments) as needy:
