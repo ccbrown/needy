@@ -93,7 +93,7 @@ class PkgConfigJamGenerator(Generator):
                 actions copy-path-{path_hash}-action {{
                     set -e ; trap "{{ rmdir $(INSTALL_PREFIX)/needy-copy-path.lock 2>/dev/null || true ; }}" EXIT TERM INT
                     mkdir -p $(INSTALL_PREFIX) && test -d $(INSTALL_PREFIX) && test -w $(INSTALL_PREFIX)
-                    until mkdir -p $(INSTALL_PREFIX)/needy-copy-path.lock 2>/dev/null ; do python -c "import time;time.sleep(0.1)" ; done
+                    until mkdir $(INSTALL_PREFIX)/needy-copy-path.lock 2>/dev/null ; do python -c "import time;time.sleep(0.1)" ; done
                     cp -pR {path}/* $(INSTALL_PREFIX)/
                 }}
                 notfile.notfile copy-path-{path_hash} : @$(__name__).copy-path-{path_hash}-action ;
@@ -108,7 +108,9 @@ class PkgConfigJamGenerator(Generator):
         for package in packages:
             path = os.path.abspath(os.path.join(package['location'], '..', '..'))
             path_hash = hashlib.sha256(path.encode('utf-8')).hexdigest().lower()
-            lines += 'alias {}-package : : : : <cflags>"{}" <linkflags>"{}" ;\n'.format(package['name'], PkgConfigJamGenerator.__escape(package['cflags']), PkgConfigJamGenerator.__escape(package['ldflags']))
+            lines += 'alias {}-package : : : : <cflags>"{}" <linkflags>"{}" ;\n'.format(
+                package['name'], PkgConfigJamGenerator.__escape(package['cflags']), PkgConfigJamGenerator.__escape(package['ldflags'])
+            )
             lines += textwrap.dedent('''\
                 alias install-{package}-package : copy-path-{path_hash} ;
             ''').format(package=package['name'], path_hash=path_hash)
