@@ -58,7 +58,7 @@ class Download(Source):
         download = None
         attempts = 0
         download_successful = False
-        while not download_successful and attempts < 5:
+        while not download_successful:
             try:
                 download = urllib2.urlopen(url, timeout=5)
             except urllib2.URLError as e:
@@ -68,8 +68,10 @@ class Download(Source):
             attempts = attempts + 1
             download_successful = download and download.code == 200 and 'content-length' in download.info()
             if not download_successful:
+                if attempts >= 5:
+                    break
                 logging.warning('Download failed. Retrying...')
-            time.sleep(attempts)
+                time.sleep(attempts)
         if not download_successful:
             raise IOError('unable to download library')
         size = int(download.info()['content-length'])
